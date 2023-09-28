@@ -1,8 +1,9 @@
-package com.huang.oj.model.dto.problem;
+package com.huang.oj.model.dto.submission;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableLogic;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -15,13 +16,26 @@ import java.util.Date;
  * @from <a href="https://yupi.icu">编程导航知识星球</a>
  */
 @Data
-public class JudgeCase implements Serializable {
+public class ProblemSubmitQuest implements Serializable {
+
     /**
-     * 输入
+     * 题目 id
      */
-    private String input;
+    private Long problemId;
+
     /**
-     * 预期
+     * 提交用户 id
      */
-    private String expected;
+    private Long userId;
+
+    /**
+     * 语言
+     */
+    private String language;
+
+    /**
+     * 提交的代码
+     */
+    private String code;
+
 }

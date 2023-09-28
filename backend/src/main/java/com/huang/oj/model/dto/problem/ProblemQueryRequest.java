@@ -21,20 +21,14 @@ import java.util.List;
 @Data
 public class ProblemQueryRequest extends PageRequest implements Serializable {
     /**
-     * id
-     */
-    @TableId(type = IdType.AUTO)
-    private Long id;
-
-    /**
      * 题目标题
      */
     private String title;
 
     /**
-     * 创建用户 id
+     * 内容
      */
-    private Long userId;
+    private String content;
 
     /**
      * 创建时间

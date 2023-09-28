@@ -1,18 +1,21 @@
 package com.huang.oj.model.entity;
 
-import com.baomidou.mybatisplus.annotation.*;
-
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.util.Date;
 
+import com.huang.oj.model.dto.problem.JudgeCase;
+import com.huang.oj.model.dto.problem.JudgeConfig;
 import lombok.Data;
 
 /**
  * 题
- *
  * @TableName problem
  */
-@TableName(value = "problem")
+@TableName(value ="problem")
 @Data
 public class Problem implements Serializable {
     /**
@@ -27,17 +30,26 @@ public class Problem implements Serializable {
     private String title;
 
     /**
+     * 官解
+     */
+    private String solution;
+    /**
      * 内容
      */
     private String content;
 
     /**
-     * 标签列表（json 数组）
+     * 题目标签列表
+     */
+    private String tags;
+
+    /**
+     * 判题标签列表
      */
     private String judgeConfig;
 
     /**
-     * 检测样例（json 数组）
+     * 检测样例
      */
     private String judgeCase;
 
@@ -74,7 +86,6 @@ public class Problem implements Serializable {
     /**
      * 是否删除
      */
-    @TableLogic(value="0",delval="1")
     private Integer isDelete;
 
     @TableField(exist = false)

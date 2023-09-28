@@ -7,6 +7,7 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 /**
  * 编辑请求
@@ -19,6 +20,6 @@ public class ProblemTestExampleRequest implements Serializable {
     /**
      * 样例（json 数组）
      */
-    private JudgeCase judgeCase;
+    private List<JudgeCase> judgeCase;
 
 }

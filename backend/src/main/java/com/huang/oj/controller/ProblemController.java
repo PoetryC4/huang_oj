@@ -12,21 +12,26 @@ import com.huang.oj.exception.BusinessException;
 import com.huang.oj.exception.ThrowUtils;
 import com.huang.oj.model.dto.post.PostAddRequest;
 import com.huang.oj.model.dto.post.PostEditRequest;
-import com.huang.oj.model.dto.post.PostQueryRequest;
 import com.huang.oj.model.dto.post.PostUpdateRequest;
-import com.huang.oj.model.entity.Post;
+import com.huang.oj.model.dto.problem.ProblemAddRequest;
+import com.huang.oj.model.dto.problem.ProblemQueryRequest;
+import com.huang.oj.model.dto.problem.ProblemTag;
+import com.huang.oj.model.dto.problem.ProblemUpdateRequest;
 import com.huang.oj.model.entity.Problem;
 import com.huang.oj.model.entity.User;
-import com.huang.oj.model.vo.PostVO;
+import com.huang.oj.model.vo.ProblemVO;
 import com.huang.oj.service.ProblemService;
 import com.huang.oj.service.UserService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+
+import static com.huang.oj.utils.SqlUtils.isAnyNull;
 
 /**
  * 帖子接口
@@ -52,30 +57,30 @@ public class ProblemController {
     /**
      * 创建
      *
-     * @param postAddRequest
+     * @param problemAddRequest
      * @param request
      * @return
      */
     @PostMapping("/add")
-    public BaseResponse<Long> addPost(@RequestBody PostAddRequest postAddRequest, HttpServletRequest request) {
-        if (postAddRequest == null) {
+    public BaseResponse<Long> addProblem(@RequestBody ProblemAddRequest problemAddRequest, HttpServletRequest request) {
+        if (problemAddRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         Problem problem = new Problem();
-        BeanUtils.copyProperties(postAddRequest, problem);
-        List<String> tags = postAddRequest.getTags();
-        if (tags != null) {
-            //problem.setTags(GSON.toJson(tags));
+        BeanUtils.copyProperties(problemAddRequest, problem);
+        ProblemTag tags = problemAddRequest.getTags();
+        if (!isAnyNull(tags.getDifficulty())) {
+            problem.setTags(GSON.toJson(tags));
         }
-        //problemService.validPost(problem, true);
+        problemService.validProblem(problem, true);
         User loginUser = userService.getLoginUser(request);
         problem.setUserId(loginUser.getId());
         problem.setDisLikeNum(0);
         problem.setThumbNum(0);
         boolean result = problemService.save(problem);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
-        long newPostId = problem.getId();
-        return ResultUtils.success(newPostId);
+        long newProblemId = problem.getId();
+        return ResultUtils.success(newProblemId);
     }
 
     /**
@@ -86,7 +91,7 @@ public class ProblemController {
      * @return
      */
     @PostMapping("/delete")
-    public BaseResponse<Boolean> deletePost(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request) {
+    public BaseResponse<Boolean> deleteProblem(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request) {
         if (deleteRequest == null || deleteRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -106,24 +111,24 @@ public class ProblemController {
     /**
      * 更新（仅管理员）
      *
-     * @param postUpdateRequest
+     * @param problemUpdateRequest
      * @return
      */
     @PostMapping("/update")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-    public BaseResponse<Boolean> updatePost(@RequestBody PostUpdateRequest postUpdateRequest) {
-        if (postUpdateRequest == null || postUpdateRequest.getId() <= 0) {
+    public BaseResponse<Boolean> updateProblem(@RequestBody ProblemUpdateRequest problemUpdateRequest) {
+        if (problemUpdateRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         Problem problem = new Problem();
-        BeanUtils.copyProperties(postUpdateRequest, problem);
-        List<String> tags = postUpdateRequest.getTags();
+        BeanUtils.copyProperties(problemUpdateRequest, problem);
+        ProblemTag tags = problemUpdateRequest.getTags();
         if (tags != null) {
-            //problem.setTags(GSON.toJson(tags));
+            problem.setTags(GSON.toJson(tags));
         }
         // 参数校验
-        //problemService.validPost(problem, false);
-        long id = postUpdateRequest.getId();
+        problemService.validProblem(problem, false);
+        long id = problemUpdateRequest.getId();
         // 判断是否存在
         Problem oldProblem = problemService.getById(id);
         ThrowUtils.throwIf(oldProblem == null, ErrorCode.NOT_FOUND_ERROR);
@@ -138,7 +143,7 @@ public class ProblemController {
      * @return
      */
     @GetMapping("/get/vo")
-    public BaseResponse<PostVO> getPostVOById(long id, HttpServletRequest request) {
+    public BaseResponse<ProblemVO> getProblemVOById(long id, HttpServletRequest request) {
         if (id <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -146,77 +151,72 @@ public class ProblemController {
         if (problem == null) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
         }
-        //return ResultUtils.success(problemService.getPostVO(problem, request));
-        return null;
+        return ResultUtils.success(problemService.getProblemVO(problem, request));
     }
 
     /**
      * 分页获取列表（封装类）
      *
-     * @param postQueryRequest
+     * @param problemQueryRequest
      * @param request
      * @return
      */
     @PostMapping("/list/page/vo")
-    public BaseResponse<Page<PostVO>> listPostVOByPage(@RequestBody PostQueryRequest postQueryRequest,
+    public BaseResponse<Page<ProblemVO>> listProblemVOByPage(@RequestBody ProblemQueryRequest problemQueryRequest,
             HttpServletRequest request) {
-        long current = postQueryRequest.getCurrent();
-        long size = postQueryRequest.getPageSize();
+        long current = problemQueryRequest.getCurrent();
+        long size = problemQueryRequest.getPageSize();
         // 限制爬虫
         ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
-        //Page<Post> postPage = problemService.page(new Page<>(current, size),
-        //        problemService.getQueryWrapper(postQueryRequest));
-        //return ResultUtils.success(problemService.getPostVOPage(postPage, request));
-        return null;
+        Page<Problem> problemPage = problemService.page(new Page<>(current, size),
+                problemService.getQueryWrapper(problemQueryRequest));
+        return ResultUtils.success(problemService.getProblemVOPage(problemPage, request));
     }
 
     /**
      * 分页获取当前用户创建的资源列表
      *
-     * @param postQueryRequest
+     * @param problemQueryRequest
      * @param request
      * @return
      */
     @PostMapping("/my/list/page/vo")
-    public BaseResponse<Page<PostVO>> listMyPostVOByPage(@RequestBody PostQueryRequest postQueryRequest,
+    public BaseResponse<Page<ProblemVO>> listMyProblemVOByPage(@RequestBody ProblemQueryRequest problemQueryRequest,
             HttpServletRequest request) {
-        if (postQueryRequest == null) {
+        if (problemQueryRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        User loginUser = userService.getLoginUser(request);
-        postQueryRequest.setUserId(loginUser.getId());
-        long current = postQueryRequest.getCurrent();
-        long size = postQueryRequest.getPageSize();
+        long current = problemQueryRequest.getCurrent();
+        long size = problemQueryRequest.getPageSize();
         // 限制爬虫
         ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
-        //Page<Post> postPage = problemService.page(new Page<>(current, size),
-        //        problemService.getQueryWrapper(postQueryRequest));
-        //return ResultUtils.success(problemService.getPostVOPage(postPage, request));
-        return null;
+        Page<Problem> problemPage = problemService.page(new Page<>(current, size),
+                problemService.getQueryWrapper(problemQueryRequest));
+        return ResultUtils.success(problemService.getProblemVOPage(problemPage, request));
     }
 
     /**
      * 编辑（用户）
      *
-     * @param postEditRequest
+     * @param problemUpdateRequest
      * @param request
      * @return
      */
     @PostMapping("/edit")
-    public BaseResponse<Boolean> editPost(@RequestBody PostEditRequest postEditRequest, HttpServletRequest request) {
-        if (postEditRequest == null || postEditRequest.getId() <= 0) {
+    public BaseResponse<Boolean> editProblem(@RequestBody ProblemUpdateRequest problemUpdateRequest, HttpServletRequest request) {
+        if (problemUpdateRequest == null || problemUpdateRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         Problem problem = new Problem();
-        BeanUtils.copyProperties(postEditRequest, problem);
-        List<String> tags = postEditRequest.getTags();
+        BeanUtils.copyProperties(problemUpdateRequest, problem);
+        ProblemTag tags = problemUpdateRequest.getTags();
         if (tags != null) {
-            //problem.setTags(GSON.toJson(tags));
+            problem.setTags(GSON.toJson(tags));
         }
         // 参数校验
-        //problemService.validPost(problem, false);
+        problemService.validProblem(problem, false);
         User loginUser = userService.getLoginUser(request);
-        long id = postEditRequest.getId();
+        long id = problemUpdateRequest.getId();
         // 判断是否存在
         Problem oldProblem = problemService.getById(id);
         ThrowUtils.throwIf(oldProblem == null, ErrorCode.NOT_FOUND_ERROR);

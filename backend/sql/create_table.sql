@@ -33,9 +33,11 @@ create table if not exists problem
 (
     id         bigint auto_increment comment 'id' primary key,
     title      varchar(512)                       null comment '题目标题',
+    solution    text                               null comment '官解',
     content    text                               null comment '内容',
-    judgeConfig       JSON                      null comment '标签列表（json 数组）',
-    judgeCase       JSON                      null comment '检测样例（json 数组）',
+    tags       JSON                      null comment '题目标签列表',
+    judgeConfig       JSON                      null comment '判题标签列表',
+    judgeCase       JSON                      null comment '检测样例',
     thumbNum   int      default 0                 not null comment '点赞数',
     disLikeNum  int      default 0                 not null comment '点踩数',
     userId     bigint                             not null comment '创建用户 id',

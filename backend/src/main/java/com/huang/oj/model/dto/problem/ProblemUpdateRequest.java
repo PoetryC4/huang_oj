@@ -17,6 +17,10 @@ import java.util.List;
  */
 @Data
 public class ProblemUpdateRequest implements Serializable {
+    /**
+     * id
+     */
+    private Long id;
 
     /**
      * 题目标题
@@ -29,6 +33,15 @@ public class ProblemUpdateRequest implements Serializable {
     private String content;
 
     /**
+     * 官解
+     */
+    private String solution;
+    /**
+     * 题目标签列表
+     */
+    private ProblemTag tags;
+
+    /**
      * 标签列表（json 数组）
      */
     private JudgeConfig judgeConfig;
@@ -36,7 +49,7 @@ public class ProblemUpdateRequest implements Serializable {
     /**
      * 样例（json 数组）
      */
-    private JudgeCase judgeCase;
+    private List<JudgeCase> judgeCase;
 
     /**
      * vip尊享?

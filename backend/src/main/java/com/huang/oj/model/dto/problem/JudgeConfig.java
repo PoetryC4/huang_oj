@@ -14,6 +14,14 @@ import java.io.Serializable;
 @Data
 public class JudgeConfig implements Serializable {
     /**
+     * 提示
+     */
+    private String hint;
+    /**
+     * 限制
+     */
+    private String[] constraints;//JSON
+    /**
      * 时间限制
      */
     private Long timeLimit;
@@ -26,9 +34,9 @@ public class JudgeConfig implements Serializable {
      */
     private Long stackLimit;
     /**
-     * 堆栈限制
+     * 提供样例数
      */
-    private int testCaseProvided;
+    private Integer testCaseProvided;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

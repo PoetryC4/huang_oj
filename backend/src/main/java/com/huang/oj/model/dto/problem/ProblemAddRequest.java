@@ -28,6 +28,15 @@ public class ProblemAddRequest implements Serializable {
     private String content;
 
     /**
+     * 官解
+     */
+    private String solution;
+    /**
+     * 题目标签列表
+     */
+    private ProblemTag tags;
+
+    /**
      * 标签列表（json 数组）
      */
     private JudgeConfig judgeConfig;
@@ -35,7 +44,7 @@ public class ProblemAddRequest implements Serializable {
     /**
      * 样例（json 数组）
      */
-    private JudgeCase judgeCase;
+    private List<JudgeCase> judgeCase;
 
     /**
      * 创建用户 id
