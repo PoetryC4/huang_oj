@@ -72,7 +72,7 @@ public class SubmissionVO implements Serializable {
         BeanUtils.copyProperties(submissionVO, submission);
         JudgeInfo judgeInfo1 = submissionVO.getJudgeInfo();
         if (judgeInfo1 != null) {
-            submission.setJudgeInfo(judgeInfo1.toString());
+            submission.setJudgeInfo(com.alibaba.fastjson2.JSON.toJSONString(judgeInfo1));
         }
         return submission;
     }

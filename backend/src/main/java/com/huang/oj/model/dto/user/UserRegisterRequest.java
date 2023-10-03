@@ -1,6 +1,7 @@
 package com.huang.oj.model.dto.user;
 
 import java.io.Serializable;
+
 import lombok.Data;
 
 /**
@@ -21,4 +22,6 @@ public class UserRegisterRequest implements Serializable {
     private String checkPassword;
 
     private String userEmail;
+
+    private String emailVerifyCode;
 }

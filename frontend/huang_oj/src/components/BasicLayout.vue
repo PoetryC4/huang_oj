@@ -1,10 +1,10 @@
 <template>
   <div id="basic_layout">
     <a-layout style="height: 400px">
-      <a-layout-header class="header">
+      <a-layout-header class="header" v-if="route.meta?.basicLayout || false">
         <a-row class="grid-demo" style="margin-bottom: 16px">
           <a-col :flex="3">
-            <GlobalHeader v-if="!route.fullPath.startsWith('/user')" />
+            <GlobalHeader />
           </a-col>
           <a-col flex="1">
             <div>{{ store.state.user?.userInfo?.userName ?? "未登录" }}</div>
@@ -15,14 +15,16 @@
         <a-layout-sider
           theme="dark"
           class="sider"
-          v-if="!route.fullPath.startsWith('/user')"
+          v-if="route.meta?.basicLayout || false"
           >Sider
         </a-layout-sider>
         <a-layout-content class="content">
           <router-view />
         </a-layout-content>
       </a-layout>
-      <a-layout-footer class="footer">Footer</a-layout-footer>
+      <a-layout-footer class="footer" v-if="route.meta?.basicLayout || false"
+        >Footer</a-layout-footer
+      >
     </a-layout>
   </div>
 </template>
@@ -32,7 +34,6 @@
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
   color: #2c3e50;
 }
 
@@ -67,7 +68,7 @@
 <script setup lang="ts">
 import GlobalHeader from "@/components/GlobalHeader.vue";
 import store from "@/store";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 const route = useRoute();
 </script>

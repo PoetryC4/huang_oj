@@ -1,5 +1,6 @@
 package com.huang.oj.controller;
 
+import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.gson.Gson;
 import com.huang.oj.annotation.AuthCheck;
@@ -13,10 +14,7 @@ import com.huang.oj.exception.ThrowUtils;
 import com.huang.oj.model.dto.post.PostAddRequest;
 import com.huang.oj.model.dto.post.PostEditRequest;
 import com.huang.oj.model.dto.post.PostUpdateRequest;
-import com.huang.oj.model.dto.problem.ProblemAddRequest;
-import com.huang.oj.model.dto.problem.ProblemQueryRequest;
-import com.huang.oj.model.dto.problem.ProblemTag;
-import com.huang.oj.model.dto.problem.ProblemUpdateRequest;
+import com.huang.oj.model.dto.problem.*;
 import com.huang.oj.model.entity.Problem;
 import com.huang.oj.model.entity.User;
 import com.huang.oj.model.vo.ProblemVO;
@@ -68,9 +66,17 @@ public class ProblemController {
         }
         Problem problem = new Problem();
         BeanUtils.copyProperties(problemAddRequest, problem);
-        ProblemTag tags = problemAddRequest.getTags();
-        if (!isAnyNull(tags.getDifficulty())) {
-            problem.setTags(GSON.toJson(tags));
+        JudgeConfig judgeConfig1 = problemAddRequest.getJudgeConfig();
+        if (judgeConfig1 != null) {
+            problem.setJudgeConfig(JSON.toJSONString(judgeConfig1));
+        }
+        ProblemTag problemTag1 = problemAddRequest.getTags();
+        if (problemTag1 != null) {
+            problem.setTags(JSON.toJSONString(problemTag1));
+        }
+        List<JudgeCase> judgeCases1 = problemAddRequest.getJudgeCase();
+        if (judgeCases1 != null) {
+            problem.setJudgeCase(com.alibaba.fastjson2.JSON.toJSONString(judgeCases1));
         }
         problemService.validProblem(problem, true);
         User loginUser = userService.getLoginUser(request);
@@ -122,9 +128,17 @@ public class ProblemController {
         }
         Problem problem = new Problem();
         BeanUtils.copyProperties(problemUpdateRequest, problem);
-        ProblemTag tags = problemUpdateRequest.getTags();
-        if (tags != null) {
-            problem.setTags(GSON.toJson(tags));
+        JudgeConfig judgeConfig1 = problemUpdateRequest.getJudgeConfig();
+        if (judgeConfig1 != null) {
+            problem.setJudgeConfig(JSON.toJSONString(judgeConfig1));
+        }
+        ProblemTag problemTag1 = problemUpdateRequest.getTags();
+        if (problemTag1 != null) {
+            problem.setTags(JSON.toJSONString(problemTag1));
+        }
+        List<JudgeCase> judgeCases1 = problemUpdateRequest.getJudgeCase();
+        if (judgeCases1 != null) {
+            problem.setJudgeCase(com.alibaba.fastjson2.JSON.toJSONString(judgeCases1));
         }
         // 参数校验
         problemService.validProblem(problem, false);
@@ -167,29 +181,7 @@ public class ProblemController {
         long current = problemQueryRequest.getCurrent();
         long size = problemQueryRequest.getPageSize();
         // 限制爬虫
-        ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
-        Page<Problem> problemPage = problemService.page(new Page<>(current, size),
-                problemService.getQueryWrapper(problemQueryRequest));
-        return ResultUtils.success(problemService.getProblemVOPage(problemPage, request));
-    }
-
-    /**
-     * 分页获取当前用户创建的资源列表
-     *
-     * @param problemQueryRequest
-     * @param request
-     * @return
-     */
-    @PostMapping("/my/list/page/vo")
-    public BaseResponse<Page<ProblemVO>> listMyProblemVOByPage(@RequestBody ProblemQueryRequest problemQueryRequest,
-            HttpServletRequest request) {
-        if (problemQueryRequest == null) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
-        }
-        long current = problemQueryRequest.getCurrent();
-        long size = problemQueryRequest.getPageSize();
-        // 限制爬虫
-        ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
+        ThrowUtils.throwIf(size > 25, ErrorCode.PARAMS_ERROR);
         Page<Problem> problemPage = problemService.page(new Page<>(current, size),
                 problemService.getQueryWrapper(problemQueryRequest));
         return ResultUtils.success(problemService.getProblemVOPage(problemPage, request));
@@ -203,6 +195,7 @@ public class ProblemController {
      * @return
      */
     @PostMapping("/edit")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Boolean> editProblem(@RequestBody ProblemUpdateRequest problemUpdateRequest, HttpServletRequest request) {
         if (problemUpdateRequest == null || problemUpdateRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);

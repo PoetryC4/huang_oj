@@ -13,6 +13,7 @@ import com.huang.oj.model.enums.UserRoleEnum;
 import com.huang.oj.model.vo.LoginUserVO;
 import com.huang.oj.model.vo.UserVO;
 import com.huang.oj.service.UserService;
+import com.huang.oj.utils.EmailCodeUtils;
 import com.huang.oj.utils.SqlUtils;
 import com.huang.oj.model.dto.user.UserQueryRequest;
 
@@ -45,9 +46,9 @@ import static com.huang.oj.utils.EncryptionUtils.getRandomString;
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
     @Override
-    public long userRegister(String userAccount, String userPassword, String checkPassword, String userEmail) {
+    public long userRegister(String userAccount, String userPassword, String checkPassword, String userEmail, String emailVerifyCode) {
         // 1. 校验
-        if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword, userEmail)) {
+        if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword, userEmail, emailVerifyCode)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数为空");
         }
         if (userAccount.length() < 4) {
@@ -72,6 +73,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (!matcher.find()) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "邮箱格式错误");
         }
+        EmailCodeUtils.CodeEmailPair codeEmailPair = EmailCodeUtils.getPair(userEmail);
+        if (codeEmailPair == null || System.currentTimeMillis() - codeEmailPair.getCreateTime() >= 300 * 1000) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "验证码过期或未发送验证码");
+        } else if (!Objects.equals(codeEmailPair.getVerificationCode(), emailVerifyCode)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "验证码不正确");
+        }
         synchronized (userAccount.intern()) {
             // 账户不能重复
             QueryWrapper<User> queryWrapper = new QueryWrapper<>();
@@ -79,6 +86,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             long count = this.baseMapper.selectCount(queryWrapper);
             if (count > 0) {
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号重复");
+            }
+            QueryWrapper<User> queryWrapper1 = new QueryWrapper<>();
+            queryWrapper1.eq("userEmail", userEmail);
+            long count1 = this.baseMapper.selectCount(queryWrapper1);
+            if (count1 > 0) {
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "邮箱重复");
             }
             // 2. 加密
             String salt = getRandomString(12);
@@ -93,6 +106,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             if (!saveResult) {
                 throw new BusinessException(ErrorCode.SYSTEM_ERROR, "注册失败，数据库错误");
             }
+            EmailCodeUtils.removePair(userEmail);
             return user.getId();
         }
     }
@@ -114,7 +128,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             QueryWrapper<User> queryWrapper1 = new QueryWrapper<>();
             queryWrapper1.eq("userAccount", userAccount);
             User user1 = this.baseMapper.selectOne(queryWrapper1);
-            if (user1.getId() == null) {
+            if (user1 == null || user1.getId() == null) {
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "账户不存在");
             }
             String encryptPassword = DigestUtils.md5DigestAsHex((user1.getUserSalt() + userPassword).getBytes());
@@ -130,6 +144,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             }
             // 3. 记录用户的登录态
             request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, user);
+            System.out.println("skjhdciuhsukdhcukh0:" + request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE));
             return this.getLoginUserVO(user);
         } else {
 
@@ -148,7 +163,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             QueryWrapper<User> queryWrapper1 = new QueryWrapper<>();
             queryWrapper1.eq("userEmail", userEmail);
             User user1 = this.baseMapper.selectOne(queryWrapper1);
-            if (user1.getId() == null) {
+            if (user1 == null || user1.getId() == null) {
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "账户不存在");
             }
             String encryptPassword = DigestUtils.md5DigestAsHex((user1.getUserSalt() + userPassword).getBytes());

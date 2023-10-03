@@ -4,7 +4,9 @@ import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.annotation.*;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.huang.oj.model.dto.problem.JudgeCase;
 import com.huang.oj.model.dto.problem.JudgeConfig;
+import com.huang.oj.model.dto.problem.ProblemTag;
 import com.huang.oj.model.entity.Post;
 import com.huang.oj.model.entity.Problem;
 import lombok.Data;
@@ -40,7 +42,7 @@ public class ProblemVO implements Serializable {
     /**
      * 题目标签列表
      */
-    private String tags;
+    private ProblemTag tags;
 
     /**
      * 内容
@@ -51,6 +53,11 @@ public class ProblemVO implements Serializable {
      * 标签列表（json 数组）
      */
     private JudgeConfig judgeConfig;
+
+    /**
+     * 样例（json 数组）
+     */
+    private List<JudgeCase> judgeCase;
     /**
      * 通过数
      */
@@ -93,6 +100,10 @@ public class ProblemVO implements Serializable {
      * 用户
      */
     private UserVO userVO;
+    /**
+     * 是否已解决
+     */
+    private Integer isSolved;
 
     public static Problem voToObj(ProblemVO problemVO) {
         if (problemVO == null) {
@@ -102,7 +113,15 @@ public class ProblemVO implements Serializable {
         BeanUtils.copyProperties(problemVO, problem);
         JudgeConfig judgeConfig1 = problemVO.getJudgeConfig();
         if (judgeConfig1 != null) {
-            problem.setJudgeConfig(judgeConfig1.toString());
+            problem.setJudgeConfig(com.alibaba.fastjson2.JSON.toJSONString(judgeConfig1));
+        }
+        ProblemTag problemTag1 = problemVO.getTags();
+        if (problemTag1 != null) {
+            problem.setTags(com.alibaba.fastjson2.JSON.toJSONString(problemTag1));
+        }
+        List<JudgeCase> judgeCases1 = problemVO.getJudgeCase();
+        if (judgeCases1 != null) {
+            problem.setJudgeCase(com.alibaba.fastjson2.JSON.toJSONString(judgeCases1));
         }
         return problem;
     }
@@ -122,6 +141,14 @@ public class ProblemVO implements Serializable {
         String judgeConfig1 = problem.getJudgeConfig();
         if (StringUtils.isNotBlank(judgeConfig1)) {
             problemVO.setJudgeConfig(JSON.parseObject(judgeConfig1, JudgeConfig.class));
+        }
+        String problemTag1 = problem.getTags();
+        if (StringUtils.isNotBlank(problemTag1)) {
+            problemVO.setTags(JSON.parseObject(problemTag1, ProblemTag.class));
+        }
+        String judgeCases1 = problem.getJudgeCase();
+        if (StringUtils.isNotBlank(judgeCases1)) {
+            problemVO.setJudgeCase(JSON.parseArray(judgeCases1, JudgeCase.class));
         }
         return problemVO;
     }

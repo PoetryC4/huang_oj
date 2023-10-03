@@ -1,19 +1,23 @@
 package com.huang.oj.service.impl;
 
-import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.gson.Gson;
 import com.huang.oj.common.ErrorCode;
 import com.huang.oj.constant.CommonConstant;
+import com.huang.oj.constant.UserConstant;
 import com.huang.oj.exception.BusinessException;
 import com.huang.oj.exception.ThrowUtils;
 import com.huang.oj.mapper.ProblemMapper;
+import com.huang.oj.mapper.SubmissionMapper;
 import com.huang.oj.model.dto.problem.JudgeConfig;
 import com.huang.oj.model.dto.problem.ProblemQueryRequest;
 import com.huang.oj.model.entity.Problem;
+import com.huang.oj.model.entity.Submission;
 import com.huang.oj.model.entity.User;
+import com.huang.oj.model.enums.SubmissionStatusEnum;
 import com.huang.oj.model.vo.ProblemVO;
 import com.huang.oj.model.vo.UserVO;
 import com.huang.oj.service.ProblemService;
@@ -25,7 +29,9 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -46,6 +52,9 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     @Resource
     private ProblemMapper problemMapper;
 
+    @Resource
+    private SubmissionMapper submissionMapper;
+
 
     @Override
     public void validProblem(Problem problem, boolean add) {
@@ -56,12 +65,12 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
         String content = problem.getContent();
         String solution = problem.getSolution();
         String tags = problem.getTags();
-        JudgeConfig judgeConfig = JSON.parseObject(problem.getJudgeConfig(), JudgeConfig.class);
+        JudgeConfig judgeConfig = JSONObject.parseObject(problem.getJudgeConfig(), JudgeConfig.class);
         // 创建时，参数不能为空
         if (add) {
-            ThrowUtils.throwIf(StringUtils.isAnyBlank(title, content, tags) && SqlUtils.isAnyNull(judgeConfig.getMemoryLimit(), judgeConfig.getStackLimit(), judgeConfig.getTimeLimit()), ErrorCode.PARAMS_ERROR);
+            ThrowUtils.throwIf(StringUtils.isAnyBlank(title, content, tags) || SqlUtils.isAnyNull(judgeConfig, judgeConfig.getMemoryLimit(), judgeConfig.getStackLimit(), judgeConfig.getTimeLimit()), ErrorCode.PARAMS_ERROR);
         }
-        // 有参数则校验
+        //有参数则校验
         if (StringUtils.isNotBlank(title) && title.length() > 80) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "标题过长");
         }
@@ -118,12 +127,38 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
         UserVO userVO = userService.getUserVO(user);
         problemVO.setUserVO(userVO);
 
+        User loginUser = null;
+        Object userObj = request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+        if (userObj != null) {
+            loginUser = userService.getLoginUser(request);
+            if (!userService.isAdmin(loginUser)) {
+                problemVO.setJudgeCase(null);
+            }
+        }
+        if (loginUser == null || loginUser.getId() == null) {
+            problemVO.setIsSolved(0);
+        } else {
+            QueryWrapper<Submission> queryWrapper1 = new QueryWrapper<>();
+            queryWrapper1.eq("userId", loginUser.getId());
+            long count1 = submissionMapper.selectCount(queryWrapper1);
+            QueryWrapper<Submission> queryWrapper2 = new QueryWrapper<>();
+            queryWrapper2.eq("userId", loginUser.getId());
+            queryWrapper2.eq("judgeStatus", SubmissionStatusEnum.SUCCESS.getValue());
+            long count2 = submissionMapper.selectCount(queryWrapper2);
+            if (count2 > 0) {
+                problemVO.setIsSolved(1);
+            } else if (count1 > 0) {
+                problemVO.setIsSolved(-1);
+            } else {
+                problemVO.setIsSolved(0);
+            }
+        }
         Long problemId = problem.getId();
         Long submitData = problemMapper.getSubmitTimes(problemId);
         Long submitAc = problemMapper.getSubmitAccepted(problemId);
         problemVO.setAccpetedCount(submitAc);
         problemVO.setSubmittedCount(submitData);
-        if(Objects.equals(.0, Double.parseDouble(submitData + ""))) {
+        if (Objects.equals(.0, Double.parseDouble(submitData + ""))) {
             problemVO.setAcceptance(.0);
         } else {
             problemVO.setAcceptance(Double.parseDouble(submitAc + "") / Double.parseDouble(submitData + ""));
@@ -139,7 +174,16 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
         if (CollectionUtils.isEmpty(problemList)) {
             return problemVOPage;
         }
+        User loginUser = null;
+        Object userObj = request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+        if (userObj != null) {
+            loginUser = userService.getLoginUser(request);
+        }
+
+        final boolean isAdmin = userService.isAdmin(loginUser);
+        final boolean isLoggedin = loginUser == null || loginUser.getId() == null;
         // 填充信息
+        User finalLoginUser = loginUser;
         List<ProblemVO> problemVOList = problemList.stream().map(problem -> {
             ProblemVO problemVO = ProblemVO.objToVo(problem);
 
@@ -151,12 +195,34 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
             UserVO userVO = userService.getUserVO(user);
             problemVO.setUserVO(userVO);
 
+            if (isLoggedin) {
+                problemVO.setIsSolved(0);
+                if (!isAdmin) {
+                    problemVO.setJudgeCase(null);
+                }
+            } else {
+                QueryWrapper<Submission> queryWrapper1 = new QueryWrapper<>();
+                queryWrapper1.eq("userId", finalLoginUser.getId());
+                long count1 = submissionMapper.selectCount(queryWrapper1);
+                QueryWrapper<Submission> queryWrapper2 = new QueryWrapper<>();
+                queryWrapper2.eq("userId", finalLoginUser.getId());
+                queryWrapper2.eq("judgeStatus", SubmissionStatusEnum.SUCCESS.getValue());
+                long count2 = submissionMapper.selectCount(queryWrapper2);
+                if (count2 > 0) {
+                    problemVO.setIsSolved(1);
+                } else if (count1 > 0) {
+                    problemVO.setIsSolved(-1);
+                } else {
+                    problemVO.setIsSolved(0);
+                }
+            }
+
             Long problemId = problem.getId();
             Long submitData = problemMapper.getSubmitTimes(problemId);
             Long submitAc = problemMapper.getSubmitAccepted(problemId);
             problemVO.setAccpetedCount(submitAc);
             problemVO.setSubmittedCount(submitData);
-            if(Objects.equals(.0, Double.parseDouble(submitData + ""))) {
+            if (Objects.equals(.0, Double.parseDouble(submitData + ""))) {
                 problemVO.setAcceptance(.0);
             } else {
                 problemVO.setAcceptance(Double.parseDouble(submitAc + "") / Double.parseDouble(submitData + ""));

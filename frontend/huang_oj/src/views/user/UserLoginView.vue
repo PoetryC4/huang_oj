@@ -80,7 +80,11 @@
             />
           </a-form-item>
           <a-form-item>
-            <a-button html-type="submit">登录</a-button>
+            <a-button
+              html-type="submit"
+              style="right: 0; left: 0; top: 0; bottom: 0; margin: auto"
+              >登录
+            </a-button>
           </a-form-item>
         </a-form>
       </a-tab-pane>
@@ -89,17 +93,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from "vue";
+import { reactive, ref } from "vue";
 import { UserControllerService } from "@/api";
 import { useRoute, useRouter } from "vue-router";
 import store from "@/store";
+import { Notification } from "@arco-design/web-vue";
 
 const router = useRouter();
 const route = useRoute();
-
-const curPath = computed(() => {
-  return route.fullPath;
-});
 
 const state = reactive({
   formDataUserAccount: {
@@ -142,6 +143,14 @@ async function handleLogin() {
       userEmail: "",
     });
   } else {
+    if (!isValidEmail(state.formDataUserEmail.userEmail)) {
+      Notification.error({
+        title: "警告",
+        content: "邮箱格式不正确!",
+        closable: true,
+      });
+      return;
+    }
     res = await UserControllerService.userLoginUsingPost({
       ...state.formDataUserEmail,
       isEmail: true,
@@ -150,8 +159,10 @@ async function handleLogin() {
   }
   if (res.code !== null && res.code === 1) {
     console.log("登录成功");
-    console.log(res.data);
-    await store.dispatch("user/getLoginUser", { ...res.data });
+    await store.dispatch("user/getLoginUser", {
+      ...res.data,
+      loginDate: new Date(),
+    });
     let redirect = route.query.redirect;
     if (redirect == null) {
       redirect = "";

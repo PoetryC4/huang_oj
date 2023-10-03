@@ -10,6 +10,7 @@ import com.huang.oj.config.WxOpenConfig;
 import com.huang.oj.constant.UserConstant;
 import com.huang.oj.exception.BusinessException;
 import com.huang.oj.exception.ThrowUtils;
+import com.huang.oj.service.EmailService;
 import com.huang.oj.service.UserService;
 import com.huang.oj.model.dto.user.UserAddRequest;
 import com.huang.oj.model.dto.user.UserLoginRequest;
@@ -22,6 +23,8 @@ import com.huang.oj.model.vo.LoginUserVO;
 import com.huang.oj.model.vo.UserVO;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -42,18 +45,11 @@ import org.springframework.web.bind.annotation.RestController;
 import static com.huang.oj.utils.EncryptionUtils.getRandomString;
 /**
  * {
- *     "userAccount":"huang",
- *     "userPassword":"12345678",
- *     "checkPassword":"12345678",
- *     "userEmail":"3@ex.com"
+ * "userAccount":"huang",
+ * "userPassword":"12345678",
+ * "checkPassword":"12345678",
+ * "userEmail":"3@ex.com"
  * }
- */
-
-/**
- * 用户接口
- *
- * @author <a href="https://github.com/liyupi">程序员鱼皮</a>
- * @from <a href="https://yupi.icu">编程导航知识星球</a>
  */
 @RestController
 @RequestMapping("/user")
@@ -65,6 +61,9 @@ public class UserController {
 
     @Resource
     private WxOpenConfig wxOpenConfig;
+
+    @Resource
+    private EmailService emailService;
 
     // region 登录相关
 
@@ -83,10 +82,11 @@ public class UserController {
         String userPassword = userRegisterRequest.getUserPassword();
         String checkPassword = userRegisterRequest.getCheckPassword();
         String userEmail = userRegisterRequest.getUserEmail();
-        if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword, userEmail)) {
-            return null;
+        String emailVerifyCode = userRegisterRequest.getEmailVerifyCode();
+        if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword, userEmail, emailVerifyCode)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        long result = userService.userRegister(userAccount, userPassword, checkPassword, userEmail);
+        long result = userService.userRegister(userAccount, userPassword, checkPassword, userEmail, emailVerifyCode);
         return ResultUtils.success(result);
     }
 
@@ -107,19 +107,17 @@ public class UserController {
         String userEmail = userLoginRequest.getUserEmail();
         Boolean isEmail = userLoginRequest.getIsEmail();
         if (isEmail) {
-            log.info("1");
             if (StringUtils.isAnyBlank(userEmail, userPassword)) {
                 throw new BusinessException(ErrorCode.PARAMS_ERROR);
             }
             LoginUserVO loginUserVO = userService.userLogin("", userPassword, userEmail, request);
             return ResultUtils.success(loginUserVO);
         } else {
-            log.info(userLoginRequest.toString());
             if (StringUtils.isAnyBlank(userAccount, userPassword)) {
                 throw new BusinessException(ErrorCode.PARAMS_ERROR);
             }
             LoginUserVO loginUserVO = userService.userLogin(userAccount, userPassword, "", request);
-            log.info(loginUserVO.toString());
+            System.out.println("skjhdciuhsukdhcukh1:"+request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE));
             return ResultUtils.success(loginUserVO);
         }
     }
@@ -333,5 +331,31 @@ public class UserController {
         boolean result = userService.updateById(user);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         return ResultUtils.success(true);
+    }
+
+
+    /**
+     * 根据 id 获取用户（仅管理员）
+     *
+     * @param userEmail
+     * @param request
+     * @return
+     */
+    @GetMapping("/sendCode")
+    public BaseResponse<String> sendVerifyCode(String userEmail, HttpServletRequest request) {
+        String regex = "^[A-Za-z0-9+_.-]+@(.+)$";
+
+        // 编译正则表达式
+        Pattern pattern = Pattern.compile(regex);
+
+        // 创建Matcher对象
+        Matcher matcher = pattern.matcher(userEmail);
+
+        // 使用find()方法查找匹配项
+        if (!matcher.find()) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "邮箱格式错误");
+        }
+        emailService.sendVerificationCode(userEmail);
+        return ResultUtils.success("验证码已发送，请检查您的邮箱。");
     }
 }

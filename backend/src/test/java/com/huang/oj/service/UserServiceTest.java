@@ -23,7 +23,7 @@ public class UserServiceTest {
         String userPassword = "123456";
         String checkPassword = "123456";
         try {
-            long result = userService.userRegister(userAccount, userPassword, checkPassword, "abc");
+            long result = userService.userRegister(userAccount, userPassword, checkPassword, "abc", "123456");
             Assertions.assertEquals(-1, result);/*
             userAccount = "yu";
             result = userService.userRegister(userAccount, userPassword, checkPassword, "abx");

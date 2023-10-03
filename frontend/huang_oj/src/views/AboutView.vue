@@ -1,5 +1,9 @@
 <template>
-  <div class="about">
-    <h1>This is an about page</h1>
-  </div>
+  <div id="about">This is about page;</div>
 </template>
+<script setup lang="ts"></script>
+<style scoped>
+#about {
+  text-align: center;
+}
+</style>

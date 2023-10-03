@@ -22,11 +22,11 @@ router.beforeEach(async (to, from, next) => {
       if (store.state.user?.userInfo?.userRole === roleEnum.DEFAULT_USER) {
         next("/noAuth");
       } else if (store.state.user?.userInfo?.userRole === roleEnum.NOT_LOGIN) {
-        next(`/user/login?redirect=${to.fullPath}`); //todo 登录页面
+        next(`/user/login?redirect=${to.fullPath}`);
       }
       return;
     } else if (to.meta?.access === roleEnum.DEFAULT_USER) {
-      next(`/user/login?redirect=${to.fullPath}`); //todo 登录页面
+      next(`/user/login?redirect=${to.fullPath}`);
       return;
     } else next();
   } else next();

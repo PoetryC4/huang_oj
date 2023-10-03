@@ -18,10 +18,6 @@ public class JudgeConfig implements Serializable {
      */
     private String hint;
     /**
-     * 限制
-     */
-    private String[] constraints;//JSON
-    /**
      * 时间限制
      */
     private Long timeLimit;
