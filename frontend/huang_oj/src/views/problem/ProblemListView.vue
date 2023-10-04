@@ -1,5 +1,49 @@
 <template>
   <div id="problem_list_view">
+    <a-row
+      style="display: flex; justify-content: space-between; flex-wrap: wrap"
+    >
+      <a-input
+        placeholder="Please enter something"
+        search-button
+        style="width: 400px; margin-left: 140px"
+        v-model="titleInput"
+        @press-enter="getProblemList"
+      >
+        <template #button-icon>
+          <icon-search />
+        </template>
+      </a-input>
+      <a-select
+        v-model="selectedDifficulty"
+        style="width: 200px"
+        placeholder="难度选择"
+        @change="getProblemList"
+      >
+        <a-option :value="0" style="color: rgb(137, 255, 83)">简单</a-option>
+        <a-option :value="1" style="color: rgb(229, 192, 44)">中等</a-option>
+        <a-option :value="2" style="color: rgb(255, 103, 83)">困难</a-option>
+      </a-select>
+      <a-select
+        v-model="selectedStatus"
+        style="width: 200px; margin-right: 140px"
+        placeholder="状态选择"
+        @change="getProblemList"
+      >
+        <a-option :value="-1">
+          <icon-question />
+          尝试过
+        </a-option>
+        <a-option :value="0">
+          <icon-minus />
+          未尝试过
+        </a-option>
+        <a-option :value="1">
+          <icon-check />
+          解答出
+        </a-option>
+      </a-select>
+    </a-row>
     <a-table :data="data.problemTable" stripe :pagination="false">
       <template #columns>
         <a-table-column title="状态" :width="90">
@@ -18,7 +62,7 @@
             <icon-lock v-else />
           </template>
         </a-table-column>
-        <a-table-column title="题目名称" :width="400" align="center">
+        <a-table-column title="题目名称" :width="220" align="center">
           <template #cell="{ record }">
             <a-button
               type="text"
@@ -29,6 +73,13 @@
             </a-button>
           </template>
         </a-table-column>
+        <a-table-column title="标签" :width="180" align="left">
+          <template #cell="{ record }">
+            <a-tag v-for="item of record.tags" :key="item" color="green">{{
+              item
+            }}</a-tag>
+          </template>
+        </a-table-column>
         <a-table-column title="通过率" :width="90">
           <template #cell="{ record }">
             {{ (record?.acceptance || 0) * 100 }}%
@@ -37,13 +88,13 @@
         <a-table-column title="难度" :width="90">
           <template #cell="{ record }">
             <div
-              v-if="record.tags.difficulty === 0"
+              v-if="record.difficulty === 0"
               style="color: rgb(137, 255, 83)"
             >
               简单
             </div>
             <div
-              v-else-if="record.tags.difficulty === 1"
+              v-else-if="record.difficulty === 1"
               style="color: rgb(229, 192, 44)"
             >
               中等
@@ -61,9 +112,13 @@
           </template>
         </a-table-column>
         <a-table-column
-          title="修改题目"
+          title="操作题目"
           :width="300"
-          v-if="curUser?.userRole || roleEnum.NOT_LOGIN === roleEnum.ADMIN"
+          v-if="
+            curUser?.userRole !== undefined &&
+            curUser?.userRole !== null &&
+            curUser?.userRole === roleEnum.ADMIN
+          "
         >
           <template #cell="{ record }">
             <a-button type="primary" @click="handleUpdateProblem(record.id)"
@@ -128,14 +183,19 @@ import {
   IconExperiment,
   IconSunFill,
   IconSend,
+  IconSearch,
+  IconMinus,
 } from "@arco-design/web-vue/es/icon";
 import { roleEnum } from "@/components/scripts/access/roleEnum";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
 
+const selectedStatus = ref(null);
+const selectedDifficulty = ref(null);
 const curUser = store.state.user?.userInfo;
 
+const titleInput = ref("");
 let curPage = ref(1);
 let pageSize = ref(8);
 let pageSizes = ref([8, 16, 24]);
@@ -149,6 +209,13 @@ const getProblemList = async () => {
   let res = await ProblemControllerService.listProblemVoByPageUsingPost({
     current: curPage.value,
     pageSize: pageSize.value,
+    title: titleInput.value,
+    status:
+      selectedStatus.value === null || curUser.userId > -1
+        ? null
+        : selectedStatus.value,
+    difficulty:
+      selectedDifficulty.value === null ? null : selectedDifficulty.value,
   });
   if (res.code !== 1) {
     Message.error("err" + res.message);
@@ -156,6 +223,9 @@ const getProblemList = async () => {
   }
   data.problemTable = res.data.records || [];
   data.problemCounts = parseInt(res.data.total);
+  if (Math.ceil(data.problemCounts / pageSize.value) < curPage.value) {
+    curPage.value = Math.ceil(data.problemCounts / pageSize.value);
+  }
 };
 
 const handleSizeChange = (val: number) => {

@@ -3,6 +3,7 @@ package com.huang.oj.mapper;
 import com.huang.oj.model.entity.Problem;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -16,6 +17,9 @@ public interface ProblemMapper extends BaseMapper<Problem> {
     Long getSubmitTimes(Long problemId);
 
     Long getSubmitAccepted(Long problemId);
+
+    List<Problem> getProblemQueryRes(long size, long offset, String title, Integer difficulty, Integer status, Long userId);
+    Integer getProblemQueryCount(long size, long offset, String title, Integer difficulty, Integer status, Long userId);
 }
 
 

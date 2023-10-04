@@ -1,35 +1,25 @@
 package com.huang.oj.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.huang.oj.annotation.AuthCheck;
 import com.huang.oj.common.BaseResponse;
 import com.huang.oj.common.DeleteRequest;
 import com.huang.oj.common.ErrorCode;
 import com.huang.oj.common.ResultUtils;
-import com.huang.oj.constant.UserConstant;
 import com.huang.oj.exception.BusinessException;
 import com.huang.oj.exception.ThrowUtils;
-import com.huang.oj.model.dto.post.PostEditRequest;
-import com.huang.oj.model.dto.problem.ProblemQueryRequest;
-import com.huang.oj.model.dto.problem.ProblemTag;
-import com.huang.oj.model.dto.problem.ProblemUpdateRequest;
 import com.huang.oj.model.dto.submission.ProblemSubmitQuest;
 import com.huang.oj.model.dto.submission.SubmissionQueryQuest;
-import com.huang.oj.model.entity.Problem;
 import com.huang.oj.model.entity.Submission;
 import com.huang.oj.model.entity.User;
 import com.huang.oj.model.enums.SubmissionStatusEnum;
-import com.huang.oj.model.vo.ProblemVO;
 import com.huang.oj.model.vo.SubmissionVO;
 import com.huang.oj.service.SubmissionService;
 import com.huang.oj.service.UserService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.List;
 
 /**
  * 帖子点赞接口

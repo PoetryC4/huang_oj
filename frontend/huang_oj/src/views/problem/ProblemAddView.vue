@@ -124,10 +124,7 @@
         />
       </a-form-item>
       <a-form-item field="difficulty" label="难度描述">
-        <a-radio-group
-          v-model="state.formDataProblem.tags.difficulty"
-          type="button"
-        >
+        <a-radio-group v-model="state.formDataProblem.difficulty" type="button">
           <a-radio :value="0">简单</a-radio>
           <a-radio :value="1">中等</a-radio>
           <a-radio :value="2">困难</a-radio>
@@ -135,7 +132,7 @@
       </a-form-item>
       <a-form-item field="tags.types" label="标签">
         <a-input-tag
-          v-model="state.formDataProblem.tags.types"
+          v-model="state.formDataProblem.tags"
           placeholder="输入题目类型"
         />
       </a-form-item>
@@ -214,10 +211,8 @@ const state = reactive({
       timeLimit: 0,
     },
     solution: "",
-    tags: {
-      difficulty: 0,
-      types: [],
-    },
+    difficulty: 0,
+    tags: [],
     title: "",
   },
 });
@@ -264,8 +259,8 @@ async function handleProblemFillIn(id: string) {
     state.formDataProblem.content = res.data.content;
     state.formDataProblem.solution = res.data.solution;
     state.formDataProblem.title = res.data.title;
-    state.formDataProblem.tags.difficulty = res.data.tags.difficulty;
-    state.formDataProblem.tags.types = res.data.tags.types;
+    state.formDataProblem.difficulty = res.data.difficulty;
+    state.formDataProblem.tags = res.data.tags;
     state.formDataProblem.judgeConfig.hint = res.data.judgeConfig.hint;
     state.formDataProblem.judgeConfig.timeLimit = parseInt(
       res.data.judgeConfig.timeLimit

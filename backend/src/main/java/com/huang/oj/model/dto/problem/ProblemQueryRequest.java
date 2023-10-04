@@ -26,19 +26,14 @@ public class ProblemQueryRequest extends PageRequest implements Serializable {
     private String title;
 
     /**
-     * 内容
+     * 状态
      */
-    private String content;
+    private Integer status;
 
     /**
-     * 创建时间
+     * 难度
      */
-    private Date createTime;
-
-    /**
-     * 更新时间
-     */
-    private Date updateTime;
+    private Integer difficulty;
 
     /**
      * vip尊享?

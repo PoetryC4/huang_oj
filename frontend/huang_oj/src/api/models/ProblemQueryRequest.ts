@@ -4,13 +4,12 @@
 /* eslint-disable */
 
 export type ProblemQueryRequest = {
-    content?: string;
-    createTime?: string;
     current?: number;
+    difficulty?: number;
     isVip?: number;
     pageSize?: number;
     sortField?: string;
     sortOrder?: string;
+    status?: string;
     title?: string;
-    updateTime?: string;
 };

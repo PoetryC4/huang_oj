@@ -31,10 +31,15 @@ public class ProblemAddRequest implements Serializable {
      * 官解
      */
     private String solution;
+
+    /**
+     * 难度
+     */
+    private Integer difficulty;
     /**
      * 题目标签列表
      */
-    private ProblemTag tags;
+    private List<String> tags;
 
     /**
      * 标签列表（json 数组）

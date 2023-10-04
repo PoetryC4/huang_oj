@@ -39,6 +39,11 @@ public class Problem implements Serializable {
     private String content;
 
     /**
+     * 难度
+     */
+    private Integer difficulty;
+
+    /**
      * 题目标签列表
      */
     private String tags;

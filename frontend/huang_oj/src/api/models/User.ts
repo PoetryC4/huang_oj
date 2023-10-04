@@ -7,6 +7,7 @@ export type User = {
     createTime?: string;
     id?: number;
     isDelete?: number;
+    isVip?: number;
     mpOpenId?: string;
     unionId?: string;
     updateTime?: string;

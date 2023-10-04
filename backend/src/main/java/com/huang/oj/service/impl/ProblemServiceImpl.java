@@ -97,20 +97,9 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
         String sortField = problemQueryRequest.getSortField();
         String sortOrder = problemQueryRequest.getSortOrder();
         String title = problemQueryRequest.getTitle();
-        String content = problemQueryRequest.getContent();
 
-        QueryWrapper<Problem> queryWrapper1 = new QueryWrapper<>();
-        // 尝试找id
-        if (StringUtils.isNotBlank(title)) {
-            queryWrapper1.eq("id", title);
-            if (problemMapper.selectCount(queryWrapper1) != 0) {
-                return queryWrapper1;
-            }
-        }
-
-        queryWrapper.like(StringUtils.isNotBlank(title), "title", title);
-        queryWrapper.like(StringUtils.isNotBlank(content), "content", content);
         queryWrapper.eq("isDelete", false);
+        queryWrapper.and(wrapper -> wrapper.eq(StringUtils.isNotBlank(title), "id", title).or().like(StringUtils.isNotBlank(title), "title", title).and(wrapper1 -> wrapper1.eq("isDelete", false)));
         queryWrapper.orderBy(SqlUtils.validSortField(sortField), sortOrder.equals(CommonConstant.SORT_ORDER_ASC),
                 sortField);
         return queryWrapper;
@@ -140,11 +129,10 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
         } else {
             QueryWrapper<Submission> queryWrapper1 = new QueryWrapper<>();
             queryWrapper1.eq("userId", loginUser.getId());
+            queryWrapper1.eq("problemId", problemVO.getId());
             long count1 = submissionMapper.selectCount(queryWrapper1);
-            QueryWrapper<Submission> queryWrapper2 = new QueryWrapper<>();
-            queryWrapper2.eq("userId", loginUser.getId());
-            queryWrapper2.eq("judgeStatus", SubmissionStatusEnum.SUCCESS.getValue());
-            long count2 = submissionMapper.selectCount(queryWrapper2);
+            queryWrapper1.eq("judgeStatus", SubmissionStatusEnum.SUCCESS.getValue());
+            long count2 = submissionMapper.selectCount(queryWrapper1);
             if (count2 > 0) {
                 problemVO.setIsSolved(1);
             } else if (count1 > 0) {
@@ -203,11 +191,10 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
             } else {
                 QueryWrapper<Submission> queryWrapper1 = new QueryWrapper<>();
                 queryWrapper1.eq("userId", finalLoginUser.getId());
+                queryWrapper1.eq("problemId", problemVO.getId());
                 long count1 = submissionMapper.selectCount(queryWrapper1);
-                QueryWrapper<Submission> queryWrapper2 = new QueryWrapper<>();
-                queryWrapper2.eq("userId", finalLoginUser.getId());
-                queryWrapper2.eq("judgeStatus", SubmissionStatusEnum.SUCCESS.getValue());
-                long count2 = submissionMapper.selectCount(queryWrapper2);
+                queryWrapper1.eq("judgeStatus", SubmissionStatusEnum.SUCCESS.getValue());
+                long count2 = submissionMapper.selectCount(queryWrapper1);
                 if (count2 > 0) {
                     problemVO.setIsSolved(1);
                 } else if (count1 > 0) {
@@ -233,6 +220,25 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
         return problemVOPage;
     }
 
+    public List<Problem> getProblemQueryRes(long current, long size, String title, Integer difficulty, Integer status, HttpServletRequest request) {
+
+        User loginUser = null;
+        Object userObj = request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+        if (userObj != null) {
+            loginUser = userService.getLoginUser(request);
+        }
+        long offset = Math.max(0, (current - 1)) * size;
+        return problemMapper.getProblemQueryRes(size, offset, title, difficulty, status, loginUser == null ? -1 : loginUser.getId());
+    }
+    public Integer getProblemQueryCount(long current, long size, String title, Integer difficulty, Integer status,HttpServletRequest request) {
+        User loginUser = null;
+        Object userObj = request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+        if (userObj != null) {
+            loginUser = userService.getLoginUser(request);
+        }
+        long offset = Math.max(0, (current - 1)) * size;
+        return problemMapper.getProblemQueryCount(size, offset, title, difficulty, status, loginUser == null ? -1 : loginUser.getId());
+    }
 }
 
 

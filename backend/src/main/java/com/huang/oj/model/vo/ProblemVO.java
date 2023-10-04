@@ -1,13 +1,9 @@
 package com.huang.oj.model.vo;
 
 import com.alibaba.fastjson.JSON;
-import com.baomidou.mybatisplus.annotation.*;
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.huang.oj.model.dto.problem.JudgeCase;
 import com.huang.oj.model.dto.problem.JudgeConfig;
-import com.huang.oj.model.dto.problem.ProblemTag;
-import com.huang.oj.model.entity.Post;
 import com.huang.oj.model.entity.Problem;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
@@ -42,7 +38,12 @@ public class ProblemVO implements Serializable {
     /**
      * 题目标签列表
      */
-    private ProblemTag tags;
+    private List<String> tags;
+
+    /**
+     * 难度
+     */
+    private Integer difficulty;
 
     /**
      * 内容
@@ -115,7 +116,7 @@ public class ProblemVO implements Serializable {
         if (judgeConfig1 != null) {
             problem.setJudgeConfig(com.alibaba.fastjson2.JSON.toJSONString(judgeConfig1));
         }
-        ProblemTag problemTag1 = problemVO.getTags();
+        List<String> problemTag1 = problemVO.getTags();
         if (problemTag1 != null) {
             problem.setTags(com.alibaba.fastjson2.JSON.toJSONString(problemTag1));
         }
@@ -144,7 +145,7 @@ public class ProblemVO implements Serializable {
         }
         String problemTag1 = problem.getTags();
         if (StringUtils.isNotBlank(problemTag1)) {
-            problemVO.setTags(JSON.parseObject(problemTag1, ProblemTag.class));
+            problemVO.setTags(JSON.parseArray(problemTag1, String.class));
         }
         String judgeCases1 = problem.getJudgeCase();
         if (StringUtils.isNotBlank(judgeCases1)) {

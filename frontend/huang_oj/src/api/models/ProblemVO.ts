@@ -3,8 +3,8 @@
 /* tslint:disable */
 /* eslint-disable */
 
+import type { JudgeCase } from './JudgeCase';
 import type { JudgeConfig } from './JudgeConfig';
-import type { ProblemTag } from './ProblemTag';
 import type { UserVO } from './UserVO';
 
 export type ProblemVO = {
@@ -12,14 +12,16 @@ export type ProblemVO = {
     accpetedCount?: number;
     content?: string;
     createTime?: string;
+    difficulty?: number;
     disLikeNum?: number;
     id?: number;
-    isSolved?: boolean;
+    isSolved?: number;
     isVip?: number;
+    judgeCase?: Array<JudgeCase>;
     judgeConfig?: JudgeConfig;
     solution?: string;
     submittedCount?: number;
-    tags?: ProblemTag;
+    tags?: Array<string>;
     thumbNum?: number;
     title?: string;
     updateTime?: string;

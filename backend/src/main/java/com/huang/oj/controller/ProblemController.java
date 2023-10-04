@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
 import java.util.List;
 
 import static com.huang.oj.utils.SqlUtils.isAnyNull;
@@ -70,7 +71,7 @@ public class ProblemController {
         if (judgeConfig1 != null) {
             problem.setJudgeConfig(JSON.toJSONString(judgeConfig1));
         }
-        ProblemTag problemTag1 = problemAddRequest.getTags();
+        List<String> problemTag1 = problemAddRequest.getTags();
         if (problemTag1 != null) {
             problem.setTags(JSON.toJSONString(problemTag1));
         }
@@ -132,7 +133,7 @@ public class ProblemController {
         if (judgeConfig1 != null) {
             problem.setJudgeConfig(JSON.toJSONString(judgeConfig1));
         }
-        ProblemTag problemTag1 = problemUpdateRequest.getTags();
+        List<String> problemTag1 = problemUpdateRequest.getTags();
         if (problemTag1 != null) {
             problem.setTags(JSON.toJSONString(problemTag1));
         }
@@ -177,13 +178,20 @@ public class ProblemController {
      */
     @PostMapping("/list/page/vo")
     public BaseResponse<Page<ProblemVO>> listProblemVOByPage(@RequestBody ProblemQueryRequest problemQueryRequest,
-            HttpServletRequest request) {
+                                                             HttpServletRequest request) {
         long current = problemQueryRequest.getCurrent();
         long size = problemQueryRequest.getPageSize();
+        Integer difficulty = problemQueryRequest.getDifficulty();
+        Integer status = problemQueryRequest.getStatus();
+        String title = problemQueryRequest.getTitle();
         // 限制爬虫
         ThrowUtils.throwIf(size > 25, ErrorCode.PARAMS_ERROR);
-        Page<Problem> problemPage = problemService.page(new Page<>(current, size),
-                problemService.getQueryWrapper(problemQueryRequest));
+        //Page<Problem> problemPage = problemService.page(new Page<>(current, size),
+        //        problemService.getQueryWrapper(problemQueryRequest));
+        Page<Problem> problemPage = new Page<>();
+        List<Problem> problemRes = problemService.getProblemQueryRes(current, size, title, difficulty, status, request);
+        problemPage.setRecords(problemRes);
+        problemPage.setTotal(problemService.getProblemQueryCount(current, size, title, difficulty, status, request));
         return ResultUtils.success(problemService.getProblemVOPage(problemPage, request));
     }
 
@@ -202,7 +210,7 @@ public class ProblemController {
         }
         Problem problem = new Problem();
         BeanUtils.copyProperties(problemUpdateRequest, problem);
-        ProblemTag tags = problemUpdateRequest.getTags();
+        List<String> tags = problemUpdateRequest.getTags();
         if (tags != null) {
             problem.setTags(GSON.toJson(tags));
         }

@@ -11,6 +11,7 @@ import com.huang.oj.model.vo.PostVO;
 import com.huang.oj.model.vo.ProblemVO;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
 * @author Administrator
@@ -53,4 +54,8 @@ public interface ProblemService extends IService<Problem> {
      */
     Page<ProblemVO> getProblemVOPage(Page<Problem> problemPage, HttpServletRequest request);
 
+
+    List<Problem> getProblemQueryRes(long current, long size, String title, Integer difficulty, Integer status,HttpServletRequest request);
+
+    Integer getProblemQueryCount(long current, long size, String title, Integer difficulty, Integer status,HttpServletRequest request);
 }
