@@ -80,9 +80,7 @@
             />
           </a-form-item>
           <a-form-item>
-            <a-button
-              html-type="submit"
-              style="right: 0; left: 0; top: 0; bottom: 0; margin: auto"
+            <a-button html-type="submit" style="inset: 0; margin: auto"
               >登录
             </a-button>
           </a-form-item>

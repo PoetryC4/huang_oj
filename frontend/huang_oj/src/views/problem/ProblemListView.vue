@@ -1,10 +1,16 @@
 <template>
   <div id="problem_list_view">
     <a-row
-      style="display: flex; justify-content: space-between; flex-wrap: wrap"
+      style="
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        margin-top: 30px;
+        margin-bottom: 30px;
+      "
     >
       <a-input
-        placeholder="Please enter something"
+        placeholder="请输入要搜索的内容"
         search-button
         style="width: 400px; margin-left: 140px"
         v-model="titleInput"
@@ -67,22 +73,27 @@
             <a-button
               type="text"
               long
-              @click="console.log(record)"
+              @click="handleGoToProblem(record.id)"
               style="left: 5px"
               >{{ record.id }} {{ record.title }}
             </a-button>
           </template>
         </a-table-column>
-        <a-table-column title="标签" :width="180" align="left">
+        <a-table-column title="标签" :width="150" align="left">
           <template #cell="{ record }">
-            <a-tag v-for="item of record.tags" :key="item" color="green">{{
-              item
-            }}</a-tag>
+            <a-tag v-for="item of record.tags" :key="item" color="green"
+              >{{ item }}
+            </a-tag>
           </template>
         </a-table-column>
         <a-table-column title="通过率" :width="90">
           <template #cell="{ record }">
             {{ (record?.acceptance || 0) * 100 }}%
+          </template>
+        </a-table-column>
+        <a-table-column title="创建日期" :width="90">
+          <template #cell="{ record }">
+            {{ moment(record?.createTime).format("YYYY-MM-DD") }}
           </template>
         </a-table-column>
         <a-table-column title="难度" :width="90">
@@ -188,6 +199,7 @@ import {
 } from "@arco-design/web-vue/es/icon";
 import { roleEnum } from "@/components/scripts/access/roleEnum";
 import { useRouter } from "vue-router";
+import moment from "moment";
 
 const router = useRouter();
 
@@ -254,7 +266,21 @@ async function handleDeleteProblem(id: string) {
   }
 }
 
+async function handleGoToProblem(id: string) {
+  router.push({
+    path: `/problem/details/${id}`,
+  });
+}
+
 onMounted(() => {
   getProblemList();
 });
 </script>
+
+<style scoped>
+#problem_list_view {
+  width: 80%;
+  inset: 0;
+  margin: auto;
+}
+</style>

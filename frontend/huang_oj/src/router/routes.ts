@@ -11,6 +11,7 @@ import UserRegisterView from "@/views/user/UserRegisterView.vue";
 import ProblemAddView from "@/views/problem/ProblemAddView.vue";
 import ProblemListView from "@/views/problem/ProblemListView.vue";
 import TestView from "@/views/TestView.vue";
+import ProblemDetailsView from "@/views/problem/ProblemDetailsView.vue";
 
 export const routes: Array<RouteRecordRaw> = [
   {
@@ -27,6 +28,16 @@ export const routes: Array<RouteRecordRaw> = [
     component: ProblemListView,
     meta: {
       access: roleEnum.NOT_LOGIN,
+    },
+  },
+  {
+    path: "/problem/details/:id",
+    name: "题目详情",
+    component: ProblemDetailsView,
+    props: true,
+    meta: {
+      access: roleEnum.NOT_LOGIN,
+      hideInMenu: true,
     },
   },
   {

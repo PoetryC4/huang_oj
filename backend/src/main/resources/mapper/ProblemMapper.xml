@@ -5,37 +5,46 @@
 <mapper namespace="com.huang.oj.mapper.ProblemMapper">
 
     <resultMap id="BaseResultMap" type="com.huang.oj.model.entity.Problem">
-            <id property="id" column="id" jdbcType="BIGINT"/>
-            <result property="title" column="title" jdbcType="VARCHAR"/>
-            <result property="solution" column="solution" jdbcType="VARCHAR"/>
-            <result property="content" column="content" jdbcType="VARCHAR"/>
-            <result property="tags" column="tags" jdbcType="VARCHAR"/>
-            <result property="judgeConfig" column="judgeConfig" jdbcType="VARCHAR"/>
-            <result property="judgeCase" column="judgeCase" jdbcType="VARCHAR"/>
-            <result property="thumbNum" column="thumbNum" jdbcType="INTEGER"/>
-            <result property="disLikeNum" column="disLikeNum" jdbcType="INTEGER"/>
-            <result property="userId" column="userId" jdbcType="BIGINT"/>
-            <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
-            <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
-            <result property="isVip" column="isVip" jdbcType="TINYINT"/>
-            <result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="title" column="title" jdbcType="VARCHAR"/>
+        <result property="solution" column="solution" jdbcType="VARCHAR"/>
+        <result property="content" column="content" jdbcType="VARCHAR"/>
+        <result property="tags" column="tags" jdbcType="VARCHAR"/>
+        <result property="judgeConfig" column="judgeConfig" jdbcType="VARCHAR"/>
+        <result property="judgeCase" column="judgeCase" jdbcType="VARCHAR"/>
+        <result property="thumbNum" column="thumbNum" jdbcType="INTEGER"/>
+        <result property="disLikeNum" column="disLikeNum" jdbcType="INTEGER"/>
+        <result property="userId" column="userId" jdbcType="BIGINT"/>
+        <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
+        <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
+        <result property="isVip" column="isVip" jdbcType="TINYINT"/>
+        <result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,title,solution,
+        id
+        ,title,solution,
         content,tags,judgeConfig,
         judgeCase,thumbNum,disLikeNum,
         userId,createTime,updateTime,
         isVip,isDelete
     </sql>
     <select id="getSubmitTimes" resultType="java.lang.Long">
-        SELECT COUNT(*) FROM submission WHERE problemId = #{problemId}
+        SELECT COUNT(*)
+        FROM submission
+        WHERE problemId = #{problemId}
     </select>
     <select id="getSubmitAccepted" resultType="java.lang.Long">
-        SELECT COUNT(*) FROM submission WHERE problemId = #{problemId} and judgeStatus = 3
+        SELECT COUNT(*)
+        FROM submission
+        WHERE problemId = #{problemId}
+          and judgeStatus = 3
     </select>
     <select id="getProblemQueryRes" resultType="com.huang.oj.model.entity.Problem">
-        SELECT distinct p.id as id,p.title as title,p.solution as solution,p.difficulty as difficulty,p.content as content,p.tags as tags,p.judgeConfig as judgeConfig,p.judgeCase as judgeCase,p.thumbNum as thumbNum,p.disLikeNum as disLikeNum,p.userId as userId,p.createTime as createTime,p.updateTime as updateTime,p.isVip as isVip, p.isDelete as isDelete
+        SELECT distinct p.id as id,p.title as title,p.solution as solution,p.difficulty as difficulty,p.content as
+        content,p.tags as tags,p.judgeConfig as judgeConfig,p.judgeCase as judgeCase,p.thumbNum as thumbNum,p.disLikeNum
+        as disLikeNum,p.userId as userId,p.createTime as createTime,p.updateTime as updateTime,p.isVip as isVip,
+        p.isDelete as isDelete
         from problem as p, (
         SELECT
         userId,
@@ -46,9 +55,14 @@
         WHEN judgeStatus = 3 THEN 1
         END AS judgeStatus
         FROM
-        submission
+        (SELECT
+        distinct s.userId,
+        problem.id as problemId,
+        s.judgeStatus
+        FROM problem
+        LEFT JOIN submission s on problem.isDelete = s.isDelete and problem.id = s.problemId) as t
         <if test="param6!=-1">
-            WHERE userId=#{param6}
+            WHERE userId=#{param6} or userId IS NULL
         </if>
         ) as s
         where p.isDelete = 0 and ((p.id = s.problemId
@@ -58,13 +72,16 @@
         <if test="param5!=null">
             and s.judgeStatus=#{param5}
         </if>
-        <if test="param3!=null">
+        <if test="param3 != null and param3 !=''.toString()">
             and p.title like CONCAT('%', #{param3}, '%')
         </if>
-        ) or
-        <if test="param3!=null">
+        )
+        <if test="param3 != null and param3 !=''.toString()">
+            or(
             p.id = #{param3}
-        </if>)
+            )
+        </if>
+        )
         limit #{param1} offset #{param2}
     </select>
     <select id="getProblemQueryCount" resultType="java.lang.Integer">
@@ -79,9 +96,14 @@
         WHEN judgeStatus = 3 THEN 1
         END AS judgeStatus
         FROM
-        submission
+        (SELECT
+        distinct s.userId,
+        problem.id as problemId,
+        s.judgeStatus
+        FROM problem
+        LEFT JOIN submission s on problem.isDelete = s.isDelete and problem.id = s.problemId) as t
         <if test="param6!=-1">
-            WHERE userId=#{param6}
+            WHERE userId=#{param6} or userId IS NULL
         </if>
         ) as s
         where p.isDelete = 0 and ((p.id = s.problemId
@@ -91,12 +113,15 @@
         <if test="param5!=null">
             and s.judgeStatus=#{param5}
         </if>
-        <if test="param3!=null">
+        <if test="param3 != null and param3 !=''.toString()">
             and p.title like CONCAT('%', #{param3}, '%')
         </if>
-        ) or
-        <if test="param3!=null">
+        )
+        <if test="param3 != null and param3 !=''.toString()">
+            or(
             p.id = #{param3}
-        </if>)
+            )
+        </if>
+            )
     </select>
 </mapper>
