@@ -2,7 +2,7 @@
   <div id="code_editor">
     <a-select
       style="margin-left: 50px"
-      v-model="langValue"
+      v-model="language"
       :style="{ width: '180px' }"
       placeholder="选择一门编程语言"
       @change="handleSelectChange"
@@ -20,11 +20,19 @@
 
 <script setup lang="ts">
 import * as monaco from "monaco-editor";
-import { defineProps, onMounted, ref, toRaw, withDefaults } from "vue";
+import {
+  defineProps,
+  onMounted,
+  ref,
+  toRaw,
+  withDefaults,
+  defineEmits,
+  computed,
+  nextTick,
+} from "vue";
 
 const codeEditorRef = ref();
 const codeEditor = ref();
-const langValue = ref("python");
 const langs = [
   {
     name: "bat",
@@ -81,25 +89,42 @@ const langs = [
 ];
 
 interface Props {
+  codeLanguage: string;
   value: string;
   handleChange: (v: string) => void;
+  handleLanguageChange: (v: string) => void;
+}
+
+interface Emits {
+  (e: "update:codeLanguage", v: string): void;
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  codeLanguage: "python",
   value: () => "",
   handleChange: (v: string) => {
     console.log(v);
   },
-  handleSelectChange: (v: string) => {
+  handleLanguageChange: (v: string) => {
     console.log(v);
+  },
+});
+const emit = defineEmits<Emits>();
+const language = computed({
+  get() {
+    return props.codeLanguage;
+  },
+  set(v: string) {
+    emit("update:codeLanguage", v);
   },
 });
 
 async function handleSelectChange(v: string) {
-  langValue.value = v;
+  props.handleLanguageChange(v);
+  emit("update:codeLanguage", v);
   monaco.editor.setModelLanguage(
     toRaw(codeEditor.value).getModel(),
-    langValue.value
+    language.value
   );
 }
 
@@ -107,7 +132,7 @@ onMounted(() => {
   // 初始化编辑器，确保dom已经渲染
   codeEditor.value = monaco.editor.create(codeEditorRef.value, {
     value: props.value, //编辑器初始显示文字
-    language: langValue.value, //此处使用的python，其他语言支持自行查阅demo
+    language: props.codeLanguage, //此处使用的python，其他语言支持自行查阅demo
     theme: "vs", //官方自带三种主题vs, hc-black, or vs-dark
     selectOnLineNumbers: true, //显示行号
     roundedSelection: false,

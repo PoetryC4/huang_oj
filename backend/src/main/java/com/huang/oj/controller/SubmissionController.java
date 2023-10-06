@@ -7,6 +7,8 @@ import com.huang.oj.common.ErrorCode;
 import com.huang.oj.common.ResultUtils;
 import com.huang.oj.exception.BusinessException;
 import com.huang.oj.exception.ThrowUtils;
+import com.huang.oj.judge.JudgeService;
+import com.huang.oj.judge.sandbox.model.JudgeResult;
 import com.huang.oj.model.dto.submission.ProblemSubmitQuest;
 import com.huang.oj.model.dto.submission.SubmissionQueryQuest;
 import com.huang.oj.model.entity.Submission;
@@ -38,6 +40,9 @@ public class SubmissionController {
     @Resource
     private UserService userService;
 
+    @Resource
+    private JudgeService judgeService;
+
     /**
      * 点赞 / 取消点赞
      *
@@ -46,7 +51,7 @@ public class SubmissionController {
      * @return resultNum 本次点赞变化数
      */
     @PostMapping("/add")
-    public BaseResponse<Long> doSubmit(@RequestBody ProblemSubmitQuest problemSubmitQuest,
+    public BaseResponse<JudgeResult> doSubmit(@RequestBody ProblemSubmitQuest problemSubmitQuest,
                                          HttpServletRequest request) {
         if (problemSubmitQuest == null || problemSubmitQuest.getProblemId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
@@ -63,7 +68,8 @@ public class SubmissionController {
         submission.setJudgeStatus(SubmissionStatusEnum.COMPILING.getValue());
         boolean save = submissionService.save(submission);
         ThrowUtils.throwIf(!save, ErrorCode.OPERATION_ERROR);
-        return ResultUtils.success(submission.getId());
+        JudgeResult judgeResult = judgeService.doJudge(submission.getId());
+        return ResultUtils.success(judgeResult);
     }
 
     /**

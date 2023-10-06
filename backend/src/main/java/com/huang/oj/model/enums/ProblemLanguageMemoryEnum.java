@@ -9,21 +9,26 @@ import java.util.stream.Collectors;
 /**
  * 用户角色枚举
  *
+ * @author <a href="https://github.com/liyupi">程序员鱼皮</a>
+ * @from <a href="https://yupi.icu">编程导航知识星球</a>
  */
-public enum SubmissionStatusEnum {
+public enum ProblemLanguageMemoryEnum {
 
-    SUBMITTING("提交中", 0),
-    COMPILING("编译中", 1),
-    RUNNING("运行中", 2),
-    JUDGING("判断中", 3),
-    FAILED("失败", 4),
-    SUCCESS("成功", 5);
+    C("C", 0),
+    CPLUSPLUS("C++", 0),
+    JAVA("Java", 50),
+    PYTHON("Python", 0),
+    PYTHON3("Python3", 0),
+    CSHARP("C#", 0),
+    JAVASCRIPT("JavaScript", 0),
+    TYPESCRIPT("TypeScript", 0),
+    PHP("PHP", 0);
 
     private final String text;
 
     private final Integer value;
 
-    SubmissionStatusEnum(String text, Integer value) {
+    ProblemLanguageMemoryEnum(String text, Integer value) {
         this.text = text;
         this.value = value;
     }
@@ -43,11 +48,11 @@ public enum SubmissionStatusEnum {
      * @param value
      * @return
      */
-    public static SubmissionStatusEnum getEnumByValue(Integer value) {
+    public static ProblemLanguageMemoryEnum getEnumByValue(String value) {
         if (ObjectUtils.isEmpty(value)) {
             return null;
         }
-        for (SubmissionStatusEnum anEnum : SubmissionStatusEnum.values()) {
+        for (ProblemLanguageMemoryEnum anEnum : ProblemLanguageMemoryEnum.values()) {
             if (anEnum.value.equals(value)) {
                 return anEnum;
             }

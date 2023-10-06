@@ -38,7 +38,7 @@
         SELECT COUNT(*)
         FROM submission
         WHERE problemId = #{problemId}
-          and judgeStatus = 3
+          and judgeStatus = 5
     </select>
     <select id="getProblemQueryRes" resultType="com.huang.oj.model.entity.Problem">
         SELECT distinct p.id as id,p.title as title,p.solution as solution,p.difficulty as difficulty,p.content as
@@ -51,8 +51,8 @@
         problemId,
         CASE
         WHEN userId IS NULL THEN 0
-        WHEN judgeStatus = 0 OR judgeStatus = 1 OR judgeStatus = 2 THEN -1
-        WHEN judgeStatus = 3 THEN 1
+        WHEN judgeStatus = 0 OR judgeStatus = 1 OR judgeStatus = 2 OR judgeStatus = 3 OR judgeStatus = 4 THEN -1
+        WHEN judgeStatus = 5 THEN 1
         END AS judgeStatus
         FROM
         (SELECT
@@ -92,8 +92,8 @@
         problemId,
         CASE
         WHEN userId IS NULL THEN 0
-        WHEN judgeStatus = 0 OR judgeStatus = 1 OR judgeStatus = 2 THEN -1
-        WHEN judgeStatus = 3 THEN 1
+        WHEN judgeStatus = 0 OR judgeStatus = 1 OR judgeStatus = 2 OR judgeStatus = 3 OR judgeStatus = 4 THEN -1
+        WHEN judgeStatus = 5 THEN 1
         END AS judgeStatus
         FROM
         (SELECT

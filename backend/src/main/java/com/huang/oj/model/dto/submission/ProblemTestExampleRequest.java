@@ -1,8 +1,9 @@
-package com.huang.oj.model.dto.problem;
+package com.huang.oj.model.dto.submission;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.huang.oj.model.dto.problem.JudgeCase;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -21,5 +22,11 @@ public class ProblemTestExampleRequest implements Serializable {
      * 样例（json 数组）
      */
     private List<JudgeCase> judgeCase;
+
+    /**
+     * 基本判题信息
+     */
+
+    private ProblemSubmitQuest problemSubmitQuest;
 
 }

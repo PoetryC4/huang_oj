@@ -102,3 +102,5 @@ cos:
     secretKey: xxx
     region: xxx
     bucket: xxx
+sandbox:
+  type: example

@@ -32,11 +32,11 @@ public class JudgeCaseVO implements Serializable {
     /**
      * 运行时
      */
-    private String runtime;
+    private Long runtime;
     /**
      * 运行内存
      */
-    private String memory;
+    private Long memory;
     /**
      * 结果
      */

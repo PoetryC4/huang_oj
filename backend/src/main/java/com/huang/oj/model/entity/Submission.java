@@ -40,7 +40,7 @@ public class Submission implements Serializable {
     private String code;
 
     /**
-     * 当前状态 0-编译 1-运行 2-失败 3-成功
+     * 当前状态
      */
     private Integer judgeStatus;
 

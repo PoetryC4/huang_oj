@@ -121,9 +121,10 @@
         <a-row :gutter="2">
           <a-col>
             <CodeEditor
+              :code-language="codeLanguage"
               :value="userCode"
               :handle-change="onChangeCode"
-              :handle-select-change="onLangChange"
+              :handle-language-change="doLanguageChange"
               style="height: 600px"
             />
           </a-col>
@@ -168,7 +169,11 @@
 
 <script setup lang="ts">
 import { onMounted, reactive, ref } from "vue";
-import { ProblemControllerService, ProblemVO } from "@/api";
+import {
+  ProblemControllerService,
+  ProblemVO,
+  SubmissionControllerService,
+} from "@/api";
 import { Message } from "@arco-design/web-vue";
 import store from "@/store";
 import {
@@ -178,26 +183,29 @@ import {
   IconExperiment,
 } from "@arco-design/web-vue/es/icon";
 import { roleEnum } from "@/components/scripts/access/roleEnum";
-import { useRouter } from "vue-router";
+import { languageEnum } from "@/components/scripts/language/languageEnum";
+import { useRoute, useRouter } from "vue-router";
 import moment from "moment";
 import { defineProps, withDefaults } from "vue/dist/vue";
 import MdViewer from "@/components/MdViewer.vue";
 import CodeEditor from "@/components/CodeEditor.vue";
 import { formatNum } from "@/components/scripts/utils";
+import { languages } from "monaco-editor";
 
 const router = useRouter();
+const route = useRoute();
 
 const curUser = store.state.user?.userInfo;
 
 const userCode = ref("");
+const codeLanguage = ref("");
 
 const onChangeCode = (v: string) => {
   userCode.value = v;
 };
-const onLangChange = (v: string) => {
-  userCode.value = v;
+const doLanguageChange = (v: string) => {
+  codeLanguage.value = v;
 };
-
 const testInput = ref("");
 
 const data = reactive({
@@ -224,15 +232,36 @@ const getProblemDetails = async () => {
 };
 
 async function handleCodeTest() {
-  console.log(testInput.value);
+  console.log(testInput.value); // TODO 代码测试
 }
 
 async function handleCodeSubmit() {
-  console.log(userCode.value);
+  if (!curUser || curUser.userId === -1) {
+    router.push({
+      path: `/user/login`,
+      query: {
+        redirect: route.path,
+      },
+    });
+    return;
+  }
+  const res = await SubmissionControllerService.doSubmitUsingPost({
+    problemId: data.problem?.id || -1,
+    userId: curUser.userId,
+    language: languageEnum[codeLanguage.value] || "",
+    code: userCode.value,
+  });
+  if (res.code !== 1) {
+    Message.error("err" + res.message);
+    return;
+  } else {
+    Message.success("提交成功");
+  }
 }
 
 onMounted(() => {
   getProblemDetails();
+  doLanguageChange("python");
 });
 </script>
 
