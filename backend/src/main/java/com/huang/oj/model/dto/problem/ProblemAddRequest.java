@@ -47,10 +47,9 @@ public class ProblemAddRequest implements Serializable {
     private JudgeConfig judgeConfig;
 
     /**
-     * 样例（json 数组）
+     * 样例（回车分割）
      */
-    private List<JudgeCase> judgeCase;
-
+    private JudgeCases judgeCases;
     /**
      * 创建用户 id
      */
@@ -60,6 +59,10 @@ public class ProblemAddRequest implements Serializable {
      * vip尊享?
      */
     private Integer isVip;
+    /**
+     * 函数名称，默认函数形式，初步处理函数，变量类型
+     */
+    private FunctionConfig functionConfig;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

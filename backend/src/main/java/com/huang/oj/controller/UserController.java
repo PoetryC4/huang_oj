@@ -117,7 +117,6 @@ public class UserController {
                 throw new BusinessException(ErrorCode.PARAMS_ERROR);
             }
             LoginUserVO loginUserVO = userService.userLogin(userAccount, userPassword, "", request);
-            System.out.println("skjhdciuhsukdhcukh1:"+request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE));
             return ResultUtils.success(loginUserVO);
         }
     }

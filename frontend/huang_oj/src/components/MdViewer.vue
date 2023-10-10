@@ -19,6 +19,6 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  value: () => "",
+  currentCode: () => "",
 });
 </script>

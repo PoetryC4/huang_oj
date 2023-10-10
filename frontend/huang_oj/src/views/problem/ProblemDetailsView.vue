@@ -16,7 +16,11 @@
                   </h1>
                 </a-col>
                 <a-col :span="4" class="background_trans">
-                  <a-popover position="bottom" content-style="width:400px;">
+                  <a-popover
+                    position="bottom"
+                    content-style="width:400px;"
+                    trigger="click"
+                  >
                     <a-button
                       :style="{
                         width: '100px',
@@ -121,8 +125,10 @@
         <a-row :gutter="2">
           <a-col>
             <CodeEditor
+              :handle-editor-init="doInitCode"
+              :next-code="nextCode"
               :code-language="codeLanguage"
-              :value="userCode"
+              :current-code="userCode"
               :handle-change="onChangeCode"
               :handle-language-change="doLanguageChange"
               style="height: 600px"
@@ -197,16 +203,31 @@ const route = useRoute();
 
 const curUser = store.state.user?.userInfo;
 
+const nextCode = ref("");
 const userCode = ref("");
-const codeLanguage = ref("");
+const codeLanguage = ref("java");
+let userCodes = {};
+
+const testInput = ref("");
 
 const onChangeCode = (v: string) => {
   userCode.value = v;
 };
-const doLanguageChange = (v: string) => {
-  codeLanguage.value = v;
+const doInitCode = () => {
+  testInput.value = data.problem.judgeCases.input;
+  userCode.value = userCodes[codeLanguage.value] || "";
+  return userCode.value;
 };
-const testInput = ref("");
+const doLanguageChange = (v: string) => {
+  userCodes[codeLanguage.value] = userCode.value;
+  if (userCodes[v] != null && userCodes[v] != "") {
+    nextCode.value = userCodes[v];
+  } else {
+    nextCode.value = "";
+  }
+  codeLanguage.value = v;
+  return nextCode.value;
+};
 
 const data = reactive({
   problem: {},
@@ -229,6 +250,7 @@ const getProblemDetails = async () => {
     return;
   }
   data.problem = res.data as ProblemVO;
+  userCodes = data.problem.functionConfig.defaultCode || {};
 };
 
 async function handleCodeTest() {
@@ -256,12 +278,14 @@ async function handleCodeSubmit() {
     return;
   } else {
     Message.success("提交成功");
+    console.log(res);
   }
 }
 
-onMounted(() => {
-  getProblemDetails();
-  doLanguageChange("python");
+onMounted(async () => {
+  await getProblemDetails();
+  doInitCode();
+  doLanguageChange("java");
 });
 </script>
 

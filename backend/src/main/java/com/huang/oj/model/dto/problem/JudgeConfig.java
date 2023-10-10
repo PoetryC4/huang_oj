@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 创建请求
@@ -33,7 +35,6 @@ public class JudgeConfig implements Serializable {
      * 提供样例数
      */
     private Integer testCaseProvided;
-
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 }

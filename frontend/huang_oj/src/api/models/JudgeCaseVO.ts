@@ -3,7 +3,13 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type JudgeCase = {
+export type JudgeCaseVO = {
+    detailCode?: string;
     expected?: string;
     input?: string;
+    memory?: number;
+    output?: string;
+    result?: string;
+    runtime?: number;
+    stdout?: string;
 };

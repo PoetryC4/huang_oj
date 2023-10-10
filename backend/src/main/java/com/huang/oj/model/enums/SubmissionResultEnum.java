@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
  */
 public enum SubmissionResultEnum {
 
-    ACCEPT("Accept", "Accept"),
+    ACCEPT("Accepted", "Accepted"),
     COMPILE_ERROR("Compile Error", "Compile Error"),
     WRONG_ANSWER("Wrong Answer", "Wrong Answer"),
     MEMORY_LIMIT_EXCEEDED("Memory Limit Exceeded", "Memory Limit Exceeded"),

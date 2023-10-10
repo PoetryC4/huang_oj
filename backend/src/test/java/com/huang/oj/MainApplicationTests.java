@@ -19,7 +19,7 @@ class MainApplicationTests {
 
     @Test
     void contextLoads() {
-        System.out.println(wxOpenConfig);
+        /*System.out.println(wxOpenConfig);*/
     }
 
 }

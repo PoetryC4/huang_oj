@@ -3,14 +3,16 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import type { JudgeCase } from './JudgeCase';
+import type { FunctionConfig } from './FunctionConfig';
+import type { JudgeCases } from './JudgeCases';
 import type { JudgeConfig } from './JudgeConfig';
 
 export type ProblemAddRequest = {
     content?: string;
     difficulty?: number;
+    functionConfig?: FunctionConfig;
     isVip?: number;
-    judgeCase?: Array<JudgeCase>;
+    judgeCases?: JudgeCases;
     judgeConfig?: JudgeConfig;
     solution?: string;
     tags?: Array<string>;

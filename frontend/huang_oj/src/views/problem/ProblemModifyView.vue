@@ -24,6 +24,35 @@
           style="min-width: 1000px; height: 300px"
         />
       </a-form-item>
+      <a-row>
+        <a-col :span="12">
+          <a-form-item
+            field="judgeCases.input"
+            tooltip="请输入测试用例"
+            label="测试用例"
+          >
+            <a-textarea
+              placeholder="请输入测试用例"
+              show-word-limit
+              v-model="state.formDataProblem.judgeCases.input"
+            />
+          </a-form-item>
+        </a-col>
+        <a-col :span="12">
+          <a-form-item
+            field="judgeCases.expected"
+            tooltip="请输入正确用例"
+            label="正确用例"
+          >
+            <a-textarea
+              placeholder="请输入正确用例"
+              show-word-limit
+              v-model="state.formDataProblem.judgeCases.expected"
+            />
+          </a-form-item>
+        </a-col>
+      </a-row>
+      <!--
       <a-form-item
         v-for="(judge_case, index) of state.formDataProblem.judgeCase"
         :field="`state.formDataProblem.judgeCase[${index}]`"
@@ -66,7 +95,7 @@
           @click="handleProblemAdd"
           >添加样例
         </a-button>
-      </a-form-item>
+      </a-form-item>-->
       <a-form-item field="judgeConfig.hint" label="提示">
         <a-input
           v-model="state.formDataProblem.judgeConfig.hint"
@@ -123,6 +152,45 @@
           placeholder="请输入提供的样例个数"
         />
       </a-form-item>
+      <a-form-item field="functionConfig.initCode" label="样例输入初始化段">
+        <CodeEditor
+          :next-code="nextCodeInit"
+          :code-language="codeLanguageInit"
+          :current-code="curInitCode"
+          :handle-change="onChangeCodeInit"
+          :handle-language-change="doLanguageChangeInit"
+          :handle-editor-init="doInitCodeInit"
+          style="height: 600px; min-width: 800px"
+        />
+      </a-form-item>
+      <a-form-item field="functionConfig.varCount" label="输入参数个数">
+        <a-input-number
+          v-model="state.formDataProblem.functionConfig.varCount"
+          placeholder="请输入输入参数个数"
+        />
+      </a-form-item>
+      <a-form-item field="functionConfig.defaultCode" label="样例默认代码段">
+        <CodeEditor
+          :next-code="nextCodeDefault"
+          :code-language="codeLanguageDefault"
+          :current-code="curDefaultCode"
+          :handle-change="onChangeCodeDefault"
+          :handle-language-change="doLanguageChangeDefault"
+          :handle-editor-init="doInitCodeDefault"
+          style="height: 600px; min-width: 800px"
+        />
+      </a-form-item>
+      <a-form-item field="functionConfig.correctCode" label="正确代码段">
+        <CodeEditor
+          :next-code="nextCodeCorrect"
+          :code-language="codeLanguageCorrect"
+          :current-code="curCorrectCode"
+          :handle-change="onChangeCodeCorrect"
+          :handle-language-change="doLanguageChangeCorrect"
+          :handle-editor-init="doInitCodeCorrect"
+          style="height: 600px; min-width: 800px"
+        />
+      </a-form-item>
       <a-form-item field="difficulty" label="难度描述">
         <a-radio-group v-model="state.formDataProblem.difficulty" type="button">
           <a-radio :value="0">简单</a-radio>
@@ -165,44 +233,19 @@ import { Message } from "@arco-design/web-vue";
 import MdEditor from "@/components/MdEditor.vue";
 import store from "@/store";
 import { useRoute, useRouter } from "vue-router";
+import CodeEditor from "@/components/CodeEditor.vue";
 
 const router = useRouter();
 const route = useRoute();
 
-const id = ref("");
-
-onMounted(() => {
-  id.value = (route.query.edit as string) || "";
-  if (id.value !== "") {
-    handleProblemFillIn(id.value);
-  }
-});
-
-const onChangeContent = (v: string) => {
-  state.formDataProblem.content = v;
-};
-const onChangeSolution = (v: string) => {
-  state.formDataProblem.solution = v;
-};
-const handleProblemAdd = () => {
-  state.formDataProblem.judgeCase.push({
-    expected: "",
-    input: "",
-  });
-};
-const handleProblemDelete = (index: number) => {
-  state.formDataProblem.judgeCase.splice(index, 1);
-};
 const state = reactive({
   formDataProblem: {
     content: "",
     vipOnly: false,
-    judgeCase: [
-      {
-        expected: "",
-        input: "",
-      },
-    ],
+    judgeCases: {
+      input: "",
+      expected: "",
+    },
     judgeConfig: {
       hint: "",
       memoryLimit: 0,
@@ -214,15 +257,127 @@ const state = reactive({
     difficulty: 0,
     tags: [],
     title: "",
+    functionConfig: {
+      initCode: {},
+      defaultCode: {},
+      correctCode: {},
+      varCount: 0,
+    },
   },
 });
 
+const id = ref("");
+
+const nextCodeInit = ref("");
+const curInitCode = ref("");
+const codeLanguageInit = ref("java");
+
+const nextCodeDefault = ref("");
+const curDefaultCode = ref("");
+const codeLanguageDefault = ref("java");
+
+const nextCodeCorrect = ref("");
+const curCorrectCode = ref("");
+const codeLanguageCorrect = ref("java");
+
+const doInitCodeInit = () => {
+  curInitCode.value =
+    state.formDataProblem.functionConfig.initCode[codeLanguageInit.value] || "";
+  return curInitCode.value;
+};
+const onChangeCodeInit = (v: string) => {
+  curInitCode.value = v;
+};
+const doLanguageChangeInit = (v: string) => {
+  state.formDataProblem.functionConfig.initCode[codeLanguageInit.value] =
+    curInitCode.value;
+  if (
+    state.formDataProblem.functionConfig.initCode[v] != null &&
+    state.formDataProblem.functionConfig.initCode[v] != ""
+  ) {
+    nextCodeInit.value = state.formDataProblem.functionConfig.initCode[v];
+  } else {
+    nextCodeInit.value = "";
+  }
+  codeLanguageInit.value = v;
+  return nextCodeInit.value;
+};
+const doInitCodeDefault = () => {
+  curDefaultCode.value =
+    state.formDataProblem.functionConfig.defaultCode[
+      codeLanguageDefault.value
+    ] || "";
+  return curDefaultCode.value;
+};
+const onChangeCodeDefault = (v: string) => {
+  curDefaultCode.value = v;
+};
+const doLanguageChangeDefault = (v: string) => {
+  state.formDataProblem.functionConfig.defaultCode[codeLanguageDefault.value] =
+    curDefaultCode.value;
+  if (
+    state.formDataProblem.functionConfig.defaultCode[v] != null &&
+    state.formDataProblem.functionConfig.defaultCode[v] != ""
+  ) {
+    nextCodeDefault.value = state.formDataProblem.functionConfig.defaultCode[v];
+  } else {
+    nextCodeDefault.value = "";
+  }
+  codeLanguageDefault.value = v;
+  return nextCodeDefault.value;
+};
+const doInitCodeCorrect = () => {
+  curCorrectCode.value =
+    state.formDataProblem.functionConfig.correctCode[
+      codeLanguageCorrect.value
+    ] || "";
+  return curCorrectCode.value;
+};
+const onChangeCodeCorrect = (v: string) => {
+  curCorrectCode.value = v;
+};
+const doLanguageChangeCorrect = (v: string) => {
+  state.formDataProblem.functionConfig.correctCode[codeLanguageCorrect.value] =
+    curCorrectCode.value;
+  if (
+    state.formDataProblem.functionConfig.correctCode[v] != null &&
+    state.formDataProblem.functionConfig.correctCode[v] != ""
+  ) {
+    nextCodeCorrect.value = state.formDataProblem.functionConfig.correctCode[v];
+  } else {
+    nextCodeCorrect.value = "";
+  }
+  codeLanguageCorrect.value = v;
+  return nextCodeCorrect.value;
+};
+const onChangeContent = (v: string) => {
+  state.formDataProblem.content = v;
+};
+const onChangeSolution = (v: string) => {
+  state.formDataProblem.solution = v;
+};
+
+/*const handleProblemAdd = () => {
+  state.formDataProblem.judgeCase.push({
+    expected: "",
+    input: "",
+  });
+};
+const handleProblemDelete = (index: number) => {
+  state.formDataProblem.judgeCase.splice(index, 1);
+};*/
 async function handleProblemSubmit() {
   let userId = store.state.user?.userInfo?.userId;
   if (userId === -1) {
     Message.error("未登录");
     return;
   }
+  state.formDataProblem.functionConfig.initCode[codeLanguageInit.value] =
+    curInitCode.value;
+  state.formDataProblem.functionConfig.defaultCode[codeLanguageDefault.value] =
+    curDefaultCode.value;
+  state.formDataProblem.functionConfig.correctCode[codeLanguageCorrect.value] =
+    curCorrectCode.value;
   let res;
   if (id.value === "") {
     res = await ProblemControllerService.addProblemUsingPost({
@@ -255,13 +410,22 @@ async function handleProblemFillIn(id: string) {
   res = await ProblemControllerService.getProblemVoByIdUsingGet(id);
   if (res.code !== null && res.code === 1) {
     Message.success("获取成功");
-    state.formDataProblem.judgeCase = res.data.judgeCase || [];
+    state.formDataProblem.judgeCases = res.data.judgeCases;
     state.formDataProblem.content = res.data.content;
     state.formDataProblem.solution = res.data.solution;
     state.formDataProblem.title = res.data.title;
     state.formDataProblem.difficulty = res.data.difficulty;
     state.formDataProblem.tags = res.data.tags;
     state.formDataProblem.judgeConfig.hint = res.data.judgeConfig.hint;
+    state.formDataProblem.functionConfig.initCode =
+      res.data.functionConfig.initCode;
+    state.formDataProblem.functionConfig.defaultCode =
+      res.data.functionConfig.defaultCode;
+    state.formDataProblem.functionConfig.correctCode =
+      res.data.functionConfig.correctCode;
+    state.formDataProblem.functionConfig.varCount = parseInt(
+      res.data.functionConfig.varCount
+    );
     state.formDataProblem.judgeConfig.timeLimit = parseInt(
       res.data.judgeConfig.timeLimit
     );
@@ -278,4 +442,11 @@ async function handleProblemFillIn(id: string) {
     Message.error(res.message || "出错");
   }
 }
+
+onMounted(() => {
+  id.value = (route.query.edit as string) || "";
+  if (id.value !== "") {
+    handleProblemFillIn(id.value);
+  }
+});
 </script>

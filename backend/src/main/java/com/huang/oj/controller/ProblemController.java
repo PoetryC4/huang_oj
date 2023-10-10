@@ -75,9 +75,13 @@ public class ProblemController {
         if (problemTag1 != null) {
             problem.setTags(JSON.toJSONString(problemTag1));
         }
-        List<JudgeCase> judgeCases1 = problemAddRequest.getJudgeCase();
+        FunctionConfig functionConfig1 = problemAddRequest.getFunctionConfig();
+        if (functionConfig1 != null) {
+            problem.setFunctionConfig(com.alibaba.fastjson2.JSON.toJSONString(functionConfig1));
+        }
+        JudgeCases judgeCases1 = problemAddRequest.getJudgeCases();
         if (judgeCases1 != null) {
-            problem.setJudgeCase(com.alibaba.fastjson2.JSON.toJSONString(judgeCases1));
+            problem.setJudgeCases(com.alibaba.fastjson2.JSON.toJSONString(judgeCases1));
         }
         problemService.validProblem(problem, true);
         User loginUser = userService.getLoginUser(request);
@@ -137,9 +141,13 @@ public class ProblemController {
         if (problemTag1 != null) {
             problem.setTags(JSON.toJSONString(problemTag1));
         }
-        List<JudgeCase> judgeCases1 = problemUpdateRequest.getJudgeCase();
+        FunctionConfig functionConfig1 = problemUpdateRequest.getFunctionConfig();
+        if (functionConfig1 != null) {
+            problem.setFunctionConfig(com.alibaba.fastjson2.JSON.toJSONString(functionConfig1));
+        }
+        JudgeCases judgeCases1 = problemUpdateRequest.getJudgeCases();
         if (judgeCases1 != null) {
-            problem.setJudgeCase(com.alibaba.fastjson2.JSON.toJSONString(judgeCases1));
+            problem.setJudgeCases(com.alibaba.fastjson2.JSON.toJSONString(judgeCases1));
         }
         // 参数校验
         problemService.validProblem(problem, false);

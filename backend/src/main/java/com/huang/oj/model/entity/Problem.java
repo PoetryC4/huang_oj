@@ -7,8 +7,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.util.Date;
 
-import com.huang.oj.model.dto.problem.JudgeCase;
-import com.huang.oj.model.dto.problem.JudgeConfig;
+import com.huang.oj.model.dto.problem.FunctionConfig;
 import lombok.Data;
 
 /**
@@ -49,14 +48,14 @@ public class Problem implements Serializable {
     private String tags;
 
     /**
-     * 判题标签列表
+     * 判题配置列表
      */
     private String judgeConfig;
 
     /**
      * 检测样例
      */
-    private String judgeCase;
+    private String judgeCases;
 
     /**
      * 点赞数
@@ -82,6 +81,11 @@ public class Problem implements Serializable {
      * 更新时间
      */
     private Date updateTime;
+
+    /**
+     * 变量名称，变量类型，函数名称
+     */
+    private String functionConfig;
 
     /**
      * vip尊享?

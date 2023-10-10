@@ -28,7 +28,6 @@ import {
   withDefaults,
   defineEmits,
   computed,
-  nextTick,
 } from "vue";
 
 const codeEditorRef = ref();
@@ -90,9 +89,11 @@ const langs = [
 
 interface Props {
   codeLanguage: string;
-  value: string;
+  currentCode: string;
+  nextCode: string;
   handleChange: (v: string) => void;
-  handleLanguageChange: (v: string) => void;
+  handleLanguageChange: (v: string) => string;
+  handleEditorInit: () => string;
 }
 
 interface Emits {
@@ -100,13 +101,18 @@ interface Emits {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  codeLanguage: "python",
-  value: () => "",
+  codeLanguage: "java",
+  currentCode: () => "",
+  nextCode: () => "",
   handleChange: (v: string) => {
     console.log(v);
   },
   handleLanguageChange: (v: string) => {
     console.log(v);
+    return "";
+  },
+  handleEditorInit: () => {
+    return "";
   },
 });
 const emit = defineEmits<Emits>();
@@ -120,18 +126,23 @@ const language = computed({
 });
 
 async function handleSelectChange(v: string) {
-  props.handleLanguageChange(v);
+  let next_code = props.handleLanguageChange(v);
   emit("update:codeLanguage", v);
   monaco.editor.setModelLanguage(
     toRaw(codeEditor.value).getModel(),
     language.value
   );
+  if (next_code != null && next_code != "") {
+    toRaw(codeEditor.value).setValue(next_code);
+  } else {
+    toRaw(codeEditor.value).setValue("");
+  }
 }
 
 onMounted(() => {
   // 初始化编辑器，确保dom已经渲染
   codeEditor.value = monaco.editor.create(codeEditorRef.value, {
-    value: props.value, //编辑器初始显示文字
+    value: props.currentCode, //编辑器初始显示文字
     language: props.codeLanguage, //此处使用的python，其他语言支持自行查阅demo
     theme: "vs", //官方自带三种主题vs, hc-black, or vs-dark
     selectOnLineNumbers: true, //显示行号
@@ -151,6 +162,16 @@ onMounted(() => {
   codeEditor.value.onDidChangeModelContent(() => {
     props.handleChange(toRaw(codeEditor.value).getValue());
   });
+});
+onMounted(() => {
+  setTimeout(() => {
+    let initCode = props.handleEditorInit();
+    if (initCode != null && initCode != "") {
+      toRaw(codeEditor.value).setValue(initCode);
+    } else {
+      toRaw(codeEditor.value).setValue("");
+    }
+  }, 1000);
 });
 </script>
 

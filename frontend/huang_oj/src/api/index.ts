@@ -9,6 +9,7 @@ export type { OpenAPIConfig } from './core/OpenAPI';
 
 export type { BaseResponse_boolean_ } from './models/BaseResponse_boolean_';
 export type { BaseResponse_int_ } from './models/BaseResponse_int_';
+export type { BaseResponse_JudgeResult_ } from './models/BaseResponse_JudgeResult_';
 export type { BaseResponse_LoginUserVO_ } from './models/BaseResponse_LoginUserVO_';
 export type { BaseResponse_long_ } from './models/BaseResponse_long_';
 export type { BaseResponse_Page_PostVO_ } from './models/BaseResponse_Page_PostVO_';
@@ -23,9 +24,12 @@ export type { BaseResponse_SubmissionVO_ } from './models/BaseResponse_Submissio
 export type { BaseResponse_User_ } from './models/BaseResponse_User_';
 export type { BaseResponse_UserVO_ } from './models/BaseResponse_UserVO_';
 export type { DeleteRequest } from './models/DeleteRequest';
-export type { JudgeCase } from './models/JudgeCase';
+export type { FunctionConfig } from './models/FunctionConfig';
+export type { JudgeCases } from './models/JudgeCases';
+export type { JudgeCaseVO } from './models/JudgeCaseVO';
 export type { JudgeConfig } from './models/JudgeConfig';
 export type { JudgeInfo } from './models/JudgeInfo';
+export type { JudgeResult } from './models/JudgeResult';
 export type { LoginUserVO } from './models/LoginUserVO';
 export type { OrderItem } from './models/OrderItem';
 export type { Page_PostVO_ } from './models/Page_PostVO_';

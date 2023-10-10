@@ -1,7 +1,7 @@
 <template>
   <div id="test">
     <MdEditor :value="inputValMd" :handle-change="onChangeMd" />
-    <CodeEditor :value="inputValCode" :handle-change="onChangeCode" />
+    <CodeEditor :currentCode="inputValCode" :handle-change="onChangeCode" />
   </div>
 </template>
 <script setup lang="ts">

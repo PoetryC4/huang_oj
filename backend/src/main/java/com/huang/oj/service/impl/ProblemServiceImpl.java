@@ -12,6 +12,7 @@ import com.huang.oj.exception.BusinessException;
 import com.huang.oj.exception.ThrowUtils;
 import com.huang.oj.mapper.ProblemMapper;
 import com.huang.oj.mapper.SubmissionMapper;
+import com.huang.oj.model.dto.problem.JudgeCases;
 import com.huang.oj.model.dto.problem.JudgeConfig;
 import com.huang.oj.model.dto.problem.ProblemQueryRequest;
 import com.huang.oj.model.entity.Problem;
@@ -121,7 +122,19 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
         if (userObj != null) {
             loginUser = userService.getLoginUser(request);
             if (!userService.isAdmin(loginUser)) {
-                problemVO.setJudgeCase(null);
+                JudgeCases judgeCases = problemVO.getJudgeCases();
+                judgeCases.setExpected(null);
+                String[] substrings = judgeCases.getInput().split("\n");
+
+                StringBuilder cutInputCases = new StringBuilder();
+                int count = problemVO.getJudgeConfig().getTestCaseProvided() * problemVO.getFunctionConfig().getVarCount();
+                for (int i = 0; i < count && i < substrings.length; i++) {
+                    cutInputCases.append(substrings[i]);
+                    if (i < count - 1) {
+                        cutInputCases.append("\n");
+                    }
+                }
+                judgeCases.setInput(cutInputCases.toString());
             }
         }
         if (loginUser == null || loginUser.getId() == null) {
@@ -186,7 +199,19 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
             if (isLoggedin) {
                 problemVO.setIsSolved(0);
                 if (!isAdmin) {
-                    problemVO.setJudgeCase(null);
+                    JudgeCases judgeCases = problemVO.getJudgeCases();
+                    judgeCases.setExpected(null);
+                    String[] substrings = judgeCases.getInput().split("\n");
+
+                    StringBuilder cutInputCases = new StringBuilder();
+                    int count = problemVO.getJudgeConfig().getTestCaseProvided() * problemVO.getFunctionConfig().getVarCount();
+                    for (int i = 0; i < count && i < substrings.length; i++) {
+                        cutInputCases.append(substrings[i]);
+                        if (i < count - 1) {
+                            cutInputCases.append("\n");
+                        }
+                    }
+                    judgeCases.setInput(cutInputCases.toString());
                 }
             } else {
                 QueryWrapper<Submission> queryWrapper1 = new QueryWrapper<>();
@@ -230,7 +255,8 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
         long offset = Math.max(0, (current - 1)) * size;
         return problemMapper.getProblemQueryRes(size, offset, title, difficulty, status, loginUser == null ? -1 : loginUser.getId());
     }
-    public Integer getProblemQueryCount(long current, long size, String title, Integer difficulty, Integer status,HttpServletRequest request) {
+
+    public Integer getProblemQueryCount(long current, long size, String title, Integer difficulty, Integer status, HttpServletRequest request) {
         User loginUser = null;
         Object userObj = request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
         if (userObj != null) {

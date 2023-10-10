@@ -45,16 +45,19 @@ public class ProblemUpdateRequest implements Serializable {
      * 题目标签列表
      */
     private List<String> tags;
-
     /**
      * 标签列表（json 数组）
      */
     private JudgeConfig judgeConfig;
 
     /**
-     * 样例（json 数组）
+     * 样例（回车分割）
      */
-    private List<JudgeCase> judgeCase;
+    private JudgeCases judgeCases;
+    /**
+     * 函数名称，默认函数形式，初步处理函数，变量类型
+     */
+    private FunctionConfig functionConfig;
 
     /**
      * vip尊享?

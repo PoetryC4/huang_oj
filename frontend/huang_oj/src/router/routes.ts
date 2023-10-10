@@ -8,7 +8,7 @@ import UserView from "@/views/user/UserView.vue";
 import UserLoginView from "@/views/user/UserLoginView.vue";
 import UserLogoutView from "@/views/user/UserLogoutView.vue";
 import UserRegisterView from "@/views/user/UserRegisterView.vue";
-import ProblemAddView from "@/views/problem/ProblemAddView.vue";
+import ProblemAddView from "@/views/problem/ProblemModifyView.vue";
 import ProblemListView from "@/views/problem/ProblemListView.vue";
 import TestView from "@/views/TestView.vue";
 import ProblemDetailsView from "@/views/problem/ProblemDetailsView.vue";

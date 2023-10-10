@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { BaseResponse_boolean_ } from '../models/BaseResponse_boolean_';
-import type { BaseResponse_long_ } from '../models/BaseResponse_long_';
+import type { BaseResponse_JudgeResult_ } from '../models/BaseResponse_JudgeResult_';
 import type { BaseResponse_Page_SubmissionVO_ } from '../models/BaseResponse_Page_SubmissionVO_';
 import type { BaseResponse_SubmissionVO_ } from '../models/BaseResponse_SubmissionVO_';
 import type { DeleteRequest } from '../models/DeleteRequest';
@@ -19,13 +19,13 @@ export class SubmissionControllerService {
     /**
      * doSubmit
      * @param problemSubmitQuest problemSubmitQuest
-     * @returns BaseResponse_long_ OK
+     * @returns BaseResponse_JudgeResult_ OK
      * @returns any Created
      * @throws ApiError
      */
     public static doSubmitUsingPost(
 problemSubmitQuest: ProblemSubmitQuest,
-): CancelablePromise<BaseResponse_long_ | any> {
+): CancelablePromise<BaseResponse_JudgeResult_ | any> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/submission/add',

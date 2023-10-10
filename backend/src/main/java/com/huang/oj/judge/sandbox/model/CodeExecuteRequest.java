@@ -13,7 +13,9 @@ import java.util.List;
 @AllArgsConstructor
 public class CodeExecuteRequest {
 
+    private String initCode;
+    private String correctCode;
     private String code;
     private String language;
-    private List<String> inputCases;
+    private String inputCases;
 }

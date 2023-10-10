@@ -20,7 +20,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  value: () => "",
+  currentCode: () => "",
   handleChange: (v: string) => {
     console.log(v);
   },

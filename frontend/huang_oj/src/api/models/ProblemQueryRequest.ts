@@ -10,6 +10,6 @@ export type ProblemQueryRequest = {
     pageSize?: number;
     sortField?: string;
     sortOrder?: string;
-    status?: string;
+    status?: number;
     title?: string;
 };

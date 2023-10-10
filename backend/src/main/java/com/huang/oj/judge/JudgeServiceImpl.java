@@ -10,17 +10,20 @@ import com.huang.oj.judge.sandbox.impl.CodeSandboxProxy;
 import com.huang.oj.judge.sandbox.model.CodeExecuteRequest;
 import com.huang.oj.judge.sandbox.model.CodeExecuteResponse;
 import com.huang.oj.judge.sandbox.model.JudgeResult;
+import com.huang.oj.judge.sandbox.model.ProcessRunResult;
 import com.huang.oj.judge.sandbox.strategy.JudgeStrategy;
 import com.huang.oj.judge.sandbox.strategy.JudgeStrategyImpl;
 import com.huang.oj.mapper.SubmissionMapper;
-import com.huang.oj.model.dto.problem.JudgeCase;
+import com.huang.oj.model.dto.problem.FunctionConfig;
+import com.huang.oj.model.dto.problem.JudgeCases;
 import com.huang.oj.model.dto.problem.JudgeConfig;
 import com.huang.oj.model.dto.submission.JudgeInfo;
 import com.huang.oj.model.entity.Problem;
 import com.huang.oj.model.entity.Submission;
+import com.huang.oj.model.enums.SubmissionResultEnum;
 import com.huang.oj.model.enums.SubmissionStatusEnum;
 import com.huang.oj.model.vo.JudgeCaseVO;
-import com.huang.oj.model.vo.SubmissionVO;
+import com.huang.oj.model.vo.ProblemVO;
 import com.huang.oj.service.ProblemService;
 import com.huang.oj.service.SubmissionService;
 import org.apache.commons.lang3.StringUtils;
@@ -29,9 +32,13 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+import static com.huang.oj.utils.JSONUtils.parseJsonToListOfLists;
+import static com.huang.oj.utils.NetUtils.RequestWithBody;
 
 @Service
 public class JudgeServiceImpl implements JudgeService {
@@ -63,77 +70,102 @@ public class JudgeServiceImpl implements JudgeService {
         queryWrapperSubmission.eq("userId", submission.getUserId());
         queryWrapperSubmission.ne("judgeStatus", SubmissionStatusEnum.FAILED.getValue());
         queryWrapperSubmission.ne("judgeStatus", SubmissionStatusEnum.SUCCESS.getValue());
-        if (submissionMapper.selectCount(queryWrapperSubmission) > 1) {
-            throw new BusinessException(ErrorCode.OPERATION_ERROR, "需等待当前判题结束");
-        }
+        //if (submissionMapper.selectCount(queryWrapperSubmission) > 1) {
+        //    throw new BusinessException(ErrorCode.OPERATION_ERROR, "需等待当前判题结束");
+        //} // TODO 个数判断
         Submission submission1 = new Submission();
         submission1.setId(submissionId);
         submission1.setJudgeStatus(SubmissionStatusEnum.COMPILING.getValue());
         submissionService.updateById(submission1);
 
-        CodeSandbox codeSandbox = CodeSandboxFactory.newInstance(type);
-        codeSandbox = new CodeSandboxProxy(codeSandbox);
+        FunctionConfig functionConfig = null;
+        JudgeCases judgeCases = null;
+        String functionConfig1 = problem.getFunctionConfig();
+        if (StringUtils.isNotBlank(functionConfig1)) {
+            functionConfig = JSON.parseObject(functionConfig1, FunctionConfig.class);
+        }
+        String judgeCases1 = problem.getJudgeCases();
+        if (StringUtils.isNotBlank(judgeCases1)) {
+            judgeCases = JSON.parseObject(judgeCases1, JudgeCases.class);
+        }
+        String lang = submission.getLanguage().toLowerCase();
+        String initCode = "";
+        if (functionConfig != null) {
+            initCode = functionConfig.getInitCode().get(lang);
+        }
+        String correctCode = "";
+        if (functionConfig != null) {
+            correctCode = functionConfig.getCorrectCode().get(lang);
+        }
         CodeExecuteRequest codeExecuteRequest = new CodeExecuteRequest();
+        codeExecuteRequest.setInitCode(initCode);
+        codeExecuteRequest.setCorrectCode(correctCode);
         codeExecuteRequest.setCode(submission.getCode());
         codeExecuteRequest.setLanguage(submission.getLanguage());
-        String judgeCases1 = problem.getJudgeCase();
-        List<JudgeCase> judgeCaseList = JSON.parseArray(judgeCases1, JudgeCase.class);
-        List<String> inputCases = judgeCaseList.stream().map(JudgeCase::getInput).collect(Collectors.toList());
-        codeExecuteRequest.setInputCases(inputCases);
-        CodeExecuteResponse codeExecuteResponse = codeSandbox.executeCode(codeExecuteRequest);
-        JudgeInfo judgeInfo = codeExecuteResponse.getJudgeInfo();
+        if (judgeCases != null) {
+            codeExecuteRequest.setInputCases(judgeCases.getInput());
+        }
+        String responseStr = "";
+        try {
+            responseStr = RequestWithBody("http", "127.0.0.1", "8103", "codeSandbox/runProblem", codeExecuteRequest);
+            ProcessRunResult processRunResult = com.alibaba.fastjson2.JSON.parseObject(responseStr, ProcessRunResult.class);
+            //System.out.println(processRunResult);
+            JudgeResult judgeResult = new JudgeResult();
+            String[] expectedOutput = judgeCases.getExpected().split("\n");
+            String[] inputs = judgeCases.getInput().split("\n");
 
-        List<String> outputCases = codeExecuteResponse.getOutputCases();
-        List<String> expectedCases = judgeCaseList.stream().map(JudgeCase::getExpected).collect(Collectors.toList());
-        boolean judge = false;
-        if (outputCases.size() != expectedCases.size()) {
-            submission1.setJudgeStatus(SubmissionStatusEnum.FAILED.getValue());
-        } else {
-            for (int i = 0; i < outputCases.size(); i++) {
-                if (!Objects.equals(outputCases.get(i), expectedCases.get(i))) {
-                    submission1.setJudgeStatus(SubmissionStatusEnum.FAILED.getValue());
-                    // TODO 把错误定位在第i+1个样例并返回呈现错误细节
+            String runtime = processRunResult.getRuntime();
+            String memoryUsed = processRunResult.getMemoryUsed();
+            String stdOut = processRunResult.getStdOut();
+            String funcReturn = processRunResult.getFuncReturn();
+
+            List<Long> runtimeList = JSON.parseArray(runtime, Long.class);
+            List<Long> memoryList = JSON.parseArray(runtime, Long.class);
+            List<String> stdOutList = JSON.parseArray(stdOut, String.class);
+            List<String> outputList = JSON.parseArray(funcReturn, String.class);
+
+            List<JudgeCaseVO> judgeCaseVOList = new ArrayList<>();
+            JudgeInfo judgeInfo = new JudgeInfo();
+            Long memorySum = 0L;
+            for (Long value : memoryList) {
+                memorySum += value;
+            }
+            judgeInfo.setMemoryUsed(memorySum);
+            Long runtimeSum = 0L;
+            for (Long aLong : runtimeList) {
+                runtimeSum += aLong;
+            }
+            judgeInfo.setTimeUsed(runtimeSum);
+            judgeInfo.setDetailCode(null);
+
+            int i;
+            for (i = 0; i < expectedOutput.length; i++) {
+                JudgeCaseVO judgeCaseVO = new JudgeCaseVO();
+                judgeCaseVO.setInput(inputs[i]);
+                judgeCaseVO.setStdout(stdOutList.get(i));
+                judgeCaseVO.setOutput(outputList.get(i));
+                judgeCaseVO.setExpected(expectedOutput[i]);
+                judgeCaseVO.setRuntime(runtimeList.get(i));
+                judgeCaseVO.setMemory(memoryList.get(i));
+                judgeCaseVO.setResult(SubmissionResultEnum.ACCEPT.getText());
+                judgeCaseVO.setDetailCode(null);
+                judgeCaseVOList.add(judgeCaseVO);
+                if(!Objects.equals(expectedOutput[i], outputList.get(i))) {
+                    judgeCaseVO.setResult(SubmissionResultEnum.WRONG_ANSWER.getText());
+                    judgeResult.setJudgeCaseVO(judgeCaseVO);
+                    judgeInfo.setResultStr(SubmissionResultEnum.WRONG_ANSWER.getText());
                     break;
                 }
             }
-            String judgeConfig1 = problem.getJudgeConfig();
-            JudgeConfig judgeConfig = null;
-            if (StringUtils.isNotBlank(judgeConfig1)) {
-                judgeConfig = JSON.parseObject(judgeConfig1, JudgeConfig.class);
+            if(judgeInfo.getResultStr() == null) {
+                judgeInfo.setResultStr(SubmissionResultEnum.ACCEPT.getText());
             }
-            JudgeStrategy judgeStrategy = new JudgeStrategyImpl();
-            judge = judgeStrategy.judgeLimit(submission.getLanguage(), judgeInfo, judgeConfig);
+            judgeResult.setJudgeInfo(judgeInfo);
+            judgeResult.setJudgeCaseVOList(judgeCaseVOList);
+            judgeResult.setSubmissionId(submissionId);
+            return judgeResult;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-        submission1.setJudgeStatus(judge ? SubmissionStatusEnum.SUCCESS.getValue() : SubmissionStatusEnum.FAILED.getValue());
-        submissionService.updateById(submission1);
-        JudgeResult judgeResult = new JudgeResult();
-        if (judge) {
-            judgeResult.setJudgeCaseVO(null);
-        } else { // TODO 找到那个错误样例
-            JudgeCaseVO judgeCaseVO = new JudgeCaseVO();
-            judgeCaseVO.setInput(inputCases.get(0));
-            judgeCaseVO.setStdout(null);
-            judgeCaseVO.setOutput(outputCases.get(0));
-            judgeCaseVO.setExpected(expectedCases.get(0));
-            judgeCaseVO.setRuntime(0L);
-            judgeCaseVO.setMemory(0L);
-            judgeCaseVO.setResult(judgeInfo.getResultStr());
-            judgeCaseVO.setDetailCode(null);
-
-            judgeResult.setJudgeCaseVO(judgeCaseVO);
-
-        }
-        judgeResult.setJudgeInfo(judgeInfo);
-        List<JudgeCaseVO> judgeCaseVOList = new ArrayList<>();
-        for (int i = 0; i < inputCases.size(); i++) {
-            JudgeCaseVO judgeCaseVO = new JudgeCaseVO();
-            judgeCaseVO.setInput(inputCases.get(i));
-            judgeCaseVO.setOutput(outputCases.get(i));
-            judgeCaseVO.setExpected(expectedCases.get(i));
-            judgeCaseVOList.add(judgeCaseVO);
-        }
-        judgeResult.setJudgeCaseVOList(judgeCaseVOList);
-        judgeResult.setSubmissionId(submissionId);
-        return judgeResult;
     }
 }
