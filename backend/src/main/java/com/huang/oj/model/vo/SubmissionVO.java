@@ -1,10 +1,8 @@
 package com.huang.oj.model.vo;
 
 import com.alibaba.fastjson.JSON;
-import com.baomidou.mybatisplus.annotation.*;
-import com.huang.oj.model.dto.problem.JudgeConfig;
+import com.huang.oj.judge.sandbox.model.JudgeResult;
 import com.huang.oj.model.dto.submission.JudgeInfo;
-import com.huang.oj.model.entity.Problem;
 import com.huang.oj.model.entity.Submission;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
@@ -48,7 +46,7 @@ public class SubmissionVO implements Serializable {
     /**
      * 结果
      */
-    private JudgeInfo judgeInfo;
+    private JudgeResult judgeResult;
 
     /**
      * 提交时间
@@ -59,10 +57,6 @@ public class SubmissionVO implements Serializable {
      * 用户
      */
     private UserVO userVO;
-    /**
-     * 题目
-     */
-    private ProblemVO problemVO;
 
     public static Submission voToObj(SubmissionVO submissionVO) {
         if (submissionVO == null) {
@@ -70,9 +64,9 @@ public class SubmissionVO implements Serializable {
         }
         Submission submission = new Submission();
         BeanUtils.copyProperties(submissionVO, submission);
-        JudgeInfo judgeInfo1 = submissionVO.getJudgeInfo();
-        if (judgeInfo1 != null) {
-            submission.setJudgeInfo(com.alibaba.fastjson2.JSON.toJSONString(judgeInfo1));
+        JudgeResult judgeResult1 = submissionVO.getJudgeResult();
+        if (judgeResult1 != null) {
+            submission.setJudgeResult(com.alibaba.fastjson2.JSON.toJSONString(judgeResult1));
         }
         return submission;
     }
@@ -89,9 +83,9 @@ public class SubmissionVO implements Serializable {
         }
         SubmissionVO submissionVO = new SubmissionVO();
         BeanUtils.copyProperties(submission, submissionVO);
-        String judgeInfo1 = submission.getJudgeInfo();
-        if (StringUtils.isNotBlank(judgeInfo1)) {
-            submissionVO.setJudgeInfo(JSON.parseObject(judgeInfo1, JudgeInfo.class));
+        String judgeResult1 = submission.getJudgeResult();
+        if (StringUtils.isNotBlank(judgeResult1)) {
+            submissionVO.setJudgeResult(JSON.parseObject(judgeResult1, JudgeResult.class));
         }
         return submissionVO;
     }

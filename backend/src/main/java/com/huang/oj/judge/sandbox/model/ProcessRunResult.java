@@ -8,4 +8,5 @@ public class ProcessRunResult {
     private String memoryUsed;
     private String stdOut;
     private String funcReturn;
+    private String errMessage;
 }

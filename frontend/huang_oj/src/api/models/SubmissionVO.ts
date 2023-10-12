@@ -3,17 +3,15 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import type { JudgeInfo } from './JudgeInfo';
-import type { ProblemVO } from './ProblemVO';
+import type { JudgeResult } from './JudgeResult';
 import type { UserVO } from './UserVO';
 
 export type SubmissionVO = {
     code?: string;
     id?: number;
-    judgeInfo?: JudgeInfo;
+    judgeResult?: JudgeResult;
     language?: string;
     problemId?: number;
-    problemVO?: ProblemVO;
     submitTime?: string;
     userId?: number;
     userVO?: UserVO;

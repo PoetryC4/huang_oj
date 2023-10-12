@@ -22,7 +22,14 @@ public enum ProblemLanguageEnum {
     CSHARP("C#", "C#"),
     JAVASCRIPT("JavaScript", "JavaScript"),
     TYPESCRIPT("TypeScript", "TypeScript"),
-    PHP("PHP", "PHP");
+    PHP("PHP", "PHP"),
+    BAT("bat", "bat"),
+    SQL("SQL", "SQL"),
+    MYSQL("MySQL", "MySQL"),
+    SHELL("shell", "shell"),
+    KOTLIN("Kotlin", "Kotlin"),
+    RUST("rust", "rust"),
+    GOLANG("GoLang","GoLang");
 
     private final String text;
 

@@ -48,6 +48,7 @@ export type { PostVO } from './models/PostVO';
 export type { ProblemAddRequest } from './models/ProblemAddRequest';
 export type { ProblemQueryRequest } from './models/ProblemQueryRequest';
 export type { ProblemSubmitQuest } from './models/ProblemSubmitQuest';
+export type { ProblemTestExampleRequest } from './models/ProblemTestExampleRequest';
 export type { ProblemUpdateRequest } from './models/ProblemUpdateRequest';
 export type { ProblemVO } from './models/ProblemVO';
 export type { SubmissionQueryQuest } from './models/SubmissionQueryQuest';

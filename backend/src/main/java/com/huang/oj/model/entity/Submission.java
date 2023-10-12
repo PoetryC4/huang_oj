@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.annotation.*;
 
 import java.io.Serializable;
 import java.util.Date;
+
+import com.huang.oj.judge.sandbox.model.JudgeResult;
 import lombok.Data;
 
 /**
@@ -16,7 +18,7 @@ public class Submission implements Serializable {
     /**
      * id
      */
-    @TableId(type = IdType.AUTO)
+    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
 
     /**
@@ -45,9 +47,9 @@ public class Submission implements Serializable {
     private Integer judgeStatus;
 
     /**
-     * 结果 
+     * 结果
      */
-    private String judgeInfo;
+    private String judgeResult;
 
     /**
      * 提交时间

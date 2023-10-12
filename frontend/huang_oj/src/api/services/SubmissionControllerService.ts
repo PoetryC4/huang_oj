@@ -8,6 +8,7 @@ import type { BaseResponse_Page_SubmissionVO_ } from '../models/BaseResponse_Pag
 import type { BaseResponse_SubmissionVO_ } from '../models/BaseResponse_SubmissionVO_';
 import type { DeleteRequest } from '../models/DeleteRequest';
 import type { ProblemSubmitQuest } from '../models/ProblemSubmitQuest';
+import type { ProblemTestExampleRequest } from '../models/ProblemTestExampleRequest';
 import type { SubmissionQueryQuest } from '../models/SubmissionQueryQuest';
 
 import type { CancelablePromise } from '../core/CancelablePromise';
@@ -19,13 +20,13 @@ export class SubmissionControllerService {
     /**
      * doSubmit
      * @param problemSubmitQuest problemSubmitQuest
-     * @returns BaseResponse_JudgeResult_ OK
+     * @returns BaseResponse_SubmissionVO_ OK
      * @returns any Created
      * @throws ApiError
      */
     public static doSubmitUsingPost(
 problemSubmitQuest: ProblemSubmitQuest,
-): CancelablePromise<BaseResponse_JudgeResult_ | any> {
+): CancelablePromise<BaseResponse_SubmissionVO_ | any> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/submission/add',
@@ -119,6 +120,28 @@ submissionQueryQuest: SubmissionQueryQuest,
             method: 'POST',
             url: '/api/submission/my/list/page/vo',
             body: submissionQueryQuest,
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+            },
+        });
+    }
+
+    /**
+     * testSubmit
+     * @param problemTestExampleRequest problemTestExampleRequest
+     * @returns BaseResponse_JudgeResult_ OK
+     * @returns any Created
+     * @throws ApiError
+     */
+    public static testSubmitUsingPost(
+problemTestExampleRequest: ProblemTestExampleRequest,
+): CancelablePromise<BaseResponse_JudgeResult_ | any> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/submission/test',
+            body: problemTestExampleRequest,
             errors: {
                 401: `Unauthorized`,
                 403: `Forbidden`,

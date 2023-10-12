@@ -12,6 +12,7 @@
         <result property="tags" column="tags" jdbcType="VARCHAR"/>
         <result property="judgeConfig" column="judgeConfig" jdbcType="VARCHAR"/>
         <result property="judgeCases" column="judgeCases" jdbcType="VARCHAR"/>
+        <result property="functionConfig" column="functionConfig" jdbcType="VARCHAR"/>
         <result property="thumbNum" column="thumbNum" jdbcType="INTEGER"/>
         <result property="disLikeNum" column="disLikeNum" jdbcType="INTEGER"/>
         <result property="userId" column="userId" jdbcType="BIGINT"/>
@@ -50,7 +51,10 @@
         userId,
         problemId,
         CASE
-        WHEN userId IS NULL THEN 0
+        WHEN userId IS NULL
+        <if test="param6!=-1">
+            OR userId !=#{param6}
+        </if> THEN 0
         WHEN judgeStatus = 0 OR judgeStatus = 1 OR judgeStatus = 2 OR judgeStatus = 3 OR judgeStatus = 4 THEN -1
         WHEN judgeStatus = 5 THEN 1
         END AS judgeStatus
@@ -61,9 +65,6 @@
         s.judgeStatus
         FROM problem
         LEFT JOIN submission s on problem.isDelete = s.isDelete and problem.id = s.problemId) as t
-        <if test="param6!=-1">
-            WHERE userId=#{param6} or userId IS NULL
-        </if>
         ) as s
         where p.isDelete = 0 and ((p.id = s.problemId
         <if test="param4!=null">
@@ -91,7 +92,10 @@
         userId,
         problemId,
         CASE
-        WHEN userId IS NULL THEN 0
+        WHEN userId IS NULL
+        <if test="param6!=-1">
+            OR userId !=#{param6}
+        </if> THEN 0
         WHEN judgeStatus = 0 OR judgeStatus = 1 OR judgeStatus = 2 OR judgeStatus = 3 OR judgeStatus = 4 THEN -1
         WHEN judgeStatus = 5 THEN 1
         END AS judgeStatus
@@ -102,9 +106,6 @@
         s.judgeStatus
         FROM problem
         LEFT JOIN submission s on problem.isDelete = s.isDelete and problem.id = s.problemId) as t
-        <if test="param6!=-1">
-            WHERE userId=#{param6} or userId IS NULL
-        </if>
         ) as s
         where p.isDelete = 0 and ((p.id = s.problemId
         <if test="param4!=null">

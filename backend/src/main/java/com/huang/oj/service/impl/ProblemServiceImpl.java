@@ -12,6 +12,7 @@ import com.huang.oj.exception.BusinessException;
 import com.huang.oj.exception.ThrowUtils;
 import com.huang.oj.mapper.ProblemMapper;
 import com.huang.oj.mapper.SubmissionMapper;
+import com.huang.oj.model.dto.problem.FunctionConfig;
 import com.huang.oj.model.dto.problem.JudgeCases;
 import com.huang.oj.model.dto.problem.JudgeConfig;
 import com.huang.oj.model.dto.problem.ProblemQueryRequest;
@@ -124,6 +125,12 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
             if (!userService.isAdmin(loginUser)) {
                 JudgeCases judgeCases = problemVO.getJudgeCases();
                 judgeCases.setExpected(null);
+                FunctionConfig functionConfig = problemVO.getFunctionConfig();
+                functionConfig.setDefaultCode(null);
+                functionConfig.setInitCode(null);
+                functionConfig.setCorrectCode(null);
+
+                problemVO.setFunctionConfig(functionConfig);
                 String[] substrings = judgeCases.getInput().split("\n");
 
                 StringBuilder cutInputCases = new StringBuilder();
@@ -201,6 +208,12 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
                 if (!isAdmin) {
                     JudgeCases judgeCases = problemVO.getJudgeCases();
                     judgeCases.setExpected(null);
+                    FunctionConfig functionConfig = problemVO.getFunctionConfig();
+                    functionConfig.setDefaultCode(null);
+                    functionConfig.setInitCode(null);
+                    functionConfig.setCorrectCode(null);
+
+                    problemVO.setFunctionConfig(functionConfig);
                     String[] substrings = judgeCases.getInput().split("\n");
 
                     StringBuilder cutInputCases = new StringBuilder();

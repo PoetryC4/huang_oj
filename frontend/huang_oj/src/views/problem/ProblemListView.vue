@@ -60,12 +60,29 @@
                 record.isVip === 0
               "
             >
-              <icon-check v-if="record.isSolved === 1" />
-              <icon-question v-else-if="record.isSolved === -1" />
+              <a-popover
+                position="bottom"
+                trigger="hover"
+                v-if="record.isSolved === 1"
+              >
+                <icon-check />
+                <template #content> 解答出</template>
+              </a-popover>
+              <a-popover
+                position="bottom"
+                trigger="hover"
+                v-else-if="record.isSolved === -1"
+              >
+                <icon-question />
+                <template #content> 尝试过</template>
+              </a-popover>
               <div style="display: none" v-else />
             </div>
 
-            <icon-lock v-else />
+            <a-popover position="bottom" trigger="hover" v-else>
+              <icon-lock />
+              <template #content> 未解锁</template>
+            </a-popover>
           </template>
         </a-table-column>
         <a-table-column title="题目名称" :width="220" align="center">
@@ -88,7 +105,7 @@
         </a-table-column>
         <a-table-column title="通过率" :width="90">
           <template #cell="{ record }">
-            {{ (record?.acceptance || 0) * 100 }}%
+            {{ ((record?.acceptance || 0) * 100).toFixed(1) }}%
           </template>
         </a-table-column>
         <a-table-column title="创建日期" :width="90">
@@ -98,12 +115,7 @@
         </a-table-column>
         <a-table-column title="难度" :width="90">
           <template #cell="{ record }">
-            <div
-              v-if="record.difficulty === 0"
-              style="color: rgb(137, 255, 83)"
-            >
-              简单
-            </div>
+            <div v-if="record.difficulty === 0" style="color: green">简单</div>
             <div
               v-else-if="record.difficulty === 1"
               style="color: rgb(229, 192, 44)"

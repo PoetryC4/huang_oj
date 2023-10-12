@@ -7,7 +7,12 @@
         :width="800"
       >
         <a-card style="overflow: hidden">
-          <a-tabs default-active-key="1" lazy-load>
+          <a-tabs
+            default-active-key="1"
+            lazy-load
+            @tab-click="handleSiderTabChange"
+            :active-key="siderTabKey"
+          >
             <a-tab-pane key="1" title="题目详情">
               <a-row justify="space-between">
                 <a-col :span="8" style="z-index: 100">
@@ -18,7 +23,7 @@
                 <a-col :span="4" class="background_trans">
                   <a-popover
                     position="bottom"
-                    content-style="width:400px;"
+                    style="width: 400px"
                     trigger="click"
                   >
                     <a-button
@@ -92,7 +97,7 @@
                 >
               </a-tag>
               <a-tag class="tag_class">
-                过题数:
+                通过数:
                 <span
                   style="font-size: 20px; font-weight: bold; margin-left: 15px"
                   >{{ formatNum(data.problem?.accpetedCount || 0) }}</span
@@ -107,16 +112,13 @@
               </a-tag>
             </a-tab-pane>
             <a-tab-pane key="2" title="题目解法">
-              <MdViewer
-                :value="data.problem?.solution || ''"
-                style="margin-top: 40px"
-              />
+              <router-view></router-view>
             </a-tab-pane>
             <a-tab-pane key="3" title="评论区">
-              Content of Tab Panel 3
+              <router-view></router-view>
             </a-tab-pane>
             <a-tab-pane key="4" title="提交历史">
-              Content of Tab Panel 4
+              <router-view :key="routerKey"></router-view>
             </a-tab-pane>
           </a-tabs>
         </a-card>
@@ -142,26 +144,105 @@
                 <template #extra>
                   <a-button
                     @click.stop="handleCodeTest"
-                    style="margin-left: 40px"
+                    style="margin-right: 40px"
                     >运行
                   </a-button>
                   <a-button
                     type="primary"
                     @click.stop="handleCodeSubmit"
-                    style="margin-left: 40px; margin-right: 30px"
+                    style="margin-right: 30px"
                     >提交
                   </a-button>
                 </template>
-                <a-tabs default-active-key="1">
+                <a-tabs
+                  default-active-key="1"
+                  :active-key="codeTestTabKey"
+                  @change="handleCodeTestTabChange"
+                >
                   <a-tab-pane key="1" title="测试用例">
                     <a-mention
                       v-model="testInput"
                       type="textarea"
                       placeholder="请输入测试用例"
+                      style="min-height: 100px"
                     />
                   </a-tab-pane>
                   <a-tab-pane key="2" title="测试结果">
-                    Content of Tab Panel 2
+                    <div v-if="userSubmissionRes.judgeInfo != undefined">
+                      <span
+                        v-if="
+                          userSubmissionRes.judgeInfo?.resultStr === 'Accepted'
+                        "
+                        :style="{ color: 'green', fontSize: '20px' }"
+                      >
+                        {{ userSubmissionRes.judgeInfo?.resultStr || "" }}
+                      </span>
+                      <span v-else :style="{ color: 'red', fontSize: '20px' }">
+                        {{ userSubmissionRes.judgeInfo?.resultStr || "" }}
+                      </span>
+                      <span
+                        :style="{ fontSize: '16px' }"
+                        v-if="
+                          userSubmissionRes.judgeInfo?.timeUsed != undefined
+                        "
+                      >
+                        运行用时:
+                        {{
+                          userSubmissionRes.judgeInfo?.timeUsed || ""
+                        }}ms</span
+                      >
+                      <a-tabs default-active-key="0" type="round">
+                        <a-tab-pane
+                          v-for="(
+                            judgeCaseVO, index
+                          ) of userSubmissionRes.judgeCaseVOList"
+                          :key="index"
+                        >
+                          <template #title>样例 {{ index + 1 }}</template>
+
+                          <h3>样例输入</h3>
+                          <a-alert type="normal">
+                            <div
+                              v-html="(judgeCaseVO.input as string).replace(/\n/g, '<br>')"
+                            />
+                          </a-alert>
+                          <h3 v-if="judgeCaseVO.stdout?.length > 0">
+                            样例标准输出
+                          </h3>
+                          <a-alert type="normal">
+                            <div
+                              v-html="(judgeCaseVO.stdout as string).replace(/\n/g, '<br>')"
+                            />
+                          </a-alert>
+                          <h3>样例返回</h3>
+                          <a-alert
+                            type="normal"
+                            v-if="judgeCaseVO.result === 'Accepted'"
+                          >
+                            <div
+                              :style="{ color: 'green' }"
+                              v-html="(judgeCaseVO.output as string).replace(/\n/g, '<br>')"
+                            />
+                          </a-alert>
+                          <a-alert type="normal" v-else>
+                            <div
+                              :style="{ color: 'red' }"
+                              v-html="(judgeCaseVO.output as string).replace(/\n/g, '<br>')"
+                            />
+                          </a-alert>
+                          <h3>样例期望值</h3>
+                          <a-alert type="normal">
+                            <div
+                              :style="{ color: 'green' }"
+                              v-html="(judgeCaseVO.expected as string).replace(/\n/g, '<br>')"
+                            />
+                          </a-alert>
+                        </a-tab-pane>
+                      </a-tabs>
+                    </div>
+                    <div style="inset: 0; margin: auto" v-else>
+                      请先运行你的代码
+                    </div>
                   </a-tab-pane>
                 </a-tabs>
               </a-collapse-item>
@@ -174,8 +255,10 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from "vue";
+import { onMounted, reactive, provide, ref } from "vue";
 import {
+  BaseResponse_ProblemVO_,
+  JudgeResult,
   ProblemControllerService,
   ProblemVO,
   SubmissionControllerService,
@@ -203,13 +286,55 @@ const route = useRoute();
 
 const curUser = store.state.user?.userInfo;
 
+const userSubmissionRes = ref<JudgeResult>({});
+
+const routerKey = ref(0);
 const nextCode = ref("");
 const userCode = ref("");
 const codeLanguage = ref("java");
 let userCodes = {};
 
+const codeTestTabKey = ref("1");
+const handleCodeTestTabChange = (v: string) => {
+  codeTestTabKey.value = v;
+};
 const testInput = ref("");
-
+const siderTabKey = ref("1");
+const handleSiderTabChange = (v: string) => {
+  siderTabKey.value = v;
+  doSiderTabChange();
+};
+const doSiderTabChange = () => {
+  switch (siderTabKey.value) {
+    case "1": {
+      router.push({
+        path: `/problem/details/` + props.id,
+      });
+      break;
+    }
+    case "2": {
+      router.push({
+        path: `/problem/details/` + props.id + `/solution`,
+      });
+      break;
+    }
+    case "3": {
+      router.push({
+        path: `/problem/details/` + props.id + `/comments`,
+      });
+      break;
+    }
+    case "4": {
+      router.push({
+        path: `/problem/details/` + props.id + `/submissions`,
+      });
+      break;
+    }
+    default: {
+      break;
+    }
+  }
+};
 const onChangeCode = (v: string) => {
   userCode.value = v;
 };
@@ -254,7 +379,34 @@ const getProblemDetails = async () => {
 };
 
 async function handleCodeTest() {
-  console.log(testInput.value); // TODO 代码测试
+  if (!curUser || curUser.userId === -1) {
+    router.push({
+      path: `/user/login`,
+      query: {
+        redirect: route.path,
+      },
+    });
+    return;
+  }
+  const res = await SubmissionControllerService.testSubmitUsingPost({
+    judgeCases: {
+      input: testInput.value,
+    },
+    problemSubmitQuest: {
+      problemId: data.problem?.id || -1,
+      userId: curUser.userId,
+      language: languageEnum[codeLanguage.value] || "",
+      code: userCode.value,
+    },
+  });
+  if (res.code !== 1) {
+    Message.error("err" + res.message);
+    return;
+  } else {
+    Message.success("测试提交成功");
+    userSubmissionRes.value = res.data;
+    codeTestTabKey.value = "2";
+  }
 }
 
 async function handleCodeSubmit() {
@@ -278,15 +430,42 @@ async function handleCodeSubmit() {
     return;
   } else {
     Message.success("提交成功");
-    console.log(res);
+    userSubmissionRes.value = res.data.judgeResult;
+    codeTestTabKey.value = "2";
+    getProblemDetails();
+    routerKey.value++;
+    if (userSubmissionRes.value.judgeInfo?.resultStr === "Accepted") {
+      router.push({
+        path: "/problem/details/" + props.id + "/submissions",
+      });
+      doSiderTabChange();
+    }
   }
 }
 
 onMounted(async () => {
+  let path = route.path;
+  if (/\/problem\/details\/\d\/submissions\/\d/.test(path as string)) {
+    siderTabKey.value = "4";
+    // TODO 转到确定的提交历史页面
+  } else if (path.endsWith("/submissions")) {
+    siderTabKey.value = "4";
+    doSiderTabChange();
+  } else if (path.endsWith("/comments")) {
+    siderTabKey.value = "3";
+    doSiderTabChange();
+  } else if (path.endsWith("/solution")) {
+    siderTabKey.value = "2";
+    doSiderTabChange();
+  } else {
+    siderTabKey.value = "1";
+    doSiderTabChange();
+  }
   await getProblemDetails();
   doInitCode();
   doLanguageChange("java");
 });
+provide("data", data);
 </script>
 
 <style scoped>
@@ -304,5 +483,9 @@ onMounted(async () => {
 
 .background_trans * {
   background: transparent;
+}
+
+.problem_details_view {
+  overflow: hidden;
 }
 </style>

@@ -107,6 +107,7 @@ public class SubmissionServiceImpl extends ServiceImpl<SubmissionMapper, Submiss
         queryWrapper.eq("isDelete", false);
         queryWrapper.orderBy(SqlUtils.validSortField(sortField), sortOrder.equals(CommonConstant.SORT_ORDER_ASC),
                 sortField);
+        queryWrapper.orderByDesc("submitTime");
         return queryWrapper;
     }
 
@@ -121,8 +122,6 @@ public class SubmissionServiceImpl extends ServiceImpl<SubmissionMapper, Submiss
         if (problemId != null && problemId > 0) {
             problem = problemService.getById(problemId);
         }
-        ProblemVO problemVO = problemService.getProblemVO(problem, request);
-        submissionVO.setProblemVO(problemVO);
         Long userId = submission.getUserId();
         User user = null;
         if (userId != null && userId > 0) {
@@ -153,8 +152,6 @@ public class SubmissionServiceImpl extends ServiceImpl<SubmissionMapper, Submiss
             if (problemId != null && problemId > 0) {
                 problem = problemService.getById(problemId);
             }
-            ProblemVO problemVO = problemService.getProblemVO(problem, request);
-            submissionVO.setProblemVO(problemVO);
             Long userId = submission.getUserId();
             User user = null;
             if (userId != null && userId > 0) {

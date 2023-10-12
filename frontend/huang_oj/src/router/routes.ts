@@ -12,6 +12,10 @@ import ProblemAddView from "@/views/problem/ProblemModifyView.vue";
 import ProblemListView from "@/views/problem/ProblemListView.vue";
 import TestView from "@/views/TestView.vue";
 import ProblemDetailsView from "@/views/problem/ProblemDetailsView.vue";
+import ProblemDetailsSolutionView from "@/views/problem/ProblemDetailsSolutionView.vue";
+import ProblemDetailsCommentsView from "@/views/problem/ProblemDetailsCommentsView.vue";
+import ProblemDetailsSubmissionsView from "@/views/problem/ProblemDetailsSubmissionsView.vue";
+import ProblemDetailsSubmissionView from "@/views/problem/ProblemDetailsSubmissionView.vue";
 
 export const routes: Array<RouteRecordRaw> = [
   {
@@ -39,6 +43,36 @@ export const routes: Array<RouteRecordRaw> = [
       access: roleEnum.NOT_LOGIN,
       hideInMenu: true,
     },
+    children: [
+      {
+        path: "/problem/details/:id/solution",
+        name: "题目解法",
+        component: ProblemDetailsSolutionView,
+        meta: {
+          access: roleEnum.NOT_LOGIN,
+          hideInMenu: true,
+        },
+      },
+      {
+        path: "/problem/details/:id/comments",
+        name: "题目评论区",
+        component: ProblemDetailsCommentsView,
+        meta: {
+          access: roleEnum.NOT_LOGIN,
+          hideInMenu: true,
+        },
+      },
+      {
+        path: "/problem/details/:id/submissions",
+        name: "题目提交历史",
+        component: ProblemDetailsSubmissionsView,
+        props: true,
+        meta: {
+          access: roleEnum.DEFAULT_USER,
+          hideInMenu: true,
+        },
+      },
+    ],
   },
   {
     path: "/problem/add",

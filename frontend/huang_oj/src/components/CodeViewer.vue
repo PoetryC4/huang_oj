@@ -1,22 +1,8 @@
 <template>
-  <div id="code_editor">
-    <a-select
-      style="margin-left: 50px"
-      v-model="language"
-      :style="{ width: '180px' }"
-      placeholder="选择一门编程语言"
-      @change="handleSelectChange"
-    >
-      <a-option
-        v-for="item of langs"
-        :value="item.name"
-        :label="item.fancyName"
-        :key="item"
-      />
-    </a-select>
+  <div id="code_viewer">
     <div
-      id="code_editor_inset"
-      ref="codeEditorRef"
+      id="code_viewer_inset"
+      ref="codeViewerRef"
       style="min-height: 600px"
     ></div>
   </div>
@@ -34,7 +20,7 @@ import {
   computed,
 } from "vue";
 
-const codeEditorRef = ref();
+const codeViewerRef = ref();
 const codeEditor = ref();
 const langs = [
   {
@@ -94,10 +80,8 @@ const langs = [
 interface Props {
   codeLanguage: string;
   currentCode: string;
-  nextCode: string;
-  handleChange: (v: string) => void;
-  handleLanguageChange: (v: string) => string;
   handleEditorInit: () => string;
+  handleLangInit: () => string;
 }
 
 interface Emits {
@@ -107,15 +91,10 @@ interface Emits {
 const props = withDefaults(defineProps<Props>(), {
   codeLanguage: "java",
   currentCode: () => "",
-  nextCode: () => "",
-  handleChange: (v: string) => {
-    console.log(v);
-  },
-  handleLanguageChange: (v: string) => {
-    console.log(v);
+  handleEditorInit: () => {
     return "";
   },
-  handleEditorInit: () => {
+  handleLangInit: () => {
     return "";
   },
 });
@@ -129,23 +108,9 @@ const language = computed({
   },
 });
 
-async function handleSelectChange(v: string) {
-  let next_code = props.handleLanguageChange(v);
-  emit("update:codeLanguage", v);
-  monaco.editor.setModelLanguage(
-    toRaw(codeEditor.value).getModel(),
-    language.value.toLowerCase()
-  );
-  if (next_code != null && next_code != "") {
-    toRaw(codeEditor.value).setValue(next_code);
-  } else {
-    toRaw(codeEditor.value).setValue("");
-  }
-}
-
 onMounted(() => {
   // 初始化编辑器，确保dom已经渲染
-  codeEditor.value = monaco.editor.create(codeEditorRef.value, {
+  codeEditor.value = monaco.editor.create(codeViewerRef.value, {
     value: props.currentCode, //编辑器初始显示文字
     language: props.codeLanguage, //此处使用的python，其他语言支持自行查阅demo
     theme: "vs", //官方自带三种主题vs, hc-black, or vs-dark
@@ -163,18 +128,20 @@ onMounted(() => {
       enabled: true,
     },
   });
-  codeEditor.value.onDidChangeModelContent(() => {
-    props.handleChange(toRaw(codeEditor.value).getValue());
-  });
 });
 onMounted(() => {
   setTimeout(() => {
     let initCode = props.handleEditorInit();
+    let langS = props.handleLangInit();
     if (initCode != null && initCode != "") {
       toRaw(codeEditor.value).setValue(initCode);
     } else {
       toRaw(codeEditor.value).setValue("");
     }
+    monaco.editor.setModelLanguage(
+      toRaw(codeEditor.value).getModel(),
+      langS.toLowerCase()
+    );
   }, 500);
 });
 </script>

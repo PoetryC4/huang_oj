@@ -5,17 +5,18 @@ import com.huang.oj.model.dto.submission.JudgeInfo;
 import com.huang.oj.model.enums.ProblemLanguageMemoryEnum;
 import com.huang.oj.model.enums.ProblemLanguageTimeEnum;
 import com.huang.oj.model.enums.SubmissionResultEnum;
+import com.huang.oj.judge.sandbox.strategy.JudgeStrategy;
+import org.springframework.stereotype.Service;
 
+@Service
 public class JudgeStrategyImpl implements JudgeStrategy {
     @Override
-    public boolean judgeLimit(String language, JudgeInfo judgeInfo, JudgeConfig judgeConfig) {
-        if (judgeInfo.getMemoryUsed() > (ProblemLanguageMemoryEnum.getEnumByValue(language) == null ? 0 : ProblemLanguageMemoryEnum.getEnumByValue(language).getValue()) + judgeConfig.getMemoryLimit()) {
-            judgeInfo.setResultStr(SubmissionResultEnum.TIME_LIMIT_EXCEEDED.getValue());
-            return false;
-        } else if (judgeInfo.getTimeUsed() > (ProblemLanguageTimeEnum.getEnumByValue(language) == null ? 0 : ProblemLanguageTimeEnum.getEnumByValue(language).getValue()) + judgeConfig.getTimeLimit()) {
-            judgeInfo.setResultStr(SubmissionResultEnum.MEMORY_LIMIT_EXCEEDED.getValue());
-            return false;
+    public String judgeLimit(String language, Long timeUsed, Long memoryUsed, JudgeConfig judgeConfig) {
+        if (memoryUsed / Math.pow(2, 20) > (ProblemLanguageMemoryEnum.getEnumByValue(language) == null ? 0 : ProblemLanguageMemoryEnum.getEnumByValue(language).getValue()) + judgeConfig.getMemoryLimit()) {
+            return SubmissionResultEnum.MEMORY_LIMIT_EXCEEDED.getValue();
+        } else if (timeUsed > (ProblemLanguageTimeEnum.getEnumByValue(language) == null ? 0 : ProblemLanguageTimeEnum.getEnumByValue(language).getValue()) + judgeConfig.getTimeLimit()) {
+            return SubmissionResultEnum.TIME_LIMIT_EXCEEDED.getValue();
         }
-        return true;
+        return SubmissionResultEnum.ACCEPT.getValue();
     }
 }
