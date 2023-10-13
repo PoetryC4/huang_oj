@@ -2,11 +2,13 @@ package com.huang.oj.judge.sandbox.model;
 
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class ProcessRunResult {
-    private String runtime;
-    private String memoryUsed;
-    private String stdOut;
-    private String funcReturn;
+    private List<Long> runtime;
+    private List<Long> memoryUsed;
+    private List<String> stdOut;
+    private List<String> funcReturn;
     private String errMessage;
 }

@@ -21,7 +21,7 @@ import {
 } from "vue";
 
 const codeViewerRef = ref();
-const codeEditor = ref();
+const codeViewer = ref();
 const langs = [
   {
     name: "bat",
@@ -110,13 +110,13 @@ const language = computed({
 
 onMounted(() => {
   // 初始化编辑器，确保dom已经渲染
-  codeEditor.value = monaco.editor.create(codeViewerRef.value, {
+  codeViewer.value = monaco.editor.create(codeViewerRef.value, {
     value: props.currentCode, //编辑器初始显示文字
     language: props.codeLanguage, //此处使用的python，其他语言支持自行查阅demo
     theme: "vs", //官方自带三种主题vs, hc-black, or vs-dark
     selectOnLineNumbers: true, //显示行号
     roundedSelection: false,
-    readOnly: false, // 只读
+    readOnly: true, // 只读
     cursorStyle: "line", //光标样式
     automaticLayout: true, //自动布局
     glyphMargin: true, //字形边缘
@@ -134,12 +134,12 @@ onMounted(() => {
     let initCode = props.handleEditorInit();
     let langS = props.handleLangInit();
     if (initCode != null && initCode != "") {
-      toRaw(codeEditor.value).setValue(initCode);
+      toRaw(codeViewer.value).setValue(initCode);
     } else {
-      toRaw(codeEditor.value).setValue("");
+      toRaw(codeViewer.value).setValue("");
     }
     monaco.editor.setModelLanguage(
-      toRaw(codeEditor.value).getModel(),
+      toRaw(codeViewer.value).getModel(),
       langS.toLowerCase()
     );
   }, 500);

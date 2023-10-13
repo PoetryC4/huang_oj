@@ -1,5 +1,6 @@
 package com.huang.oj.judge.sandbox.model;
 
+import com.huang.oj.model.dto.problem.FunctionConfig;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,9 +14,8 @@ import java.util.List;
 @AllArgsConstructor
 public class CodeExecuteRequest {
 
-    private String initCode;
-    private String correctCode;
     private String code;
     private String language;
     private String inputCases;
+    private FunctionConfig functionConfig;
 }

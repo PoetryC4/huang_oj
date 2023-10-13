@@ -14,22 +14,26 @@ import java.util.stream.Collectors;
  */
 public enum SubmissionResultEnum {
 
-    ACCEPT("Accepted", "Accepted"),
-    COMPILE_ERROR("Compile Error", "Compile Error"),
-    WRONG_ANSWER("Wrong Answer", "Wrong Answer"),
-    MEMORY_LIMIT_EXCEEDED("Memory Limit Exceeded", "Memory Limit Exceeded"),
-    TIME_LIMIT_EXCEEDED("Time Limit Exceeded", "Time Limit Exceeded"),
-    OUTPUT_LIMIT_EXCEEDED("Output Limit Exceeded", "Output Limit Exceeded"),
-    WAITING("Waiting", "Waiting"),
-    DANGEROUS_OPERATION("Dangerous Operation", "Dangerous Operation"),
-    RUNTIME_ERROR("Runtime Error", "Runtime Error"),
-    SYSTEM_ERROR("System Error", "System Error");
+    ACCEPT("Accepted", 0),
+    COMPILE_ERROR("Compile Error", 1),
+    WRONG_ANSWER("Wrong Answer", 2),
+    MEMORY_LIMIT_EXCEEDED("Memory Limit Exceeded", 3),
+    TIME_LIMIT_EXCEEDED("Time Limit Exceeded", 4),
+    OUTPUT_LIMIT_EXCEEDED("Output Limit Exceeded", 5),
+    WAITING("Waiting", 6),
+    DANGEROUS_OPERATION("Dangerous Operation", 7),
+    RUNTIME_ERROR("Runtime Error", 8),
+    SYSTEM_ERROR("System Error", 9),
+    SUBMITTING("提交中", 10),
+    COMPILING("编译中", 11),
+    RUNNING("运行中", 12),
+    JUDGING("判断中", 13);
 
     private final String text;
 
-    private final String value;
+    private final Integer value;
 
-    SubmissionResultEnum(String text, String value) {
+    SubmissionResultEnum(String text, Integer value) {
         this.text = text;
         this.value = value;
     }
@@ -39,7 +43,7 @@ public enum SubmissionResultEnum {
      *
      * @return
      */
-    public static List<String> getValues() {
+    public static List<Integer> getValues() {
         return Arrays.stream(values()).map(item -> item.value).collect(Collectors.toList());
     }
 
@@ -49,7 +53,7 @@ public enum SubmissionResultEnum {
      * @param value
      * @return
      */
-    public static SubmissionResultEnum getEnumByValue(String value) {
+    public static SubmissionResultEnum getEnumByValue(Integer value) {
         if (ObjectUtils.isEmpty(value)) {
             return null;
         }
@@ -61,7 +65,7 @@ public enum SubmissionResultEnum {
         return null;
     }
 
-    public String getValue() {
+    public Integer getValue() {
         return value;
     }
 

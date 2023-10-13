@@ -7,5 +7,6 @@ export type FunctionConfig = {
     correctCode?: Record<string, string>;
     defaultCode?: Record<string, string>;
     initCode?: Record<string, string>;
+    validCode?: Record<string, string>;
     varCount?: number;
 };

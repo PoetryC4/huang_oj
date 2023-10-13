@@ -12,6 +12,11 @@ public class FunctionConfig {
      */
     private Map<String, String> defaultCode;
     /**
+     * 用于验证输入的函数
+     */
+
+    private Map<String, String> validCode;
+    /**
      * 用于初步处理的函数
      */
 

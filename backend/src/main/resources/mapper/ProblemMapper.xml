@@ -55,8 +55,10 @@
         <if test="param6!=-1">
             OR userId !=#{param6}
         </if> THEN 0
-        WHEN judgeStatus = 0 OR judgeStatus = 1 OR judgeStatus = 2 OR judgeStatus = 3 OR judgeStatus = 4 THEN -1
-        WHEN judgeStatus = 5 THEN 1
+        WHEN judgeStatus = 1 OR judgeStatus = 2 OR judgeStatus = 3 OR judgeStatus = 4 OR judgeStatus = 5
+        OR judgeStatus = 6 OR judgeStatus = 7 OR judgeStatus = 8 OR judgeStatus = 9  OR judgeStatus = 10
+        OR judgeStatus = 11 OR judgeStatus = 12 OR judgeStatus = 13 THEN -1
+        WHEN judgeStatus = 0 THEN 1
         END AS judgeStatus
         FROM
         (SELECT
@@ -96,8 +98,10 @@
         <if test="param6!=-1">
             OR userId !=#{param6}
         </if> THEN 0
-        WHEN judgeStatus = 0 OR judgeStatus = 1 OR judgeStatus = 2 OR judgeStatus = 3 OR judgeStatus = 4 THEN -1
-        WHEN judgeStatus = 5 THEN 1
+        WHEN judgeStatus = 1 OR judgeStatus = 2 OR judgeStatus = 3 OR judgeStatus = 4 OR judgeStatus = 5
+        OR judgeStatus = 6 OR judgeStatus = 7 OR judgeStatus = 8 OR judgeStatus = 9  OR judgeStatus = 10
+        OR judgeStatus = 11 OR judgeStatus = 12 OR judgeStatus = 13 THEN -1
+        WHEN judgeStatus = 0 THEN 1
         END AS judgeStatus
         FROM
         (SELECT

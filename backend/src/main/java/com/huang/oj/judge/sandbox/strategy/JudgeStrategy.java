@@ -6,5 +6,5 @@ import org.springframework.stereotype.Service;
 
 public interface JudgeStrategy {
 
-    public String judgeLimit(String language, Long timeUsed, Long memoryUsed, JudgeConfig judgeConfig);
+    public Integer judgeLimit(String language, Long timeUsed, Long memoryUsed, JudgeConfig judgeConfig);
 }

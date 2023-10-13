@@ -272,7 +272,7 @@ import {
   IconExperiment,
 } from "@arco-design/web-vue/es/icon";
 import { roleEnum } from "@/components/scripts/access/roleEnum";
-import { languageEnum } from "@/components/scripts/language/languageEnum";
+import { languageEnum } from "@/components/scripts/enum/languageEnum";
 import { useRoute, useRouter } from "vue-router";
 import moment from "moment";
 import { defineProps, withDefaults } from "vue/dist/vue";

@@ -19,7 +19,7 @@ import com.huang.oj.model.dto.problem.ProblemQueryRequest;
 import com.huang.oj.model.entity.Problem;
 import com.huang.oj.model.entity.Submission;
 import com.huang.oj.model.entity.User;
-import com.huang.oj.model.enums.SubmissionStatusEnum;
+import com.huang.oj.model.enums.SubmissionResultEnum;
 import com.huang.oj.model.vo.ProblemVO;
 import com.huang.oj.model.vo.UserVO;
 import com.huang.oj.service.ProblemService;
@@ -31,9 +31,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -151,7 +149,7 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
             queryWrapper1.eq("userId", loginUser.getId());
             queryWrapper1.eq("problemId", problemVO.getId());
             long count1 = submissionMapper.selectCount(queryWrapper1);
-            queryWrapper1.eq("judgeStatus", SubmissionStatusEnum.SUCCESS.getValue());
+            queryWrapper1.eq("judgeStatus", SubmissionResultEnum.ACCEPT.getValue());
             long count2 = submissionMapper.selectCount(queryWrapper1);
             if (count2 > 0) {
                 problemVO.setIsSolved(1);
@@ -231,7 +229,7 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
                 queryWrapper1.eq("userId", finalLoginUser.getId());
                 queryWrapper1.eq("problemId", problemVO.getId());
                 long count1 = submissionMapper.selectCount(queryWrapper1);
-                queryWrapper1.eq("judgeStatus", SubmissionStatusEnum.SUCCESS.getValue());
+                queryWrapper1.eq("judgeStatus", SubmissionResultEnum.ACCEPT.getValue());
                 long count2 = submissionMapper.selectCount(queryWrapper1);
                 if (count2 > 0) {
                     problemVO.setIsSolved(1);

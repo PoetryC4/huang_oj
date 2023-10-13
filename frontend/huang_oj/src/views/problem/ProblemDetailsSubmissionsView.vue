@@ -28,12 +28,13 @@
         placeholder="状态选择"
         @change="getSubmissionList"
       >
-        <a-option :value="0"> 提交中</a-option>
-        <a-option :value="1"> 编译中</a-option>
-        <a-option :value="2"> 运行中</a-option>
-        <a-option :value="3"> 判断中</a-option>
-        <a-option :value="4" style="color: red"> 失败</a-option>
-        <a-option :value="5" style="color: green"> 成功</a-option>
+        <a-option
+          v-for="submissionResult in SubmissionResultEnums"
+          :value="submissionResult.value"
+          :key="submissionResult.value"
+        >
+          {{ submissionResult.label }}
+        </a-option>
       </a-select>
     </a-row>
     <a-table :data="submissionsData.submissionTable" stripe :pagination="false">
@@ -219,10 +220,11 @@ import { useRoute, useRouter } from "vue-router";
 import { SubmissionControllerService } from "@/api";
 import { Message } from "@arco-design/web-vue";
 import store from "@/store";
-import { languageEnum } from "@/components/scripts/language/languageEnum";
+import { languageEnum } from "@/components/scripts/enum/languageEnum";
 import * as path from "path";
 import CodeEditor from "@/components/CodeEditor.vue";
 import CodeViewer from "@/components/CodeViewer.vue";
+import { SubmissionResultEnums } from "@/components/scripts/enum/SubmissionResultEnums";
 
 interface Props {
   id: string;

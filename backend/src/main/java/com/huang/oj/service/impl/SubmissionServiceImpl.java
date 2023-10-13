@@ -6,7 +6,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.huang.oj.common.ErrorCode;
 import com.huang.oj.constant.CommonConstant;
 import com.huang.oj.exception.BusinessException;
-import com.huang.oj.mapper.ProblemMapper;
 import com.huang.oj.mapper.SubmissionMapper;
 import com.huang.oj.model.dto.submission.ProblemSubmitQuest;
 import com.huang.oj.model.dto.submission.SubmissionQueryQuest;
@@ -15,8 +14,6 @@ import com.huang.oj.model.entity.Submission;
 import com.huang.oj.model.entity.User;
 import com.huang.oj.model.enums.ProblemLanguageEnum;
 import com.huang.oj.model.enums.SubmissionResultEnum;
-import com.huang.oj.model.enums.SubmissionStatusEnum;
-import com.huang.oj.model.vo.ProblemVO;
 import com.huang.oj.model.vo.SubmissionVO;
 import com.huang.oj.model.vo.UserVO;
 import com.huang.oj.service.ProblemService;
@@ -101,7 +98,7 @@ public class SubmissionServiceImpl extends ServiceImpl<SubmissionMapper, Submiss
         if (userId != null && userId > 0) {
             queryWrapper.eq("userId", userId);
         }
-        if (judgeStatus != null && SubmissionStatusEnum.getEnumByValue(judgeStatus) != null) {
+        if (judgeStatus != null && SubmissionResultEnum.getEnumByValue(judgeStatus) != null) {
             queryWrapper.eq("judgeStatus", judgeStatus);
         }
         queryWrapper.eq("isDelete", false);

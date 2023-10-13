@@ -16,8 +16,7 @@ import com.huang.oj.model.dto.submission.ProblemTestExampleRequest;
 import com.huang.oj.model.dto.submission.SubmissionQueryQuest;
 import com.huang.oj.model.entity.Submission;
 import com.huang.oj.model.entity.User;
-import com.huang.oj.model.enums.SubmissionStatusEnum;
-import com.huang.oj.model.vo.ProblemVO;
+import com.huang.oj.model.enums.SubmissionResultEnum;
 import com.huang.oj.model.vo.SubmissionVO;
 import com.huang.oj.model.vo.UserVO;
 import com.huang.oj.service.SubmissionService;
@@ -71,7 +70,7 @@ public class SubmissionController {
         submission.setProblemId(problemSubmitQuest.getProblemId());
         submission.setLanguage(problemSubmitQuest.getLanguage());
         submission.setUserId(loginUser.getId());
-        submission.setJudgeStatus(SubmissionStatusEnum.COMPILING.getValue());
+        submission.setJudgeStatus(SubmissionResultEnum.COMPILING.getValue());
         boolean save = submissionService.save(submission);
         ThrowUtils.throwIf(!save, ErrorCode.OPERATION_ERROR);
         JudgeResult judgeResult = judgeService.doJudge(submission.getId());

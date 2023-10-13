@@ -152,6 +152,20 @@
           placeholder="请输入提供的样例个数"
         />
       </a-form-item>
+      <a-form-item
+        field="functionConfig.validCode"
+        label="样例输入输入验证代码段"
+      >
+        <CodeEditor
+          :next-code="nextCodeValid"
+          :code-language="codeLanguageValid"
+          :current-code="curValidCode"
+          :handle-change="onChangeCodeValid"
+          :handle-language-change="doLanguageChangeValid"
+          :handle-editor-init="doInitCodeValid"
+          style="height: 600px; min-width: 800px"
+        />
+      </a-form-item>
       <a-form-item field="functionConfig.initCode" label="样例输入初始化段">
         <CodeEditor
           :next-code="nextCodeInit"
@@ -261,6 +275,7 @@ const state = reactive({
       initCode: {},
       defaultCode: {},
       correctCode: {},
+      validCode: {},
       varCount: 0,
     },
   },
@@ -280,9 +295,37 @@ const nextCodeCorrect = ref("");
 const curCorrectCode = ref("");
 const codeLanguageCorrect = ref("java");
 
+const nextCodeValid = ref("");
+const curValidCode = ref("");
+const codeLanguageValid = ref("java");
+
+const doInitCodeValid = () => {
+  curValidCode.value =
+    state.formDataProblem.functionConfig?.validCode[codeLanguageValid.value] ||
+    "";
+  return curValidCode.value;
+};
+const onChangeCodeValid = (v: string) => {
+  curValidCode.value = v;
+};
+const doLanguageChangeValid = (v: string) => {
+  state.formDataProblem.functionConfig.validCode[codeLanguageValid.value] =
+    curValidCode.value;
+  if (
+    state.formDataProblem.functionConfig.validCode[v] != null &&
+    state.formDataProblem.functionConfig.validCode[v] != ""
+  ) {
+    nextCodeValid.value = state.formDataProblem.functionConfig.validCode[v];
+  } else {
+    nextCodeValid.value = "";
+  }
+  codeLanguageValid.value = v;
+  return nextCodeValid.value;
+};
 const doInitCodeInit = () => {
   curInitCode.value =
-    state.formDataProblem.functionConfig.initCode[codeLanguageInit.value] || "";
+    state.formDataProblem.functionConfig?.initCode[codeLanguageInit.value] ||
+    "";
   return curInitCode.value;
 };
 const onChangeCodeInit = (v: string) => {
@@ -304,7 +347,7 @@ const doLanguageChangeInit = (v: string) => {
 };
 const doInitCodeDefault = () => {
   curDefaultCode.value =
-    state.formDataProblem.functionConfig.defaultCode[
+    state.formDataProblem.functionConfig?.defaultCode[
       codeLanguageDefault.value
     ] || "";
   return curDefaultCode.value;
@@ -328,7 +371,7 @@ const doLanguageChangeDefault = (v: string) => {
 };
 const doInitCodeCorrect = () => {
   curCorrectCode.value =
-    state.formDataProblem.functionConfig.correctCode[
+    state.formDataProblem.functionConfig?.correctCode[
       codeLanguageCorrect.value
     ] || "";
   return curCorrectCode.value;
@@ -378,6 +421,8 @@ async function handleProblemSubmit() {
     curDefaultCode.value;
   state.formDataProblem.functionConfig.correctCode[codeLanguageCorrect.value] =
     curCorrectCode.value;
+  state.formDataProblem.functionConfig.validCode[codeLanguageValid.value] =
+    curValidCode.value;
   let res;
   if (id.value === "") {
     res = await ProblemControllerService.addProblemUsingPost({
@@ -418,11 +463,13 @@ async function handleProblemFillIn(id: string) {
     state.formDataProblem.tags = res.data.tags;
     state.formDataProblem.judgeConfig.hint = res.data.judgeConfig.hint;
     state.formDataProblem.functionConfig.initCode =
-      res.data.functionConfig.initCode;
+      res.data.functionConfig.initCode || {};
     state.formDataProblem.functionConfig.defaultCode =
-      res.data.functionConfig.defaultCode;
+      res.data.functionConfig.defaultCode || {};
     state.formDataProblem.functionConfig.correctCode =
-      res.data.functionConfig.correctCode;
+      res.data.functionConfig.correctCode || {};
+    state.formDataProblem.functionConfig.validCode =
+      res.data.functionConfig.validCode || {};
     state.formDataProblem.functionConfig.varCount = parseInt(
       res.data.functionConfig.varCount
     );
