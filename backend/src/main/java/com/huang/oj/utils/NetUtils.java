@@ -65,7 +65,6 @@ public class NetUtils {
     public static String RequestWithBody(String protocol, String host, String port, String path, Object requestBody) throws Exception {
 
         URL url = new URL(protocol + "://" + host + ":" + port + "/" + path);
-        System.out.println(url);
         // 打开和URL之间的连接
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
         con.setRequestMethod("POST");//请求post方式

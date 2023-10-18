@@ -78,7 +78,12 @@
           <template #cell="{ record }">
             <icon-qrcode />
             <span style="font-size: 20px; margin-left: 10px">
-              {{ record.judgeResult?.judgeInfo?.memoryUsed / 1048576 || 0 }}
+              {{
+                (
+                  (record.judgeResult?.judgeInfo?.memoryUsed /
+                    1048576) as number
+                ).toFixed(2) || 0
+              }}
             </span>
             MB
           </template>
@@ -155,7 +160,10 @@
           占用内存
           <span style="font-size: 20px; margin-left: 10px">
             {{
-              submissionDetail.judgeResult?.judgeInfo?.memoryUsed / 1048576 || 0
+              (
+                (submissionDetail.judgeResult?.judgeInfo?.memoryUsed /
+                  1048576) as number
+              ).toFixed(2) || 0
             }}
           </span>
           MB

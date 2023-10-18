@@ -39,7 +39,7 @@
         SELECT COUNT(*)
         FROM submission
         WHERE problemId = #{problemId}
-          and judgeStatus = 5
+          and judgeStatus = 0
     </select>
     <select id="getProblemQueryRes" resultType="com.huang.oj.model.entity.Problem">
         SELECT distinct p.id as id,p.title as title,p.solution as solution,p.difficulty as difficulty,p.content as

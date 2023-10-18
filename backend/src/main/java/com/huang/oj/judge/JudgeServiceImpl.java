@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -102,7 +103,7 @@ public class JudgeServiceImpl implements JudgeService {
         JudgeConfig judgeConfig = JSON.parseObject(problem.getJudgeConfig(), JudgeConfig.class);
         String responseStr = "";
         try {
-            responseStr = RequestWithBody("http", "127.0.0.1", "8103", "codeSandbox/runProblem", codeExecuteRequest);
+            responseStr = RequestWithBody("http", "192.168.137.128", "8103", "codeSandbox/runProblem", codeExecuteRequest);
             ProcessRunResult processRunResult = com.alibaba.fastjson2.JSON.parseObject(responseStr, ProcessRunResult.class);
             if (processRunResult.getErrMessage() != null) {
                 JudgeResult judgeResult = new JudgeResult();
@@ -118,11 +119,14 @@ public class JudgeServiceImpl implements JudgeService {
             JudgeResult judgeResult = new JudgeResult();
             String[] expectedOutput = judgeCases.getExpected().split("\n");
             String[] inputs = judgeCases.getInput().split("\n");
+            List<String> expectedOutputList = Arrays.asList(expectedOutput);
+            expectedOutputList.replaceAll(String::trim);
 
             List<Long> runtimeList = processRunResult.getRuntime();
             List<Long> memoryList = processRunResult.getMemoryUsed();
             List<String> stdOutList = processRunResult.getStdOut();
             List<String> outputList = processRunResult.getFuncReturn();
+            outputList.replaceAll(String::trim);
             String errMessage = processRunResult.getErrMessage();
 
             JudgeInfo judgeInfo = new JudgeInfo();
@@ -132,13 +136,20 @@ public class JudgeServiceImpl implements JudgeService {
             judgeInfo.setDetailCode(null);
 
             int i;
-            for (i = 0; i < expectedOutput.length; i++) {
+            for (i = 0; i < outputList.size(); i++) {
 
                 memorySum += memoryList.get(i);
                 runtimeSum += runtimeList.get(i);
                 String judgeRes = SubmissionResultEnum.getEnumByValue(judgeStrategy.judgeLimit(submission.getLanguage(), runtimeSum, memorySum, judgeConfig)).getText();
                 // 检测空间与时间使用
                 if (!Objects.equals(judgeRes, SubmissionResultEnum.ACCEPT.getText())) {
+                    if (Objects.equals(judgeRes, SubmissionResultEnum.TIME_LIMIT_EXCEEDED.getText())) {
+                        submission1.setJudgeStatus(SubmissionResultEnum.TIME_LIMIT_EXCEEDED.getValue());
+                    }
+                    if (Objects.equals(judgeRes, SubmissionResultEnum.MEMORY_LIMIT_EXCEEDED.getText())) {
+                        submission1.setJudgeStatus(SubmissionResultEnum.MEMORY_LIMIT_EXCEEDED.getValue());
+                    }
+                    submissionService.updateById(submission1);
 
                     JudgeCaseVO judgeCaseVO = new JudgeCaseVO();
                     judgeCaseVO.setStdout(stdOutList.get(i));
@@ -149,7 +160,7 @@ public class JudgeServiceImpl implements JudgeService {
                         inputTmp.append("\n");
                     }
                     judgeCaseVO.setInput(inputTmp.toString());
-                    judgeCaseVO.setExpected(expectedOutput[i]);
+                    judgeCaseVO.setExpected(expectedOutputList.get(i));
                     judgeCaseVO.setRuntime(runtimeList.get(i));
                     judgeCaseVO.setMemory(memoryList.get(i));
                     judgeCaseVO.setDetailCode(null);
@@ -161,10 +172,10 @@ public class JudgeServiceImpl implements JudgeService {
                     judgeResult.setJudgeCaseVOList(judgeCaseVOList);
                     break;
                 }
-                if (outputList.get(i).charAt(outputList.get(i).length() - 1) == '\n') {
-                    expectedOutput[i] = expectedOutput[i] + '\n';
-                }//解决换行符读取问题
-                if (!Objects.equals(expectedOutput[i], outputList.get(i))) {//放入错误样例
+                if (!Objects.equals(expectedOutputList.get(i), outputList.get(i))) {//放入错误样例
+                    submission1.setJudgeStatus(SubmissionResultEnum.WRONG_ANSWER.getValue());
+                    submissionService.updateById(submission1);
+
                     JudgeCaseVO judgeCaseVO = new JudgeCaseVO();
                     judgeCaseVO.setStdout(stdOutList.get(i));
                     judgeCaseVO.setOutput(outputList.get(i));
@@ -174,7 +185,7 @@ public class JudgeServiceImpl implements JudgeService {
                         inputTmp.append("\n");
                     }
                     judgeCaseVO.setInput(inputTmp.toString());
-                    judgeCaseVO.setExpected(expectedOutput[i]);
+                    judgeCaseVO.setExpected(expectedOutputList.get(i));
                     judgeCaseVO.setRuntime(runtimeList.get(i));
                     judgeCaseVO.setMemory(memoryList.get(i));
                     judgeCaseVO.setDetailCode(null);
@@ -244,9 +255,18 @@ public class JudgeServiceImpl implements JudgeService {
         String responseStr1 = "";
         List<String> expectedOutputs;
         try {
-            responseStr1 = RequestWithBody("http", "127.0.0.1", "8103", "codeSandbox/runProblem", codeExecuteRequest);
+            responseStr1 = RequestWithBody("http", "192.168.137.128", "8103", "codeSandbox/runProblem", codeExecuteRequest);
             ProcessRunResult processRunResult = com.alibaba.fastjson2.JSON.parseObject(responseStr1, ProcessRunResult.class);
+            if (processRunResult.getErrMessage() != null) {
+                JudgeResult judgeResult = new JudgeResult();
+                JudgeInfo judgeInfo = new JudgeInfo();
+                judgeInfo.setResultStr(processRunResult.getErrMessage());
+                judgeResult.setJudgeInfo(judgeInfo);
+                return judgeResult;
+            }
             expectedOutputs = processRunResult.getFuncReturn();
+            //去除前置后置换行符
+            expectedOutputs.replaceAll(String::trim);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -255,7 +275,7 @@ public class JudgeServiceImpl implements JudgeService {
 
         String responseStr2 = "";
         try {
-            responseStr2 = RequestWithBody("http", "127.0.0.1", "8103", "codeSandbox/runProblem", codeExecuteRequest);
+            responseStr2 = RequestWithBody("http", "192.168.137.128", "8103", "codeSandbox/runProblem", codeExecuteRequest);
             ProcessRunResult processRunResult = com.alibaba.fastjson2.JSON.parseObject(responseStr2, ProcessRunResult.class);
             if (processRunResult.getErrMessage() != null) {
                 JudgeResult judgeResult = new JudgeResult();
@@ -273,6 +293,8 @@ public class JudgeServiceImpl implements JudgeService {
             List<Long> memoryList = processRunResult.getMemoryUsed();
             List<String> stdOutList = processRunResult.getStdOut();
             List<String> outputList = processRunResult.getFuncReturn();
+            //去除前置后置换行符
+            outputList.replaceAll(String::trim);
             String errMessage = processRunResult.getErrMessage();
 
             JudgeInfo judgeInfo = new JudgeInfo();
@@ -310,6 +332,9 @@ public class JudgeServiceImpl implements JudgeService {
                     judgeInfo.setResultStr(judgeRes);
                     break;
                 }
+                System.out.println(expectedOutputs.get(i));
+                System.out.println(outputList.get(i));
+                System.out.println(Objects.equals(expectedOutputs.get(i), outputList.get(i)));
                 if (!Objects.equals(expectedOutputs.get(i), outputList.get(i))) {//放入错误样例
                     judgeCaseVO.setResult(SubmissionResultEnum.WRONG_ANSWER.getText());
                     judgeResult.setJudgeCaseVO(judgeCaseVO);
