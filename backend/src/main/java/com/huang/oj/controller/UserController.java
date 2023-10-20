@@ -29,6 +29,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.huang.oj.utils.RedisUtils;
 import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.bean.WxOAuth2UserInfo;
 import me.chanjar.weixin.common.bean.oauth2.WxOAuth2AccessToken;
@@ -55,7 +56,8 @@ import static com.huang.oj.utils.EncryptionUtils.getRandomString;
 @RequestMapping("/user")
 @Slf4j
 public class UserController {
-
+    @Resource
+    private RedisUtils redisUtils;
     @Resource
     private UserService userService;
 
@@ -246,8 +248,13 @@ public class UserController {
         if (id <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        User user = userService.getById(id);
-        ThrowUtils.throwIf(user == null, ErrorCode.NOT_FOUND_ERROR);
+        String key = "UserCache:" + id;
+        User user = (User) redisUtils.get(key);
+        if (user == null) {
+            user = userService.getById(id);
+            ThrowUtils.throwIf(user == null, ErrorCode.NOT_FOUND_ERROR);
+            redisUtils.set(key, user);
+        }
         return ResultUtils.success(user);
     }
 

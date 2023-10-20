@@ -21,6 +21,7 @@ import com.huang.oj.model.vo.SubmissionVO;
 import com.huang.oj.model.vo.UserVO;
 import com.huang.oj.service.SubmissionService;
 import com.huang.oj.service.UserService;
+import com.huang.oj.utils.RedisUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
@@ -39,6 +40,8 @@ import javax.servlet.http.HttpServletRequest;
 @Slf4j
 public class SubmissionController {
 
+    @Resource
+    private RedisUtils redisUtils;
     @Resource
     private SubmissionService submissionService;
 
@@ -136,9 +139,14 @@ public class SubmissionController {
         if (id <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        Submission submission = submissionService.getById(id);
+        String key = "SubmissionVO:" + id;
+        Submission submission = (Submission) redisUtils.get(key);
         if (submission == null) {
-            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+            submission = submissionService.getById(id);
+            if (submission == null) {
+                throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+            }
+            redisUtils.set(key, submission);
         }
         return ResultUtils.success(submissionService.getSubmissionVO(submission, request));
     }

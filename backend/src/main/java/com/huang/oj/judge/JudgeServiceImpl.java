@@ -47,7 +47,7 @@ public class JudgeServiceImpl implements JudgeService {
     @Resource
     private JudgeStrategy judgeStrategy;
 
-    @Value("${sandbox.type: example}")
+    @Value("${sandbox.type}")
     private String type;
 
     @Override
@@ -332,9 +332,6 @@ public class JudgeServiceImpl implements JudgeService {
                     judgeInfo.setResultStr(judgeRes);
                     break;
                 }
-                System.out.println(expectedOutputs.get(i));
-                System.out.println(outputList.get(i));
-                System.out.println(Objects.equals(expectedOutputs.get(i), outputList.get(i)));
                 if (!Objects.equals(expectedOutputs.get(i), outputList.get(i))) {//放入错误样例
                     judgeCaseVO.setResult(SubmissionResultEnum.WRONG_ANSWER.getText());
                     judgeResult.setJudgeCaseVO(judgeCaseVO);

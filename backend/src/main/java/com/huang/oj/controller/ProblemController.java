@@ -20,9 +20,11 @@ import com.huang.oj.model.entity.User;
 import com.huang.oj.model.vo.ProblemVO;
 import com.huang.oj.service.ProblemService;
 import com.huang.oj.service.UserService;
+import com.huang.oj.utils.RedisUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -42,6 +44,12 @@ import static com.huang.oj.utils.SqlUtils.isAnyNull;
 @RequestMapping("/problem")
 @Slf4j
 public class ProblemController {
+
+    @Value("${spring.redis.timeout}")
+    private Integer redisTimeout;
+
+    @Resource
+    private RedisUtils redisUtils;
 
     @Resource
     private ProblemService problemService;
@@ -170,9 +178,14 @@ public class ProblemController {
         if (id <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        Problem problem = problemService.getById(id);
-        if (problem == null) {
-            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+        String key = "ProblemVO:"+id;
+        Problem problem = (Problem) redisUtils.get(key);
+        if(problem == null) {
+            problem = problemService.getById(id);
+            if (problem == null) {
+                throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+            }
+            redisUtils.set(key, problem, redisTimeout);
         }
         return ResultUtils.success(problemService.getProblemVO(problem, request));
     }

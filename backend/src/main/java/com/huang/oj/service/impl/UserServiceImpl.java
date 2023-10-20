@@ -14,6 +14,7 @@ import com.huang.oj.model.vo.LoginUserVO;
 import com.huang.oj.model.vo.UserVO;
 import com.huang.oj.service.UserService;
 import com.huang.oj.utils.EmailCodeUtils;
+import com.huang.oj.utils.RedisUtils;
 import com.huang.oj.utils.SqlUtils;
 import com.huang.oj.model.dto.user.UserQueryRequest;
 
@@ -44,6 +45,9 @@ import static com.huang.oj.utils.EncryptionUtils.getRandomString;
 @Service
 @Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
+
+    @Resource
+    private RedisUtils redisUtils;
 
     @Override
     public long userRegister(String userAccount, String userPassword, String checkPassword, String userEmail, String emailVerifyCode) {
@@ -231,9 +235,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         // 从数据库查询（追求性能的话可以注释，直接走缓存）
         long userId = currentUser.getId();
-        currentUser = this.getById(userId);
+
+        String key = "UserCache:" + userId;
+        currentUser = (User) redisUtils.get(key);
         if (currentUser == null) {
-            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
+            currentUser = this.getById(userId);
+            if (currentUser == null) {
+                throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
+            }
+            redisUtils.set(key, currentUser);
         }
         return currentUser;
     }
@@ -254,7 +264,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         // 从数据库查询（追求性能的话可以注释，直接走缓存）
         long userId = currentUser.getId();
-        return this.getById(userId);
+
+        String key = "UserCachePermitNull:" + userId;
+        User user = (User) redisUtils.get(key);
+        if (user == null) {
+            user = this.getById(userId);
+            if (user == null) {
+                throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
+            }
+            redisUtils.set(key, user);
+        }
+        return user;
     }
 
     /**
