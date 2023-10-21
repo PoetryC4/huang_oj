@@ -1,7 +1,4 @@
 import { RouteRecordRaw } from "vue-router";
-import HomeView from "@/views/HomeView.vue";
-import AboutView from "@/views/AboutView.vue";
-import AdminView from "@/views/AdminView.vue";
 import NoAuthView from "@/views/NoAuthView.vue";
 import { roleEnum } from "@/components/scripts/access/roleEnum";
 import UserView from "@/views/user/UserView.vue";
@@ -10,28 +7,19 @@ import UserLogoutView from "@/views/user/UserLogoutView.vue";
 import UserRegisterView from "@/views/user/UserRegisterView.vue";
 import ProblemAddView from "@/views/problem/ProblemModifyView.vue";
 import ProblemListView from "@/views/problem/ProblemListView.vue";
-import TestView from "@/views/TestView.vue";
 import ProblemDetailsView from "@/views/problem/ProblemDetailsView.vue";
 import ProblemDetailsSolutionView from "@/views/problem/ProblemDetailsSolutionView.vue";
 import ProblemDetailsCommentsView from "@/views/problem/ProblemDetailsCommentsView.vue";
 import ProblemDetailsSubmissionsView from "@/views/problem/ProblemDetailsSubmissionsView.vue";
-import ProblemDetailsSubmissionView from "@/views/problem/ProblemDetailsSubmissionView.vue";
 
 export const routes: Array<RouteRecordRaw> = [
-  {
-    path: "/test",
-    name: "test",
-    component: TestView,
-    meta: {
-      access: roleEnum.ADMIN,
-    },
-  },
   {
     path: "/problem/list",
     name: "题目列表",
     component: ProblemListView,
     meta: {
       access: roleEnum.NOT_LOGIN,
+      basicLayout: true,
     },
   },
   {
@@ -80,6 +68,7 @@ export const routes: Array<RouteRecordRaw> = [
     component: ProblemAddView,
     meta: {
       access: roleEnum.ADMIN,
+      hideInMenu: true,
     },
   },
   {
@@ -121,28 +110,18 @@ export const routes: Array<RouteRecordRaw> = [
   },
   {
     path: "/",
-    name: "首页",
-    component: HomeView,
+    redirect: "/problem/list",
     meta: {
       access: roleEnum.NOT_LOGIN,
-      basicLayout: true,
+      hideInMenu: true,
     },
   },
   {
-    path: "/about",
-    name: "关于",
-    component: AboutView,
+    path: "/problem",
+    redirect: "/problem/list",
     meta: {
       access: roleEnum.NOT_LOGIN,
-      basicLayout: true,
-    },
-  },
-  {
-    path: "/admin",
-    name: "管理员",
-    component: AdminView,
-    meta: {
-      access: roleEnum.ADMIN,
+      hideInMenu: true,
     },
   },
   {

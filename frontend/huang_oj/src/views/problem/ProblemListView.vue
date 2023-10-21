@@ -9,46 +9,65 @@
         margin-bottom: 30px;
       "
     >
-      <a-input
-        placeholder="请输入要搜索的内容"
-        search-button
-        style="width: 400px; margin-left: 140px"
-        v-model="titleInput"
-        @press-enter="getProblemList"
+      <a-col :span="4">
+        <a-input
+          placeholder="请输入要搜索的内容"
+          search-button
+          style="width: 99%"
+          v-model="titleInput"
+          @press-enter="getProblemList"
+        >
+          <template #button-icon>
+            <icon-search />
+          </template>
+        </a-input>
+      </a-col>
+      <a-col :span="3" :offset="1">
+        <a-select
+          v-model="selectedDifficulty"
+          style="width: 99%"
+          placeholder="难度选择"
+          @change="getProblemList"
+        >
+          <a-option :value="0" style="color: rgb(137, 255, 83)">简单</a-option>
+          <a-option :value="1" style="color: rgb(229, 192, 44)">中等</a-option>
+          <a-option :value="2" style="color: rgb(255, 103, 83)">困难</a-option>
+        </a-select>
+      </a-col>
+      <a-col :span="3" :offset="1">
+        <a-select
+          v-model="selectedStatus"
+          style="width: 99%"
+          placeholder="状态选择"
+          @change="getProblemList"
+        >
+          <a-option :value="-1">
+            <icon-question />
+            尝试过
+          </a-option>
+          <a-option :value="0">
+            <icon-minus />
+            未尝试过
+          </a-option>
+          <a-option :value="1">
+            <icon-check />
+            解答出
+          </a-option>
+        </a-select>
+      </a-col>
+      <a-col
+        :span="2"
+        :offset="10"
+        v-if="
+          curUser?.userRole !== undefined &&
+          curUser?.userRole !== null &&
+          curUser?.userRole === roleEnum.ADMIN
+        "
       >
-        <template #button-icon>
-          <icon-search />
-        </template>
-      </a-input>
-      <a-select
-        v-model="selectedDifficulty"
-        style="width: 200px"
-        placeholder="难度选择"
-        @change="getProblemList"
-      >
-        <a-option :value="0" style="color: rgb(137, 255, 83)">简单</a-option>
-        <a-option :value="1" style="color: rgb(229, 192, 44)">中等</a-option>
-        <a-option :value="2" style="color: rgb(255, 103, 83)">困难</a-option>
-      </a-select>
-      <a-select
-        v-model="selectedStatus"
-        style="width: 200px; margin-right: 140px"
-        placeholder="状态选择"
-        @change="getProblemList"
-      >
-        <a-option :value="-1">
-          <icon-question />
-          尝试过
-        </a-option>
-        <a-option :value="0">
-          <icon-minus />
-          未尝试过
-        </a-option>
-        <a-option :value="1">
-          <icon-check />
-          解答出
-        </a-option>
-      </a-select>
+        <a-button type="primary" @click="handleAddProblem()"
+          >添加题目
+        </a-button>
+      </a-col>
     </a-row>
     <a-table :data="data.problemTable" stripe :pagination="false">
       <template #columns>
@@ -116,13 +135,10 @@
         <a-table-column title="难度" :width="90">
           <template #cell="{ record }">
             <div v-if="record.difficulty === 0" style="color: green">简单</div>
-            <div
-              v-else-if="record.difficulty === 1"
-              style="color: rgb(229, 192, 44)"
-            >
+            <div v-else-if="record.difficulty === 1" style="color: orange">
               中等
             </div>
-            <div v-else style="color: rgb(255, 103, 83)">困难</div>
+            <div v-else style="color: firebrick">困难</div>
           </template>
         </a-table-column>
         <a-table-column title="解答" :width="90">
@@ -235,7 +251,7 @@ const getProblemList = async () => {
     pageSize: pageSize.value,
     title: titleInput.value,
     status:
-      selectedStatus.value === null || curUser.userId > -1
+      selectedStatus.value === null || curUser.id > -1
         ? null
         : selectedStatus.value,
     difficulty:
@@ -263,6 +279,10 @@ const handleCurrentChange = (val: number) => {
 
 async function handleUpdateProblem(id: string) {
   router.push(`/problem/add?edit=${id}`);
+}
+
+async function handleAddProblem() {
+  router.push(`/problem/add`);
 }
 
 async function handleDeleteProblem(id: string) {

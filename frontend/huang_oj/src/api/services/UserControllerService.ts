@@ -9,6 +9,7 @@ import type { BaseResponse_Page_User_ } from '../models/BaseResponse_Page_User_'
 import type { BaseResponse_Page_UserVO_ } from '../models/BaseResponse_Page_UserVO_';
 import type { BaseResponse_string_ } from '../models/BaseResponse_string_';
 import type { BaseResponse_User_ } from '../models/BaseResponse_User_';
+import type { BaseResponse_UserRecordVO_ } from '../models/BaseResponse_UserRecordVO_';
 import type { BaseResponse_UserVO_ } from '../models/BaseResponse_UserVO_';
 import type { DeleteRequest } from '../models/DeleteRequest';
 import type { UserAddRequest } from '../models/UserAddRequest';
@@ -109,6 +110,29 @@ id?: number,
     }
 
     /**
+     * getUserRecordById
+     * @param id id
+     * @returns BaseResponse_UserRecordVO_ OK
+     * @throws ApiError
+     */
+    public static getUserRecordByIdUsingGet(
+id?: number,
+): CancelablePromise<BaseResponse_UserRecordVO_> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/user/get/record',
+            query: {
+                'id': id,
+            },
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+            },
+        });
+    }
+
+    /**
      * getUserVOById
      * @param id id
      * @returns BaseResponse_UserVO_ OK
@@ -189,29 +213,6 @@ userLoginRequest: UserLoginRequest,
             method: 'POST',
             url: '/api/user/login',
             body: userLoginRequest,
-            errors: {
-                401: `Unauthorized`,
-                403: `Forbidden`,
-                404: `Not Found`,
-            },
-        });
-    }
-
-    /**
-     * userLoginByWxOpen
-     * @param code code
-     * @returns BaseResponse_LoginUserVO_ OK
-     * @throws ApiError
-     */
-    public static userLoginByWxOpenUsingGet(
-code: string,
-): CancelablePromise<BaseResponse_LoginUserVO_> {
-        return __request(OpenAPI, {
-            method: 'GET',
-            url: '/api/user/login/wx_open',
-            query: {
-                'code': code,
-            },
             errors: {
                 401: `Unauthorized`,
                 403: `Forbidden`,

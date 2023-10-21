@@ -1,6 +1,5 @@
 package com.huang.oj.job.cycle;
 
-import com.huang.oj.esdao.PostEsDao;
 import com.huang.oj.mapper.PostMapper;
 import com.huang.oj.model.dto.post.PostEsDTO;
 import com.huang.oj.model.entity.Post;
@@ -26,13 +25,13 @@ public class IncSyncPostToEs {
     @Resource
     private PostMapper postMapper;
 
-    @Resource
-    private PostEsDao postEsDao;
+ /*   @Resource
+    private PostEsDao postEsDao;*/
 
     /**
      * 每分钟执行一次
      */
-    @Scheduled(fixedRate = 60 * 1000)
+  /*  @Scheduled(fixedRate = 60 * 1000)
     public void run() {
         // 查询近 5 分钟内的数据
         Date fiveMinutesAgoDate = new Date(new Date().getTime() - 5 * 60 * 1000L);
@@ -53,5 +52,5 @@ public class IncSyncPostToEs {
             postEsDao.saveAll(postEsDTOList.subList(i, end));
         }
         log.info("IncSyncPostToEs end, total {}", total);
-    }
+    }*/
 }

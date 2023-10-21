@@ -1,41 +1,35 @@
 <template>
   <div id="problem_details_submissions_view">
-    <a-row
-      style="
-        display: flex;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        margin-top: 30px;
-        margin-bottom: 30px;
-      "
-    >
-      <a-select
-        v-model="selectedLanguage"
-        style="width: 200px"
-        placeholder="语言选择"
-        @change="getSubmissionList"
-      >
-        <a-option
-          v-for="language of languageEnum"
-          :value="language"
-          :key="language"
-          >{{ language }}
-        </a-option>
-      </a-select>
-      <a-select
-        v-model="selectedStatus"
-        style="width: 200px; margin-right: 140px"
-        placeholder="状态选择"
-        @change="getSubmissionList"
-      >
-        <a-option
-          v-for="submissionResult in SubmissionResultEnums"
-          :value="submissionResult.value"
-          :key="submissionResult.value"
+    <a-row style="margin-top: 30px; margin-bottom: 30px">
+      <a-col :span="4" :offset="1">
+        <a-select
+          v-model="selectedLanguage"
+          placeholder="语言选择"
+          @change="getSubmissionList"
         >
-          {{ submissionResult.label }}
-        </a-option>
-      </a-select>
+          <a-option
+            v-for="language of languageEnum"
+            :value="language"
+            :key="language"
+            >{{ language }}
+          </a-option>
+        </a-select>
+      </a-col>
+      <a-col :span="4" :offset="1">
+        <a-select
+          v-model="selectedStatus"
+          placeholder="状态选择"
+          @change="getSubmissionList"
+        >
+          <a-option
+            v-for="submissionResult in SubmissionResultEnums"
+            :value="submissionResult.value"
+            :key="submissionResult.value"
+          >
+            {{ submissionResult.label }}
+          </a-option>
+        </a-select>
+      </a-col>
     </a-row>
     <a-table :data="submissionsData.submissionTable" stripe :pagination="false">
       <template #columns>
@@ -137,14 +131,27 @@
     >
       <template #title>
         <div
-          style="color: green; font-size: 30px"
+          style="
+            color: green;
+            font-size: 30px;
+            margin-top: 30px;
+            margin-bottom: 30px;
+          "
           v-if="
             submissionDetail.judgeResult.judgeInfo?.resultStr === 'Accepted'
           "
         >
           {{ submissionDetail.judgeResult.judgeInfo?.resultStr || "" }}
         </div>
-        <div v-else style="color: red; font-size: 30px">
+        <div
+          v-else
+          style="
+            color: red;
+            font-size: 30px;
+            margin-top: 30px;
+            margin-bottom: 30px;
+          "
+        >
           {{ submissionDetail.judgeResult.judgeInfo?.resultStr || "" }}
         </div>
       </template>
@@ -266,18 +273,16 @@ const submissionsData = reactive({
 });
 
 const getSubmissionList = async () => {
-  let res = await SubmissionControllerService.listMySubmissionVoByPageUsingPost(
-    {
-      current: curPage.value,
-      pageSize: pageSize.value,
-      problemId: parseInt(props.id),
-      judgeStatus:
-        selectedStatus.value === null || curUser.userId < 0
-          ? null
-          : selectedStatus.value,
-      language: selectedLanguage.value === null ? null : selectedLanguage.value,
-    }
-  );
+  let res = await SubmissionControllerService.listSubmissionVoByPageUsingPost({
+    current: curPage.value,
+    pageSize: pageSize.value,
+    problemId: parseInt(props.id),
+    judgeStatus:
+      selectedStatus.value === null || curUser.id < 0
+        ? null
+        : selectedStatus.value,
+    language: selectedLanguage.value === null ? null : selectedLanguage.value,
+  });
   if (res.code !== 1) {
     Message.error("err" + res.message);
     return;

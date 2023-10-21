@@ -7,27 +7,31 @@
       @menu-item-click="menuItemClicked"
     >
       <a-menu-item class="a_menu_item" key="0" disabled>
-        <div
+        <a-tag
+          :color="'arcoblue'"
+          bordered
           :style="{
-            width: '100px',
-            height: '30px',
-            borderRadius: '2px',
-            cursor: 'pointer',
-            textAlign: 'center',
+            width: '106px',
+            height: '35px',
+            borderRadius: '10px',
+            cursor: 'text',
             fontSize: '18px',
-            color: '#222222',
+            color: '#0d3365',
             background: 'tranparent',
+            marginRight: '50px',
           }"
         >
-          huang_oj
-        </div>
+          Huang_OJ
+        </a-tag>
       </a-menu-item>
       <a-menu-item
         v-for="item in visibleRoutes"
         :key="item.path"
         class="a_menu_item"
       >
-        {{ item.name }}
+        <a-tag style="font-size: 15px; margin-left: 10px; margin-right: 10px">
+          {{ item.name }}
+        </a-tag>
       </a-menu-item>
     </a-menu>
   </div>
@@ -56,14 +60,15 @@
 </style>
 <script setup lang="ts">
 import { routes } from "@/router/routes";
-import { useRouter } from "vue-router";
-import { computed, ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { computed, onMounted, ref } from "vue";
 import { useStore } from "vuex";
 import { roleChecker } from "@/components/scripts/access/roleCheck";
 import { roleEnum } from "@/components/scripts/access/roleEnum";
 
 const store = useStore();
 const router = useRouter();
+const route = useRoute();
 const selectedKey = ref<string[]>(["/"]);
 const visibleRoutes = computed(() => {
   return routes.filter((item, index) => {
@@ -73,13 +78,17 @@ const visibleRoutes = computed(() => {
     );
   });
 });
-router.afterEach((to, from, failure) => {
+/*router.afterEach((to, from, failure) => {
   //当前路由绑定
   selectedKey.value = [to.path];
-});
+});*/
 const menuItemClicked = (key: string) => {
+  selectedKey.value = [key];
   router.push({
     path: key,
   });
 };
+onMounted(() => {
+  selectedKey.value = [route.path];
+});
 </script>

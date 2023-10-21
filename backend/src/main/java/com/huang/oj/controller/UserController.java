@@ -10,6 +10,7 @@ import com.huang.oj.config.WxOpenConfig;
 import com.huang.oj.constant.UserConstant;
 import com.huang.oj.exception.BusinessException;
 import com.huang.oj.exception.ThrowUtils;
+import com.huang.oj.model.vo.UserRecordVO;
 import com.huang.oj.service.EmailService;
 import com.huang.oj.service.UserService;
 import com.huang.oj.model.dto.user.UserAddRequest;
@@ -31,9 +32,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.huang.oj.utils.RedisUtils;
 import lombok.extern.slf4j.Slf4j;
-import me.chanjar.weixin.common.bean.WxOAuth2UserInfo;
-import me.chanjar.weixin.common.bean.oauth2.WxOAuth2AccessToken;
-import me.chanjar.weixin.mp.api.WxMpService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -126,7 +124,7 @@ public class UserController {
     /**
      * 用户登录（微信开放平台）
      */
-    @GetMapping("/login/wx_open")
+/*    @GetMapping("/login/wx_open")
     public BaseResponse<LoginUserVO> userLoginByWxOpen(HttpServletRequest request, HttpServletResponse response,
                                                        @RequestParam("code") String code) {
         WxOAuth2AccessToken accessToken;
@@ -144,7 +142,7 @@ public class UserController {
             log.error("userLoginByWxOpen error", e);
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "登录失败，系统错误");
         }
-    }
+    }*/
 
     /**
      * 用户注销
@@ -349,7 +347,7 @@ public class UserController {
      */
     @GetMapping("/sendCode")
     public BaseResponse<String> sendVerifyCode(String userEmail, HttpServletRequest request) {
-        String regex = "^[A-Za-z0-9+_.-]+@(.+)$";
+/*        String regex = "^[A-Za-z0-9+_.-]+@(.+)$";
 
         // 编译正则表达式
         Pattern pattern = Pattern.compile(regex);
@@ -357,11 +355,18 @@ public class UserController {
         // 创建Matcher对象
         Matcher matcher = pattern.matcher(userEmail);
 
-        // 使用find()方法查找匹配项
-        if (!matcher.find()) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "邮箱格式错误");
+        // 使用find()方法查找匹配项*/
+        if (StringUtils.isAnyBlank(userEmail)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "邮箱错误");
         }
         emailService.sendVerificationCode(userEmail);
         return ResultUtils.success("验证码已发送，请检查您的邮箱。");
+    }
+    @GetMapping("/get/record")
+    public BaseResponse<UserRecordVO> getUserRecordById(long id, HttpServletRequest request) {
+        if(id<0) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "用户错误");
+        }
+        return ResultUtils.success(userService.getUserRecordVO(id));
     }
 }

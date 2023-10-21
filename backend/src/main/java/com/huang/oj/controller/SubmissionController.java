@@ -13,10 +13,13 @@ import com.huang.oj.judge.JudgeService;
 import com.huang.oj.judge.sandbox.model.JudgeResult;
 import com.huang.oj.model.dto.submission.ProblemSubmitQuest;
 import com.huang.oj.model.dto.submission.ProblemTestExampleRequest;
+import com.huang.oj.model.dto.submission.SimpleSubmissionQueryQuest;
 import com.huang.oj.model.dto.submission.SubmissionQueryQuest;
+import com.huang.oj.model.entity.Problem;
 import com.huang.oj.model.entity.Submission;
 import com.huang.oj.model.entity.User;
 import com.huang.oj.model.enums.SubmissionResultEnum;
+import com.huang.oj.model.vo.SimpleSubmissionVO;
 import com.huang.oj.model.vo.SubmissionVO;
 import com.huang.oj.model.vo.UserVO;
 import com.huang.oj.service.SubmissionService;
@@ -28,6 +31,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
  * 帖子点赞接口
@@ -178,28 +182,32 @@ public class SubmissionController {
     /**
      * 分页获取当前用户创建的资源列表
      *
-     * @param submissionQueryQuest
+     * @param simpleSubmissionQueryQuest
      * @param request
      * @return
      */
     @PostMapping("/my/list/page/vo")
-    public BaseResponse<Page<SubmissionVO>> listMySubmissionVOByPage(@RequestBody SubmissionQueryQuest submissionQueryQuest,
-                                                                     HttpServletRequest request) {
-        if (submissionQueryQuest == null) {
+    public BaseResponse<Page<SimpleSubmissionVO>> listMySubmissionVOByPage(@RequestBody SimpleSubmissionQueryQuest simpleSubmissionQueryQuest,
+                                                                           HttpServletRequest request) {
+        if (simpleSubmissionQueryQuest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         User loginUser = userService.getLoginUser(request);
         if (loginUser == null || loginUser.getId() < 0) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
         }
-        submissionQueryQuest.setUserId(loginUser.getId());
-        long current = submissionQueryQuest.getCurrent();
-        long size = submissionQueryQuest.getPageSize();
+        simpleSubmissionQueryQuest.setUserId(loginUser.getId());
+        String title = simpleSubmissionQueryQuest.getTitle();
+        Integer judgeStatus = simpleSubmissionQueryQuest.getJudgeStatus();
+        long current = simpleSubmissionQueryQuest.getCurrent();
+        long size = simpleSubmissionQueryQuest.getPageSize();
         // 限制爬虫
         ThrowUtils.throwIf(size > 25, ErrorCode.PARAMS_ERROR);
-        Page<Submission> submissionPage = submissionService.page(new Page<>(current, size),
-                submissionService.getQueryWrapper(submissionQueryQuest));
-        return ResultUtils.success(submissionService.getSubmissionVOPage(submissionPage, request));
+        Page<SimpleSubmissionVO> simpleSubmissionVOPage = new Page<>();
+        List<SimpleSubmissionVO> submissionVOList = submissionService.getSimpleSubmissionPage(current, size, title, judgeStatus, request);
+        simpleSubmissionVOPage.setRecords(submissionVOList);
+        simpleSubmissionVOPage.setTotal(submissionService.getSimpleSubmissionCount(current, size, title, judgeStatus, request));
+        return ResultUtils.success(simpleSubmissionVOPage);
     }
 
 

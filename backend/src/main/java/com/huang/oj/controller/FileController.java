@@ -49,7 +49,7 @@ public class FileController {
      * @param request
      * @return
      */
-    @PostMapping("/upload")
+    /*@PostMapping("/upload")
     public BaseResponse<String> uploadFile(@RequestPart("file") MultipartFile multipartFile,
                                            UploadFileRequest uploadFileRequest, HttpServletRequest request) {
         String biz = uploadFileRequest.getBiz();
@@ -83,7 +83,7 @@ public class FileController {
                 }
             }
         }
-    }
+    }*/
 
     /**
      * 校验文件

@@ -7,11 +7,16 @@ import com.huang.oj.common.ErrorCode;
 import com.huang.oj.constant.CommonConstant;
 import com.huang.oj.constant.UserConstant;
 import com.huang.oj.exception.BusinessException;
+import com.huang.oj.mapper.SubmissionMapper;
 import com.huang.oj.mapper.UserMapper;
+import com.huang.oj.model.entity.Submission;
 import com.huang.oj.model.entity.User;
+import com.huang.oj.model.enums.SubmissionResultEnum;
 import com.huang.oj.model.enums.UserRoleEnum;
 import com.huang.oj.model.vo.LoginUserVO;
+import com.huang.oj.model.vo.UserRecordVO;
 import com.huang.oj.model.vo.UserVO;
+import com.huang.oj.service.SubmissionService;
 import com.huang.oj.service.UserService;
 import com.huang.oj.utils.EmailCodeUtils;
 import com.huang.oj.utils.RedisUtils;
@@ -20,6 +25,7 @@ import com.huang.oj.model.dto.user.UserQueryRequest;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,7 +34,6 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
 import lombok.extern.slf4j.Slf4j;
-import me.chanjar.weixin.common.bean.WxOAuth2UserInfo;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -48,6 +53,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Resource
     private RedisUtils redisUtils;
+    @Resource
+    private SubmissionMapper submissionMapper;
 
     @Override
     public long userRegister(String userAccount, String userPassword, String checkPassword, String userEmail, String emailVerifyCode) {
@@ -65,7 +72,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (!userPassword.equals(checkPassword)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "两次输入的密码不一致");
         }
-        String regex = "^[A-Za-z0-9+_.-]+@(.+)$";
+       /* String regex = "^[A-Za-z0-9+_.-]+@(.+)$";
 
         // 编译正则表达式
         Pattern pattern = Pattern.compile(regex);
@@ -76,7 +83,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 使用find()方法查找匹配项
         if (!matcher.find()) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "邮箱格式错误");
-        }
+        }*/
         EmailCodeUtils.CodeEmailPair codeEmailPair = EmailCodeUtils.getPair(userEmail);
         if (codeEmailPair == null || System.currentTimeMillis() - codeEmailPair.getCreateTime() >= 300 * 1000) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "验证码过期或未发送验证码");
@@ -151,7 +158,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return this.getLoginUserVO(user);
         } else {
 
-            String regex = "^[A-Za-z0-9+_.-]+@(.+)$";
+           /* String regex = "^[A-Za-z0-9+_.-]+@(.+)$";
 
             // 编译正则表达式
             Pattern pattern = Pattern.compile(regex);
@@ -162,7 +169,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             // 使用find()方法查找匹配项
             if (!matcher.find()) {
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "邮箱格式错误");
-            }
+            }*/
             QueryWrapper<User> queryWrapper1 = new QueryWrapper<>();
             queryWrapper1.eq("userEmail", userEmail);
             User user1 = this.baseMapper.selectOne(queryWrapper1);
@@ -186,7 +193,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
     }
 
-    @Override
+/*    @Override
     public LoginUserVO userLoginByMpOpen(WxOAuth2UserInfo wxOAuth2UserInfo, HttpServletRequest request) {
         String unionId = wxOAuth2UserInfo.getUnionId();
         String mpOpenId = wxOAuth2UserInfo.getOpenid();
@@ -216,7 +223,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, user);
             return getLoginUserVO(user);
         }
-    }
+    }*/
 
     /**
      * 获取当前登录用户
@@ -362,5 +369,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         queryWrapper.orderBy(SqlUtils.validSortField(sortField), sortOrder.equals(CommonConstant.SORT_ORDER_ASC),
                 sortField);
         return queryWrapper;
+    }
+
+    @Override
+    public UserRecordVO getUserRecordVO(long id) {
+        UserRecordVO userRecordVO = submissionMapper.getUserRecordTried(id);
+        userRecordVO.setId(id);
+        return userRecordVO;
     }
 }

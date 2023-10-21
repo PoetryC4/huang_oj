@@ -204,7 +204,7 @@ public class PostController {
      * @param request
      * @return
      */
-    @PostMapping("/search/page/vo")
+    /*@PostMapping("/search/page/vo")
     public BaseResponse<Page<PostVO>> searchPostVOByPage(@RequestBody PostQueryRequest postQueryRequest,
             HttpServletRequest request) {
         long size = postQueryRequest.getPageSize();
@@ -212,7 +212,7 @@ public class PostController {
         ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
         Page<Post> postPage = postService.searchFromEs(postQueryRequest);
         return ResultUtils.success(postService.getPostVOPage(postPage, request));
-    }
+    }*/
 
     /**
      * 编辑（用户）

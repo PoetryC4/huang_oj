@@ -379,7 +379,7 @@ const getProblemDetails = async () => {
 };
 
 async function handleCodeTest() {
-  if (!curUser || curUser.userId === -1) {
+  if (!curUser || curUser.id === -1) {
     router.push({
       path: `/user/login`,
       query: {
@@ -394,7 +394,7 @@ async function handleCodeTest() {
     },
     problemSubmitQuest: {
       problemId: data.problem?.id || -1,
-      userId: curUser.userId,
+      userId: curUser.id,
       language: languageEnum[codeLanguage.value] || "",
       code: userCode.value,
     },
@@ -410,7 +410,7 @@ async function handleCodeTest() {
 }
 
 async function handleCodeSubmit() {
-  if (!curUser || curUser.userId === -1) {
+  if (!curUser || curUser.id === -1) {
     router.push({
       path: `/user/login`,
       query: {
@@ -421,7 +421,7 @@ async function handleCodeSubmit() {
   }
   const res = await SubmissionControllerService.doSubmitUsingPost({
     problemId: data.problem?.id || -1,
-    userId: curUser.userId,
+    userId: curUser.id,
     language: languageEnum[codeLanguage.value] || "",
     code: userCode.value,
   });

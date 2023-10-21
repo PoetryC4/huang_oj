@@ -5,7 +5,7 @@ import { roleChecker } from "@/components/scripts/access/roleCheck";
 
 router.beforeEach(async (to, from, next) => {
   const curUser = store.state.user?.userInfo;
-  if (!curUser || !curUser.userRole || curUser.userId === -1) {
+  if (!curUser || !curUser.userRole || curUser.id === -1) {
     await store.dispatch("user/getLoginUser");
   }
   if (

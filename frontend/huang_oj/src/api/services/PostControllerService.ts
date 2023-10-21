@@ -152,28 +152,6 @@ postQueryRequest: PostQueryRequest,
     }
 
     /**
-     * searchPostVOByPage
-     * @param postQueryRequest postQueryRequest
-     * @returns BaseResponse_Page_PostVO_ OK
-     * @returns any Created
-     * @throws ApiError
-     */
-    public static searchPostVoByPageUsingPost(
-postQueryRequest: PostQueryRequest,
-): CancelablePromise<BaseResponse_Page_PostVO_ | any> {
-        return __request(OpenAPI, {
-            method: 'POST',
-            url: '/api/post/search/page/vo',
-            body: postQueryRequest,
-            errors: {
-                401: `Unauthorized`,
-                403: `Forbidden`,
-                404: `Not Found`,
-            },
-        });
-    }
-
-    /**
      * updatePost
      * @param postUpdateRequest postUpdateRequest
      * @returns BaseResponse_boolean_ OK

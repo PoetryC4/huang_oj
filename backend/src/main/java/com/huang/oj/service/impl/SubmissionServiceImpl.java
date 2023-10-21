@@ -1,12 +1,17 @@
 package com.huang.oj.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.huang.oj.common.ErrorCode;
 import com.huang.oj.constant.CommonConstant;
+import com.huang.oj.constant.UserConstant;
 import com.huang.oj.exception.BusinessException;
+import com.huang.oj.judge.sandbox.model.JudgeResult;
 import com.huang.oj.mapper.SubmissionMapper;
+import com.huang.oj.model.dto.problem.FunctionConfig;
+import com.huang.oj.model.dto.problem.JudgeCases;
 import com.huang.oj.model.dto.submission.ProblemSubmitQuest;
 import com.huang.oj.model.dto.submission.SubmissionQueryQuest;
 import com.huang.oj.model.entity.Problem;
@@ -14,8 +19,7 @@ import com.huang.oj.model.entity.Submission;
 import com.huang.oj.model.entity.User;
 import com.huang.oj.model.enums.ProblemLanguageEnum;
 import com.huang.oj.model.enums.SubmissionResultEnum;
-import com.huang.oj.model.vo.SubmissionVO;
-import com.huang.oj.model.vo.UserVO;
+import com.huang.oj.model.vo.*;
 import com.huang.oj.service.ProblemService;
 import com.huang.oj.service.SubmissionService;
 import com.huang.oj.service.UserService;
@@ -26,6 +30,8 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -163,6 +169,54 @@ public class SubmissionServiceImpl extends ServiceImpl<SubmissionMapper, Submiss
         return problemVOPage;
     }
 
+    @Override
+    public List<SimpleSubmissionVO> getSimpleSubmissionPage(long current, long size, String title, Integer judgeStatus, HttpServletRequest request) {
+        User loginUser = null;
+        Object userObj = request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+        if (userObj != null) {
+            loginUser = userService.getLoginUser(request);
+        }
+        Long id = loginUser.getId();
+        if (id == null || id < 0) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+        }
+        long offset = Math.max(0, (current - 1)) * size;
+        List<SimpleSubmission> simpleSubmissionRes = submissionMapper.getSimpleSubmissionRes(size, offset, title, judgeStatus, id);
+        List<SimpleSubmissionVO> simpleSubmissionVOList = simpleSubmissionRes.stream().map(simpleSubmission -> {
+            Long id1 = simpleSubmission.getId();
+            Long problemId = simpleSubmission.getProblemId();
+            Long userId = simpleSubmission.getUserId();
+            String title1 = simpleSubmission.getTitle();
+            String judgeResult = simpleSubmission.getJudgeResult();
+            Date submitTime = simpleSubmission.getSubmitTime();
+
+            SimpleSubmissionVO simpleSubmissionVO = new SimpleSubmissionVO();
+            simpleSubmissionVO.setId(id1);
+            simpleSubmissionVO.setProblemId(problemId);
+            simpleSubmissionVO.setUserId(userId);
+            simpleSubmissionVO.setTitle(title1);
+            simpleSubmissionVO.setJudgeResult(JSON.parseObject(judgeResult, JudgeResult.class));
+            simpleSubmissionVO.setSubmitTime(submitTime);
+
+            return simpleSubmissionVO;
+        }).collect(Collectors.toList());
+        return simpleSubmissionVOList;
+    }
+
+    @Override
+    public Integer getSimpleSubmissionCount(long current, long size, String title, Integer judgeStatus, HttpServletRequest request) {
+        User loginUser = null;
+        Object userObj = request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+        if (userObj != null) {
+            loginUser = userService.getLoginUser(request);
+        }
+        Long id = loginUser.getId();
+        if (id == null || id < 0) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+        }
+        long offset = Math.max(0, (current - 1)) * size;
+        return submissionMapper.getSimpleSubmissionCount(size, offset, title, judgeStatus, id);
+    }
 
 }
 

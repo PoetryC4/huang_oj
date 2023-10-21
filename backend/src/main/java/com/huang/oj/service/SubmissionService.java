@@ -10,9 +10,11 @@ import com.huang.oj.model.entity.Submission;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.huang.oj.model.entity.User;
 import com.huang.oj.model.vo.ProblemVO;
+import com.huang.oj.model.vo.SimpleSubmissionVO;
 import com.huang.oj.model.vo.SubmissionVO;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
 * @author Administrator
@@ -56,4 +58,7 @@ public interface SubmissionService extends IService<Submission> {
      */
     Page<SubmissionVO> getSubmissionVOPage(Page<Submission> submissionPage, HttpServletRequest request);
 
+    List<SimpleSubmissionVO> getSimpleSubmissionPage(long current, long size, String title, Integer judgeStatus, HttpServletRequest request);
+
+    Integer getSimpleSubmissionCount(long current, long size, String title, Integer judgeStatus, HttpServletRequest request);
 }

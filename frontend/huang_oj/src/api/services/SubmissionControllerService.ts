@@ -4,11 +4,13 @@
 /* eslint-disable */
 import type { BaseResponse_boolean_ } from '../models/BaseResponse_boolean_';
 import type { BaseResponse_JudgeResult_ } from '../models/BaseResponse_JudgeResult_';
+import type { BaseResponse_Page_SimpleSubmissionVO_ } from '../models/BaseResponse_Page_SimpleSubmissionVO_';
 import type { BaseResponse_Page_SubmissionVO_ } from '../models/BaseResponse_Page_SubmissionVO_';
 import type { BaseResponse_SubmissionVO_ } from '../models/BaseResponse_SubmissionVO_';
 import type { DeleteRequest } from '../models/DeleteRequest';
 import type { ProblemSubmitQuest } from '../models/ProblemSubmitQuest';
 import type { ProblemTestExampleRequest } from '../models/ProblemTestExampleRequest';
+import type { SimpleSubmissionQueryQuest } from '../models/SimpleSubmissionQueryQuest';
 import type { SubmissionQueryQuest } from '../models/SubmissionQueryQuest';
 
 import type { CancelablePromise } from '../core/CancelablePromise';
@@ -108,18 +110,18 @@ submissionQueryQuest: SubmissionQueryQuest,
 
     /**
      * listMySubmissionVOByPage
-     * @param submissionQueryQuest submissionQueryQuest
-     * @returns BaseResponse_Page_SubmissionVO_ OK
+     * @param simpleSubmissionQueryQuest simpleSubmissionQueryQuest
+     * @returns BaseResponse_Page_SimpleSubmissionVO_ OK
      * @returns any Created
      * @throws ApiError
      */
     public static listMySubmissionVoByPageUsingPost(
-submissionQueryQuest: SubmissionQueryQuest,
-): CancelablePromise<BaseResponse_Page_SubmissionVO_ | any> {
+simpleSubmissionQueryQuest: SimpleSubmissionQueryQuest,
+): CancelablePromise<BaseResponse_Page_SimpleSubmissionVO_ | any> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/submission/my/list/page/vo',
-            body: submissionQueryQuest,
+            body: simpleSubmissionQueryQuest,
             errors: {
                 401: `Unauthorized`,
                 403: `Forbidden`,

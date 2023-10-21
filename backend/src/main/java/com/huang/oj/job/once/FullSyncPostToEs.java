@@ -1,6 +1,5 @@
 package com.huang.oj.job.once;
 
-import com.huang.oj.esdao.PostEsDao;
 import com.huang.oj.service.PostService;
 import com.huang.oj.model.dto.post.PostEsDTO;
 import com.huang.oj.model.entity.Post;
@@ -26,10 +25,15 @@ public class FullSyncPostToEs implements CommandLineRunner {
     @Resource
     private PostService postService;
 
-    @Resource
-    private PostEsDao postEsDao;
-
     @Override
+    public void run(String... args) throws Exception {
+        return;
+    }
+
+   /* @Resource
+    private PostEsDao postEsDao;*/
+
+    /*@Override
     public void run(String... args) {
         List<Post> postList = postService.list();
         if (CollectionUtils.isEmpty(postList)) {
@@ -45,5 +49,5 @@ public class FullSyncPostToEs implements CommandLineRunner {
             postEsDao.saveAll(postEsDTOList.subList(i, end));
         }
         log.info("FullSyncPostToEs end, total {}", total);
-    }
+    }*/
 }

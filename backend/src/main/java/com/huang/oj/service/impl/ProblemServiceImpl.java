@@ -257,7 +257,6 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     }
 
     public List<Problem> getProblemQueryRes(long current, long size, String title, Integer difficulty, Integer status, HttpServletRequest request) {
-
         User loginUser = null;
         Object userObj = request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
         if (userObj != null) {

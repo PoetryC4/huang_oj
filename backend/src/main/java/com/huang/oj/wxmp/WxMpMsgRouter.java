@@ -4,10 +4,6 @@ import com.huang.oj.wxmp.handler.EventHandler;
 import com.huang.oj.wxmp.handler.MessageHandler;
 import com.huang.oj.wxmp.handler.SubscribeHandler;
 import javax.annotation.Resource;
-import me.chanjar.weixin.common.api.WxConsts.EventType;
-import me.chanjar.weixin.common.api.WxConsts.XmlMsgType;
-import me.chanjar.weixin.mp.api.WxMpMessageRouter;
-import me.chanjar.weixin.mp.api.WxMpService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -20,8 +16,8 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class WxMpMsgRouter {
 
-    @Resource
-    private WxMpService wxMpService;
+    /*@Resource
+    private WxMpService wxMpService;*/
 
     @Resource
     private EventHandler eventHandler;
@@ -32,7 +28,7 @@ public class WxMpMsgRouter {
     @Resource
     private SubscribeHandler subscribeHandler;
 
-    @Bean
+    /*@Bean
     public WxMpMessageRouter getWxMsgRouter() {
         WxMpMessageRouter router = new WxMpMessageRouter(wxMpService);
         // 消息
@@ -57,5 +53,5 @@ public class WxMpMsgRouter {
                 .handler(eventHandler)
                 .end();
         return router;
-    }
+    }*/
 }

@@ -3,28 +3,49 @@
     <a-layout style="height: 400px">
       <a-layout-header class="header" v-if="route.meta?.basicLayout || false">
         <a-row class="grid-demo" style="margin-bottom: 16px">
-          <a-col :flex="3">
+          <a-col :flex="20">
             <GlobalHeader />
           </a-col>
-          <a-col flex="1">
-            <div>{{ store.state.user?.userInfo?.userName ?? "未登录" }}</div>
+          <a-col
+            :flex="1"
+            style="margin: auto 50px auto auto; cursor: pointer"
+            @click="handleAvatarClick"
+          >
+            <a-avatar
+              :style="{ backgroundColor: '#3370ff' }"
+              v-if="store.state.user?.userInfo?.id === -1"
+            >
+              未登录
+            </a-avatar>
+            <a-avatar
+              :style="{ backgroundColor: '#3370ff' }"
+              v-else-if="
+                store.state.user?.userInfo?.userAvatar === undefined ||
+                store.state.user?.userInfo?.userAvatar === null
+              "
+            >
+              {{ store.state.user?.userInfo?.userName || "用户" }}
+            </a-avatar>
+            <a-avatar v-else>
+              <img
+                alt="avatar"
+                src="https://p1-arco.byteimg.com/tos-cn-i-uwbnlip3yd/3ee5f13fb09879ecb5185e440cef6eb9.png~tplv-uwbnlip3yd-webp.webp"
+              />
+            </a-avatar>
           </a-col>
         </a-row>
       </a-layout-header>
-      <a-layout>
-        <a-layout-sider
-          theme="dark"
-          class="sider"
-          v-if="route.meta?.basicLayout || false"
-          >Sider
-        </a-layout-sider>
-        <a-layout-content class="content">
-          <router-view />
-        </a-layout-content>
-      </a-layout>
-      <a-layout-footer class="footer" v-if="route.meta?.basicLayout || false"
-        >Footer</a-layout-footer
-      >
+      <a-layout-content class="content">
+        <router-view />
+      </a-layout-content>
+      <a-layout-footer class="footer" v-if="route.meta?.basicLayout || false">
+        <a-typography style="margin-left: 22px">
+          <a-typography-title :heading="5">项目开源地址:</a-typography-title>
+          <a-typography-paragraph copyable>
+            https://github.com/PoetryC4/huang_oj
+          </a-typography-paragraph>
+        </a-typography>
+      </a-layout-footer>
     </a-layout>
   </div>
 </template>
@@ -38,7 +59,7 @@
 }
 
 .sider {
-  background: linear-gradient(135deg, #eeeeee, #ffffff);
+  background: white;
   box-shadow: 2px 2px 4px 2px rgba(0, 0, 0, 0.2);
   height: 600px;
 }
@@ -49,13 +70,13 @@
 }
 
 .header {
-  background: linear-gradient(to right, #eeeeee, #ffffff);
+  background: white;
   box-shadow: 2px 2px 4px 2px rgba(0, 0, 0, 0.2);
   margin-bottom: 12px;
 }
 
 .footer {
-  background: linear-gradient(to right, #ffffff, #eeeeee);
+  background: white;
   box-shadow: -2px -2px 4px 2px rgba(0, 0, 0, 0.2);
   position: absolute;
   right: 0;
@@ -70,5 +91,12 @@ import GlobalHeader from "@/components/GlobalHeader.vue";
 import store from "@/store";
 import { useRoute, useRouter } from "vue-router";
 
+const router = useRouter();
 const route = useRoute();
+
+const handleAvatarClick = () => {
+  router.push({
+    path: "/user",
+  });
+};
 </script>

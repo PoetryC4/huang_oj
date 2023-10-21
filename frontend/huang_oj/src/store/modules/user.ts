@@ -8,15 +8,17 @@ export default {
   state: () => ({
     userInfo: {
       userName: "未登录",
-      userId: -1,
+      id: -1,
       loginDate: new Date("1970-01-01T00:00:00"),
       userRole: roleEnum.NOT_LOGIN,
       isVip: 0,
+      userAvatar: null,
+      createTime: null,
     },
   }),
   actions: {
     async getLoginUser({ commit, state }, payload) {
-      // userId === -1 代表未登录
+      // id === -1 代表未登录
       const res = await UserControllerService.getLoginUserUsingGet();
       if (res.code === 1) {
         commit("userLogin", res.data);
@@ -35,10 +37,12 @@ export default {
   mutations: {
     userLogout(state) {
       state.userInfo.userName = "未登录";
-      state.userInfo.userId = -1;
+      state.userInfo.id = -1;
       state.userInfo.loginDate = new Date("1970-01-01T00:00:00");
       state.userInfo.role = roleEnum.NOT_LOGIN;
       state.userInfo.isVip = 0;
+      state.userInfo.createTime = null;
+      state.userInfo.userAvatar = null;
     },
     userLogin(state, payload) {
       state.userInfo = payload;
