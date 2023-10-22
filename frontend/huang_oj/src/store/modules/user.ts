@@ -7,6 +7,7 @@ export default {
   namespaced: true,
   state: () => ({
     userInfo: {
+      userAccount: null,
       userName: "未登录",
       id: -1,
       loginDate: new Date("1970-01-01T00:00:00"),
@@ -14,6 +15,8 @@ export default {
       isVip: 0,
       userAvatar: null,
       createTime: null,
+      userProfile: null,
+      userEmail: null,
     },
   }),
   actions: {
@@ -43,6 +46,9 @@ export default {
       state.userInfo.isVip = 0;
       state.userInfo.createTime = null;
       state.userInfo.userAvatar = null;
+      state.userInfo.userProfile = null;
+      state.userInfo.userEmail = null;
+      state.userInfo.userAccount = null;
     },
     userLogin(state, payload) {
       state.userInfo = payload;

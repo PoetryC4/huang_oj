@@ -17,6 +17,8 @@ export type ProblemVO = {
     disLikeNum?: number;
     functionConfig?: FunctionConfig;
     id?: number;
+    isDisliked?: boolean;
+    isLiked?: boolean;
     isSolved?: number;
     isVip?: number;
     judgeCases?: JudgeCases;

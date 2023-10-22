@@ -6,7 +6,9 @@
 export type UserVO = {
     createTime?: string;
     id?: number;
+    userAccount?: string;
     userAvatar?: string;
+    userEmail?: string;
     userName?: string;
     userProfile?: string;
     userRole?: string;

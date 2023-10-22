@@ -14,7 +14,7 @@
           <a-avatar
             :size="60"
             :style="{ backgroundColor: '#3370ff', marginLeft: '20px' }"
-            v-if="store.state.user?.userInfo?.id === -1"
+            v-if="curUser.id === -1"
           >
             未登录
           </a-avatar>
@@ -22,20 +22,24 @@
             :size="60"
             :style="{ backgroundColor: '#3370ff', marginLeft: '20px' }"
             v-else-if="
-              store.state.user?.userInfo?.userAvatar === undefined ||
-              store.state.user?.userInfo?.userAvatar === null
+              curUser.userAvatar === undefined || curUser.userAvatar === null
             "
           >
-            {{ store.state.user?.userInfo?.userName || "用户" }}
+            {{ curUser.userName || "用户" }}
           </a-avatar>
           <a-avatar v-else :size="60" :style="{ marginLeft: '20px' }">
             <img
               alt="avatar"
-              src="https://p1-arco.byteimg.com/tos-cn-i-uwbnlip3yd/3ee5f13fb09879ecb5185e440cef6eb9.png~tplv-uwbnlip3yd-webp.webp"
+              :src="
+                'http://127.0.0.1:8102/api/avatars/' +
+                curUser.id +
+                '/' +
+                curUser.userAvatar
+              "
             />
           </a-avatar>
           <a-typography-text style="font-size: 17px; margin-left: 20px">
-            {{ store.state.user?.userInfo?.userName || "用户" }}
+            {{ curUser.userName || "用户" }}
           </a-typography-text>
           <a-button
             type="dashed"
@@ -50,6 +54,10 @@
                 store.state.user?.userInfo?.createTime || new Date()
               ).format("YYYY-MM-DD")
             }}
+          </a-typography-text>
+          <a-divider class="half-divider" />
+          <a-typography-text style="font-size: 17px; margin-left: 20px">
+            简介:{{ store.state.user?.userInfo?.userProfile || "" }}
           </a-typography-text>
           <a-divider class="half-divider" />
           <a-typography-text
@@ -386,7 +394,7 @@ const goToInfoChange = () => {
     return;
   }
   router.push({
-    path: "/user/" + store.state.user?.userInfo?.id + "/profile",
+    path: "/user/profile",
   });
 };
 const handleGoToProblem = (id: number) => {

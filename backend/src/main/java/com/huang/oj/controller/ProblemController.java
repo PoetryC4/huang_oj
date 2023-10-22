@@ -178,6 +178,10 @@ public class ProblemController {
         if (id <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
+        Problem problem = problemService.getById(id);
+        if (problem == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+        }/*
         String key = "ProblemVO:"+id;
         Problem problem = (Problem) redisUtils.get(key);
         if(problem == null) {
@@ -186,7 +190,7 @@ public class ProblemController {
                 throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
             }
             redisUtils.set(key, problem, redisTimeout);
-        }
+        }*/
         return ResultUtils.success(problemService.getProblemVO(problem, request));
     }
 
@@ -250,4 +254,33 @@ public class ProblemController {
         return ResultUtils.success(result);
     }
 
+    @PostMapping("/like")
+    public BaseResponse<Boolean> doLikeProblem(@RequestBody ProblemThumbUpdateRequest problemThumbUpdateRequest, HttpServletRequest request) {
+        if (problemThumbUpdateRequest == null || problemThumbUpdateRequest.getProblemId() <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        Problem problem = problemService.getById(problemThumbUpdateRequest.getProblemId());
+        if (problem == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+        }
+        User user = userService.getLoginUser(request);
+        boolean result = problemService.doLikeProblem(problem.getId(), user.getId(), request);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        return ResultUtils.success(result);
+    }
+
+    @PostMapping("/dislike")
+    public BaseResponse<Boolean> doDislikeProblem(@RequestBody ProblemDislikeUpdateRequest problemDislikeUpdateRequest, HttpServletRequest request) {
+        if (problemDislikeUpdateRequest == null || problemDislikeUpdateRequest.getProblemId() <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        Problem problem = problemService.getById(problemDislikeUpdateRequest.getProblemId());
+        if (problem == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+        }
+        User user = userService.getLoginUser(request);
+        boolean result = problemService.doDislikeProblem(problem.getId(), user.getId(), request);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        return ResultUtils.success(result);
+    }
 }

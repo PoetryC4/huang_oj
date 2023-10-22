@@ -11,6 +11,7 @@ import ProblemDetailsView from "@/views/problem/ProblemDetailsView.vue";
 import ProblemDetailsSolutionView from "@/views/problem/ProblemDetailsSolutionView.vue";
 import ProblemDetailsCommentsView from "@/views/problem/ProblemDetailsCommentsView.vue";
 import ProblemDetailsSubmissionsView from "@/views/problem/ProblemDetailsSubmissionsView.vue";
+import UserProfileView from "@/views/user/UserProfileView.vue";
 
 export const routes: Array<RouteRecordRaw> = [
   {
@@ -68,6 +69,16 @@ export const routes: Array<RouteRecordRaw> = [
     component: ProblemAddView,
     meta: {
       access: roleEnum.ADMIN,
+      hideInMenu: true,
+    },
+  },
+  {
+    path: "/user/profile",
+    name: "用户信息更改",
+    component: UserProfileView,
+    meta: {
+      access: roleEnum.DEFAULT_USER,
+      basicLayout: true,
       hideInMenu: true,
     },
   },

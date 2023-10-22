@@ -48,6 +48,28 @@ userAddRequest: UserAddRequest,
     }
 
     /**
+     * updateAvatar
+     * @param file file
+     * @returns BaseResponse_boolean_ OK
+     * @returns any Created
+     * @throws ApiError
+     */
+    public static updateAvatarUsingPost(
+file: FormData,
+): CancelablePromise<BaseResponse_boolean_ | any> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/user/avatar/update',
+            body: file,
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+            },
+        });
+    }
+
+    /**
      * deleteUser
      * @param deleteRequest deleteRequest
      * @returns BaseResponse_boolean_ OK

@@ -10,19 +10,21 @@ import com.huang.oj.constant.CommonConstant;
 import com.huang.oj.constant.UserConstant;
 import com.huang.oj.exception.BusinessException;
 import com.huang.oj.exception.ThrowUtils;
+import com.huang.oj.mapper.ProblemDislikeMapper;
 import com.huang.oj.mapper.ProblemMapper;
+import com.huang.oj.mapper.ProblemThumbMapper;
 import com.huang.oj.mapper.SubmissionMapper;
 import com.huang.oj.model.dto.problem.FunctionConfig;
 import com.huang.oj.model.dto.problem.JudgeCases;
 import com.huang.oj.model.dto.problem.JudgeConfig;
 import com.huang.oj.model.dto.problem.ProblemQueryRequest;
-import com.huang.oj.model.entity.Problem;
-import com.huang.oj.model.entity.Submission;
-import com.huang.oj.model.entity.User;
+import com.huang.oj.model.entity.*;
 import com.huang.oj.model.enums.SubmissionResultEnum;
 import com.huang.oj.model.vo.ProblemVO;
 import com.huang.oj.model.vo.UserVO;
+import com.huang.oj.service.ProblemDislikeService;
 import com.huang.oj.service.ProblemService;
+import com.huang.oj.service.ProblemThumbService;
 import com.huang.oj.service.UserService;
 import com.huang.oj.utils.SqlUtils;
 import org.apache.commons.collections4.CollectionUtils;
@@ -54,6 +56,18 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
 
     @Resource
     private SubmissionMapper submissionMapper;
+
+    @Resource
+    private ProblemThumbMapper problemThumbMapper;
+
+    @Resource
+    private ProblemDislikeMapper problemDislikeMapper;
+
+    @Resource
+    private ProblemThumbService problemThumbService;
+
+    @Resource
+    private ProblemDislikeService problemDislikeService;
 
 
     @Override
@@ -144,7 +158,25 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
         }
         if (loginUser == null || loginUser.getId() == null) {
             problemVO.setIsSolved(0);
+            problemVO.setIsLiked(false);
+            problemVO.setIsDisliked(false);
         } else {
+            QueryWrapper<ProblemDislike> queryWrapper3 = new QueryWrapper<>();
+            queryWrapper3.eq("problemId",problemVO.getId());
+            queryWrapper3.eq("userId",loginUser.getId());
+            if(problemDislikeMapper.selectCount(queryWrapper3) >0) {
+                problemVO.setIsDisliked(true);
+            } else {
+                problemVO.setIsDisliked(false);
+            }
+            QueryWrapper<ProblemThumb> queryWrapper2 = new QueryWrapper<>();
+            queryWrapper2.eq("problemId",problemVO.getId());
+            queryWrapper2.eq("userId",loginUser.getId());
+            if(problemThumbMapper.selectCount(queryWrapper2) >0) {
+                problemVO.setIsLiked(true);
+            } else {
+                problemVO.setIsLiked(false);
+            }
             QueryWrapper<Submission> queryWrapper1 = new QueryWrapper<>();
             queryWrapper1.eq("userId", loginUser.getId());
             queryWrapper1.eq("problemId", problemVO.getId());
@@ -203,6 +235,8 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
 
             if (isLoggedin) {
                 problemVO.setIsSolved(0);
+                problemVO.setIsLiked(false);
+                problemVO.setIsDisliked(false);
                 if (!isAdmin) {
                     JudgeCases judgeCases = problemVO.getJudgeCases();
                     judgeCases.setExpected(null);
@@ -225,6 +259,22 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
                     judgeCases.setInput(cutInputCases.toString());
                 }
             } else {
+                QueryWrapper<ProblemDislike> queryWrapper3 = new QueryWrapper<>();
+                queryWrapper3.eq("problemId",problemVO.getId());
+                queryWrapper3.eq("userId",finalLoginUser.getId());
+                if(problemDislikeMapper.selectCount(queryWrapper3) >0) {
+                    problemVO.setIsDisliked(true);
+                } else {
+                    problemVO.setIsDisliked(false);
+                }
+                QueryWrapper<ProblemThumb> queryWrapper2 = new QueryWrapper<>();
+                queryWrapper2.eq("problemId",problemVO.getId());
+                queryWrapper2.eq("userId",finalLoginUser.getId());
+                if(problemThumbMapper.selectCount(queryWrapper2) >0) {
+                    problemVO.setIsLiked(true);
+                } else {
+                    problemVO.setIsLiked(false);
+                }
                 QueryWrapper<Submission> queryWrapper1 = new QueryWrapper<>();
                 queryWrapper1.eq("userId", finalLoginUser.getId());
                 queryWrapper1.eq("problemId", problemVO.getId());
@@ -274,6 +324,44 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
         }
         long offset = Math.max(0, (current - 1)) * size;
         return problemMapper.getProblemQueryCount(size, offset, title, difficulty, status, loginUser == null ? -1 : loginUser.getId());
+    }
+    public boolean doLikeProblem(Long problemId, Long userId, HttpServletRequest request) {
+        QueryWrapper<ProblemThumb> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("problemId", problemId);
+        queryWrapper.eq("userId", userId);
+        Long count = problemThumbMapper.selectCount(queryWrapper);
+        Problem problem = this.getById(problemId);
+        if(Objects.equals(0L, count)) {
+            problem.setThumbNum(problem.getThumbNum()+1);
+            this.updateById(problem);
+            ProblemThumb problemThumb = new ProblemThumb();
+            problemThumb.setProblemId(problemId);
+            problemThumb.setUserId(userId);
+            return problemThumbService.save(problemThumb);
+        } else {
+            problem.setThumbNum(problem.getThumbNum()-1);
+            this.updateById(problem);
+            return problemThumbService.remove(queryWrapper);
+        }
+    }
+    public boolean doDislikeProblem(Long problemId, Long userId, HttpServletRequest request) {
+        QueryWrapper<ProblemDislike> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("problemId", problemId);
+        queryWrapper.eq("userId", userId);
+        Long count = problemDislikeMapper.selectCount(queryWrapper);
+        Problem problem = this.getById(problemId);
+        if(Objects.equals(0L, count)) {
+            problem.setDisLikeNum(problem.getDisLikeNum()+1);
+            this.updateById(problem);
+            ProblemDislike problemDislike = new ProblemDislike();
+            problemDislike.setProblemId(problemId);
+            problemDislike.setUserId(userId);
+            return problemDislikeService.save(problemDislike);
+        } else {
+            problem.setDisLikeNum(problem.getDisLikeNum()-1);
+            this.updateById(problem);
+            return problemDislikeService.remove(queryWrapper);
+        }
     }
 }
 

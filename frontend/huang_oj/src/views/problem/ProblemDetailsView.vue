@@ -13,6 +13,16 @@
             @tab-click="handleSiderTabChange"
             :active-key="siderTabKey"
           >
+            <template #extra>
+              <a-button type="text" @click="goToProblemList">
+                <a-tag color="gray" style="font-size: 15px">
+                  <template #icon>
+                    <icon-list style="font-size: 23px; stroke-width: 6px" />
+                  </template>
+                  题目列表
+                </a-tag>
+              </a-button>
+            </template>
             <a-tab-pane key="1" title="题目详情">
               <a-row justify="space-between">
                 <a-col :span="8" style="z-index: 100">
@@ -48,6 +58,32 @@
               </a-tag>
               <a-tag class="tag_class">
                 堆栈限制:{{ data.problem.judgeConfig?.stackLimit || 1000 }}MB
+              </a-tag>
+              <a-tag
+                color="green"
+                style="float: right; cursor: pointer; margin-right: 20px"
+                @click="handleLikeClick"
+              >
+                <template #icon>
+                  <icon-thumb-up-fill v-if="isLiked" />
+                  <icon-thumb-up v-else />
+                </template>
+                <span style="font-weight: bold">{{
+                  data.problem.thumbNum
+                }}</span>
+              </a-tag>
+              <a-tag
+                color="red"
+                style="float: right; cursor: pointer; margin-right: 20px"
+                @click="handleDislikeClick"
+              >
+                <template #icon>
+                  <icon-thumb-down-fill v-if="isDisliked" />
+                  <icon-thumb-down v-else />
+                </template>
+                <span style="font-weight: bold">{{
+                  data.problem.disLikeNum
+                }}</span>
               </a-tag>
               <a-divider />
               <a-space />
@@ -270,6 +306,12 @@ import {
   IconQuestion,
   IconCheck,
   IconExperiment,
+  IconThumbUp,
+  IconThumbDown,
+  IconThumbUpFill,
+  IconThumbDownFill,
+  IconBackward,
+  IconList,
 } from "@arco-design/web-vue/es/icon";
 import { roleEnum } from "@/components/scripts/access/roleEnum";
 import { languageEnum } from "@/components/scripts/enum/languageEnum";
@@ -293,6 +335,63 @@ const nextCode = ref("");
 const userCode = ref("");
 const codeLanguage = ref("java");
 let userCodes = {};
+const isLiked = ref(false);
+const isDisliked = ref(false);
+
+const handleLikeClick = async () => {
+  if (curUser == null || curUser.id < 0) {
+    return;
+  }
+  if (isLiked.value) {
+    isLiked.value = !isLiked.value;
+    const res = await ProblemControllerService.doLikeProblemUsingPost({
+      problemId: data.problem?.id,
+    });
+    console.log(res);
+    if (res.code == 0) {
+      Message.error("err" + res.message);
+    } else {
+      (data.problem.thumbNum as number)--;
+    }
+  } else {
+    isLiked.value = !isLiked.value;
+    const res = await ProblemControllerService.doLikeProblemUsingPost({
+      problemId: data.problem?.id,
+    });
+    console.log(res);
+    if (res.code == 0) {
+      Message.error("err" + res.message);
+    } else {
+      (data.problem.thumbNum as number)++;
+    }
+  }
+};
+const handleDislikeClick = async () => {
+  if (curUser == null || curUser.id < 0) {
+    return;
+  }
+  if (isDisliked.value) {
+    isDisliked.value = !isDisliked.value;
+    const res = await ProblemControllerService.doDislikeProblemUsingPost({
+      problemId: data.problem?.id,
+    });
+    if (res.code == 0) {
+      Message.error("err" + res.message);
+    } else {
+      (data.problem.disLikeNum as number)--;
+    }
+  } else {
+    isDisliked.value = !isDisliked.value;
+    const res = await ProblemControllerService.doDislikeProblemUsingPost({
+      problemId: data.problem?.id,
+    });
+    if (res.code == 0) {
+      Message.error("err" + res.message);
+    } else {
+      (data.problem.disLikeNum as number)++;
+    }
+  }
+};
 
 const codeTestTabKey = ref("1");
 const handleCodeTestTabChange = (v: string) => {
@@ -300,6 +399,12 @@ const handleCodeTestTabChange = (v: string) => {
 };
 const testInput = ref("");
 const siderTabKey = ref("1");
+
+const goToProblemList = () => {
+  router.push({
+    path: "/problem/list",
+  });
+};
 const handleSiderTabChange = (v: string) => {
   siderTabKey.value = v;
   doSiderTabChange();
@@ -376,6 +481,8 @@ const getProblemDetails = async () => {
   }
   data.problem = res.data as ProblemVO;
   userCodes = data.problem.functionConfig.defaultCode || {};
+  isLiked.value = data.problem.isLiked;
+  isDisliked.value = data.problem.isDisliked;
 };
 
 async function handleCodeTest() {
@@ -445,10 +552,7 @@ async function handleCodeSubmit() {
 
 onMounted(async () => {
   let path = route.path;
-  if (/\/problem\/details\/\d\/submissions\/\d/.test(path as string)) {
-    siderTabKey.value = "4";
-    // TODO 转到确定的提交历史页面
-  } else if (path.endsWith("/submissions")) {
+  if (path.endsWith("/submissions")) {
     siderTabKey.value = "4";
     doSiderTabChange();
   } else if (path.endsWith("/comments")) {

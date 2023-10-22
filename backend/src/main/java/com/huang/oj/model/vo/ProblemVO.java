@@ -106,6 +106,15 @@ public class ProblemVO implements Serializable {
      * 是否已解决
      */
     private Integer isSolved;
+
+    /**
+     * 是否已点赞
+     */
+    private Boolean isLiked;
+    /**
+     * 是否已点踩
+     */
+    private Boolean isDisliked;
     /**
      * 函数名称，默认函数形式，初步处理函数，变量类型
      */

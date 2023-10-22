@@ -8,7 +8,9 @@ import type { BaseResponse_Page_ProblemVO_ } from '../models/BaseResponse_Page_P
 import type { BaseResponse_ProblemVO_ } from '../models/BaseResponse_ProblemVO_';
 import type { DeleteRequest } from '../models/DeleteRequest';
 import type { ProblemAddRequest } from '../models/ProblemAddRequest';
+import type { ProblemDislikeUpdateRequest } from '../models/ProblemDislikeUpdateRequest';
 import type { ProblemQueryRequest } from '../models/ProblemQueryRequest';
+import type { ProblemThumbUpdateRequest } from '../models/ProblemThumbUpdateRequest';
 import type { ProblemUpdateRequest } from '../models/ProblemUpdateRequest';
 
 import type { CancelablePromise } from '../core/CancelablePromise';
@@ -62,6 +64,28 @@ deleteRequest: DeleteRequest,
     }
 
     /**
+     * doDislikeProblem
+     * @param problemDislikeUpdateRequest problemDislikeUpdateRequest
+     * @returns BaseResponse_boolean_ OK
+     * @returns any Created
+     * @throws ApiError
+     */
+    public static doDislikeProblemUsingPost(
+problemDislikeUpdateRequest: ProblemDislikeUpdateRequest,
+): CancelablePromise<BaseResponse_boolean_ | any> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/problem/dislike',
+            body: problemDislikeUpdateRequest,
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+            },
+        });
+    }
+
+    /**
      * editProblem
      * @param problemUpdateRequest problemUpdateRequest
      * @returns BaseResponse_boolean_ OK
@@ -98,6 +122,28 @@ id?: number,
             query: {
                 'id': id,
             },
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+            },
+        });
+    }
+
+    /**
+     * doLikeProblem
+     * @param problemThumbUpdateRequest problemThumbUpdateRequest
+     * @returns BaseResponse_boolean_ OK
+     * @returns any Created
+     * @throws ApiError
+     */
+    public static doLikeProblemUsingPost(
+problemThumbUpdateRequest: ProblemThumbUpdateRequest,
+): CancelablePromise<BaseResponse_boolean_ | any> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/problem/like',
+            body: problemThumbUpdateRequest,
             errors: {
                 401: `Unauthorized`,
                 403: `Forbidden`,

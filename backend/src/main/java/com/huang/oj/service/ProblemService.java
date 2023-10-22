@@ -58,4 +58,8 @@ public interface ProblemService extends IService<Problem> {
     List<Problem> getProblemQueryRes(long current, long size, String title, Integer difficulty, Integer status,HttpServletRequest request);
 
     Integer getProblemQueryCount(long current, long size, String title, Integer difficulty, Integer status,HttpServletRequest request);
+
+    boolean doLikeProblem(Long problemId, Long userId, HttpServletRequest request);
+
+    boolean doDislikeProblem(Long problemId, Long userId, HttpServletRequest request);
 }

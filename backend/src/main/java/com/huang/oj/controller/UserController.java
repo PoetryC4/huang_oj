@@ -1,5 +1,7 @@
 package com.huang.oj.controller;
 
+import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.io.file.FileWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.huang.oj.annotation.AuthCheck;
 import com.huang.oj.common.BaseResponse;
@@ -10,6 +12,7 @@ import com.huang.oj.config.WxOpenConfig;
 import com.huang.oj.constant.UserConstant;
 import com.huang.oj.exception.BusinessException;
 import com.huang.oj.exception.ThrowUtils;
+import com.huang.oj.mapper.UserMapper;
 import com.huang.oj.model.vo.UserRecordVO;
 import com.huang.oj.service.EmailService;
 import com.huang.oj.service.UserService;
@@ -23,6 +26,7 @@ import com.huang.oj.model.entity.User;
 import com.huang.oj.model.vo.LoginUserVO;
 import com.huang.oj.model.vo.UserVO;
 
+import java.io.File;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -40,8 +44,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import static com.huang.oj.utils.EncryptionUtils.getRandomString;
+
 /**
  * {
  * "userAccount":"huang",
@@ -64,6 +70,11 @@ public class UserController {
 
     @Resource
     private EmailService emailService;
+
+    private static String userDir = System.getProperty("user.dir");
+
+    private static String globalAvatarPath = userDir + File.separator + "src" + File.separator + "main" + File.separator + "resources" + File.separator + "avatars";
+
 
     // region 登录相关
 
@@ -230,6 +241,14 @@ public class UserController {
         BeanUtils.copyProperties(userUpdateRequest, user);
         boolean result = userService.updateById(user);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+
+        User user1 = userService.getById(user.getId());
+        // 用户不存在
+        if (user1 == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+        }
+        // 3. 记录用户的登录态
+        request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, user1);
         return ResultUtils.success(true);
     }
 
@@ -334,6 +353,13 @@ public class UserController {
         user.setId(loginUser.getId());
         boolean result = userService.updateById(user);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        User user1 = userService.getById(user.getId());
+        // 用户不存在
+        if (user1 == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+        }
+        // 3. 记录用户的登录态
+        request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, user1);
         return ResultUtils.success(true);
     }
 
@@ -362,11 +388,70 @@ public class UserController {
         emailService.sendVerificationCode(userEmail);
         return ResultUtils.success("验证码已发送，请检查您的邮箱。");
     }
+
     @GetMapping("/get/record")
     public BaseResponse<UserRecordVO> getUserRecordById(long id, HttpServletRequest request) {
-        if(id<0) {
+        if (id < 0) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "用户错误");
         }
         return ResultUtils.success(userService.getUserRecordVO(id));
     }
+
+    @PostMapping("/avatar/update")
+    public BaseResponse<Boolean> updateAvatar(@RequestParam MultipartFile file, HttpServletRequest request) throws Exception {
+        User loginUser = userService.getLoginUser(request);
+        if (loginUser == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+        }
+        if (!FileUtil.exist(globalAvatarPath)) {
+            FileUtil.mkdir(globalAvatarPath);
+        }
+        String originalFileName = file.getOriginalFilename();
+        String suffix = ".png";
+        for (int i = originalFileName.length()-1; i >=0; i--) {
+            if(originalFileName.charAt(i) == '.') {
+                suffix = originalFileName.substring(i);
+                break;
+            }
+        }
+
+        // 指定服务器上的保存路径，可以根据你的需求修改
+        Long id = loginUser.getId();
+        String savePath = globalAvatarPath + File.separator + id;
+
+        if (!FileUtil.exist(savePath)) {
+            FileUtil.mkdir(savePath);
+        }
+        File directory = FileUtil.file(savePath);
+
+        if (directory.isDirectory()) {
+            // 获取目标文件夹下的所有文件
+            File[] files = directory.listFiles();
+            if (files != null) {
+                for (File file1 : files) {
+                    if (file1.isFile()) {
+                        // 删除文件
+                        FileUtil.del(file1);
+                    }
+                }
+            }
+        }
+        String fileName = String.valueOf(id)+suffix;
+        // 使用Hutool的FileUtil来保存文件
+        FileUtil.writeBytes(file.getBytes(), savePath + File.separator + fileName);
+        User user = new User();
+        user.setId(id);
+        user.setUserAvatar(fileName);
+        boolean result = userService.updateById(user);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        User user1 = userService.getById(user.getId());
+        // 用户不存在
+        if (user1 == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+        }
+        // 3. 记录用户的登录态
+        request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, user1);
+        return ResultUtils.success(result);
+    }
+
 }

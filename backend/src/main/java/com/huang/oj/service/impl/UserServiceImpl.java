@@ -239,7 +239,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         User currentUser = (User) userObj;
         if (currentUser == null || currentUser.getId() == null) {
             throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
-        }
+        }/*
         // 从数据库查询（追求性能的话可以注释，直接走缓存）
         long userId = currentUser.getId();
 
@@ -251,7 +251,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
             }
             redisUtils.set(key, currentUser);
-        }
+        }*/
         return currentUser;
     }
 
@@ -270,7 +270,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return null;
         }
         // 从数据库查询（追求性能的话可以注释，直接走缓存）
-        long userId = currentUser.getId();
+        /*long userId = currentUser.getId();
 
         String key = "UserCachePermitNull:" + userId;
         User user = (User) redisUtils.get(key);
@@ -280,8 +280,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
             }
             redisUtils.set(key, user);
-        }
-        return user;
+        }*/
+        return currentUser;
     }
 
     /**
@@ -310,8 +310,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      */
     @Override
     public boolean userLogout(HttpServletRequest request) {
-        if (request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE) == null) {
+        Object attribute = request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+        User user = (User) attribute;
+        if (user == null) {
             throw new BusinessException(ErrorCode.OPERATION_ERROR, "未登录");
+        }
+        String key = "UserCache:" + user.getId();
+        User user1 = (User) redisUtils.get(key);
+        if (user1 != null) {
+            redisUtils.remove(key, user1);
         }
         // 移除登录态
         request.getSession().removeAttribute(UserConstant.USER_LOGIN_STATE);
@@ -366,8 +373,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         queryWrapper.eq(StringUtils.isNotBlank(userRole), "userRole", userRole);
         queryWrapper.like(StringUtils.isNotBlank(userProfile), "userProfile", userProfile);
         queryWrapper.like(StringUtils.isNotBlank(userName), "userName", userName);
-        queryWrapper.orderBy(SqlUtils.validSortField(sortField), sortOrder.equals(CommonConstant.SORT_ORDER_ASC),
-                sortField);
+        queryWrapper.orderBy(SqlUtils.validSortField(sortField), sortOrder.equals(CommonConstant.SORT_ORDER_ASC), sortField);
         return queryWrapper;
     }
 

@@ -29,7 +29,12 @@
             <a-avatar v-else>
               <img
                 alt="avatar"
-                src="https://p1-arco.byteimg.com/tos-cn-i-uwbnlip3yd/3ee5f13fb09879ecb5185e440cef6eb9.png~tplv-uwbnlip3yd-webp.webp"
+                :src="
+                  'http://127.0.0.1:8102/api/avatars/' +
+                  store.state.user?.userInfo.id +
+                  '/' +
+                  store.state.user?.userInfo.userAvatar
+                "
               />
             </a-avatar>
           </a-col>
@@ -90,6 +95,7 @@
 import GlobalHeader from "@/components/GlobalHeader.vue";
 import store from "@/store";
 import { useRoute, useRouter } from "vue-router";
+import { onMounted } from "vue";
 
 const router = useRouter();
 const route = useRoute();

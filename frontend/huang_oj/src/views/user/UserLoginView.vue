@@ -156,6 +156,7 @@ async function handleLogin() {
     });
   }
   if (res.code !== null && res.code === 1) {
+    console.log(res.data);
     console.log("登录成功");
     await store.dispatch("user/getLoginUser", {
       ...res.data,

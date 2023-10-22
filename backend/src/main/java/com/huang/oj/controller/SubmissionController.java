@@ -68,6 +68,7 @@ public class SubmissionController {
         if (problemSubmitQuest == null || problemSubmitQuest.getProblemId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
+
         final User loginUser = userService.getLoginUser(request);
 
         submissionService.ValidSubmission(problemSubmitQuest, loginUser);
