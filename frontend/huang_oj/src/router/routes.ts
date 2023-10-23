@@ -46,6 +46,7 @@ export const routes: Array<RouteRecordRaw> = [
         path: "/problem/details/:id/comments",
         name: "题目评论区",
         component: ProblemDetailsCommentsView,
+        props: true,
         meta: {
           access: roleEnum.NOT_LOGIN,
           hideInMenu: true,
@@ -89,6 +90,7 @@ export const routes: Array<RouteRecordRaw> = [
     meta: {
       access: roleEnum.DEFAULT_USER,
       basicLayout: true,
+      hideInMenu: true,
     },
   },
   {

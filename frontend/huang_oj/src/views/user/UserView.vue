@@ -191,8 +191,8 @@
           }"
           hoverable
         >
-          <a-tabs>
-            <a-tab-pane key="1">
+          <a-tabs @change="handleUserTabChange">
+            <a-tab-pane :key="1">
               <template #title>
                 <icon-select-all />
                 提交记录
@@ -310,12 +310,136 @@
                 </template>
               </a-pagination>
             </a-tab-pane>
-            <a-tab-pane key="2">
+            <a-tab-pane :key="2">
               <template #title>
                 <icon-message />
-                发言记录
+                评论记录
               </template>
-              Content of Tab Panel 2
+
+              <a-row
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  flex-wrap: wrap;
+                  margin-top: 30px;
+                  margin-bottom: 30px;
+                "
+              >
+                <a-col :span="9" :offset="1">
+                  <a-input
+                    placeholder="请输入要搜索的评论内容"
+                    search-button
+                    style="width: 99%"
+                    v-model="commentSearchText"
+                    @press-enter="getMyCommentList"
+                  >
+                    <template #button-icon>
+                      <icon-search />
+                    </template>
+                  </a-input>
+                </a-col>
+              </a-row>
+              <a-comment
+                v-for="(item, index) of data.myCommentTable"
+                :key="index"
+                :datetime="
+                  moment(
+                    moment(item.createTime).format('YYYY-MM-DD HH:mm:ss'),
+                    'YYYY-MM-DD HH:mm:ss'
+                  ).fromNow()
+                "
+                :author="item.userVO.userName || '用户'"
+                :content="item.content"
+              >
+                <template #actions>
+                  <a-tag
+                    @click="handleGoToProblem(item.problemVO.id)"
+                    style="cursor: pointer"
+                    >{{ item.problemVO?.id || -1 }}
+                    {{ item.problemVO?.title || "" }}
+                  </a-tag>
+                  <a-button
+                    size="small"
+                    v-if="
+                      curUser != undefined &&
+                      curUser?.userRole !== undefined &&
+                      curUser?.userRole !== null &&
+                      curUser?.userRole === roleEnum.ADMIN
+                    "
+                    style="margin-right: 10px; margin-left: auto; float: right"
+                    status="danger"
+                    type="primary"
+                    @click="handleDeleteComment(item.id)"
+                    >删除该评论
+                  </a-button>
+                </template>
+                <template #avatar>
+                  <a-avatar
+                    :size="60"
+                    :style="{ backgroundColor: '#3370ff', marginLeft: '20px' }"
+                    v-if="item.userVO.id === -1"
+                  >
+                    未登录
+                  </a-avatar>
+                  <a-avatar
+                    :size="60"
+                    :style="{ backgroundColor: '#3370ff', marginLeft: '20px' }"
+                    v-else-if="
+                      item.userVO.userAvatar === undefined ||
+                      item.userVO.userAvatar === null
+                    "
+                  >
+                    {{ item.userVO.userName || "用户" }}
+                  </a-avatar>
+                  <a-avatar v-else :size="60" :style="{ marginLeft: '20px' }">
+                    <img
+                      alt="avatar"
+                      :src="
+                        'http://127.0.0.1:8102/api/avatars/' +
+                        item.userVO.id +
+                        '/' +
+                        item.userVO.userAvatar
+                      "
+                    />
+                  </a-avatar>
+                </template>
+                <a-divider />
+              </a-comment>
+              <a-pagination
+                :total="data.myCommentCount"
+                show-total
+                show-jumper
+                show-page-size
+                :page-size-options="commentPageSizes"
+                @page-size-change="handleCommentSizeChange"
+                @change="handleCommentCurrentChange"
+                v-model:current="commentCurPage"
+                v-model:page-size="commentPageSize"
+                style="
+                  left: 0;
+                  right: 0;
+                  top: 0;
+                  bottom: 0;
+                  margin: 2% auto;
+                  padding: 0;
+                  justify-content: center;
+                  -webkit-justify-content: center;
+                "
+              >
+                <template #page-item="{ page }"> - {{ page }} -</template>
+                <template #page-item-step="{ type }">
+                  <icon-send
+                    :style="
+                      type === 'previous'
+                        ? { transform: `rotate(180deg)` }
+                        : undefined
+                    "
+                  />
+                </template>
+                <template #page-item-ellipsis>
+                  <icon-sun-fill />
+                </template>
+              </a-pagination>
             </a-tab-pane>
           </a-tabs>
         </a-card>
@@ -328,7 +452,12 @@
 import store from "@/store";
 import moment from "moment";
 import { onMounted, ref, reactive } from "vue";
-import { SubmissionControllerService, UserControllerService } from "@/api";
+import {
+  CommentControllerService,
+  ProblemControllerService,
+  SubmissionControllerService,
+  UserControllerService,
+} from "@/api";
 import { Message } from "@arco-design/web-vue";
 import { useRouter } from "vue-router";
 import {
@@ -340,8 +469,11 @@ import {
   IconSunFill,
   IconQrcode,
   IconSearch,
+  IconHeart,
+  IconHeartFill,
 } from "@arco-design/web-vue/es/icon";
 import { SubmissionResultEnums } from "@/components/scripts/enum/SubmissionResultEnums";
+import { roleEnum } from "@/components/scripts/access/roleEnum";
 
 const userRecord = ref({});
 const router = useRouter();
@@ -352,11 +484,30 @@ const titleInput = ref("");
 const subCurPage = ref(1);
 const subPageSize = ref(8);
 const subPageSizes = ref([8, 16, 24]);
+const commentCurPage = ref(1);
+const commentPageSize = ref(8);
+const commentPageSizes = ref([8, 16, 24]);
 const selectedStatus = ref(null);
+const commentSearchText = ref("");
 const data = reactive({
   mySubmissionTable: [],
   mySubmissionCount: 0,
+  myCommentTable: [],
+  myCommentCount: 0,
 });
+
+const handleDeleteComment = async (id: number) => {
+  let res = await CommentControllerService.deleteCommentUsingPost({
+    id: id,
+  });
+  if (res.code !== 1) {
+    Message.error("err" + res.message);
+    return;
+  } else {
+    Message.success("删除成功");
+    getMyCommentList();
+  }
+};
 const getMySubmissionList = async () => {
   let res = await SubmissionControllerService.listMySubmissionVoByPageUsingPost(
     {
@@ -381,6 +532,25 @@ const getMySubmissionList = async () => {
     subCurPage.value = Math.ceil(data.mySubmissionCount / subPageSize.value);
   }
 };
+const getMyCommentList = async () => {
+  let res = await CommentControllerService.listMyCommentVoByPageUsingPost({
+    current: commentCurPage.value,
+    pageSize: commentPageSize.value,
+    searchText: commentSearchText.value,
+  });
+  if (res.code !== 1) {
+    Message.error("err" + res.message);
+    return;
+  }
+  data.myCommentTable = res.data.records || [];
+  data.myCommentCount = parseInt(res.data.total);
+  if (
+    Math.ceil(data.myCommentCount / commentPageSize.value) <
+    commentCurPage.value
+  ) {
+    subCurPage.value = Math.ceil(data.myCommentCount / commentPageSize.value);
+  }
+};
 const handleSubSizeChange = (val: number) => {
   subPageSize.value = val;
   getMySubmissionList();
@@ -388,6 +558,14 @@ const handleSubSizeChange = (val: number) => {
 const handleSubCurrentChange = (val: number) => {
   subCurPage.value = val;
   getMySubmissionList();
+};
+const handleCommentSizeChange = (val: number) => {
+  subPageSize.value = val;
+  getMyCommentList();
+};
+const handleCommentCurrentChange = (val: number) => {
+  subCurPage.value = val;
+  getMyCommentList();
 };
 const goToInfoChange = () => {
   if (store.state.user?.userInfo?.id < 0) {
@@ -398,13 +576,21 @@ const goToInfoChange = () => {
   });
 };
 const handleGoToProblem = (id: number) => {
-  if (id < 0) {
+  if (id == null || id < 0) {
     return;
   }
   router.push({
     path: "/problem/details/" + id,
   });
 };
+const handleUserTabChange = (key: number) => {
+  if (key === 1) {
+    getMySubmissionList();
+  } else {
+    getMyCommentList();
+  }
+};
+
 onMounted(async () => {
   let res = await UserControllerService.getUserRecordByIdUsingGet(
     store.state.user?.userInfo?.id || -1

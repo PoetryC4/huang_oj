@@ -340,55 +340,39 @@ const isDisliked = ref(false);
 
 const handleLikeClick = async () => {
   if (curUser == null || curUser.id < 0) {
+    Message.info("你需要先登录");
     return;
   }
-  if (isLiked.value) {
-    isLiked.value = !isLiked.value;
-    const res = await ProblemControllerService.doLikeProblemUsingPost({
-      problemId: data.problem?.id,
-    });
-    console.log(res);
-    if (res.code == 0) {
-      Message.error("err" + res.message);
+  isLiked.value = !isLiked.value;
+  const res = await ProblemControllerService.doLikeProblemUsingPost({
+    problemId: data.problem?.id,
+  });
+  if (res.code == 0) {
+    Message.error("err" + res.message);
+  } else {
+    if (isLiked.value) {
+      (data.problem.thumbNum as number)++;
     } else {
       (data.problem.thumbNum as number)--;
-    }
-  } else {
-    isLiked.value = !isLiked.value;
-    const res = await ProblemControllerService.doLikeProblemUsingPost({
-      problemId: data.problem?.id,
-    });
-    console.log(res);
-    if (res.code == 0) {
-      Message.error("err" + res.message);
-    } else {
-      (data.problem.thumbNum as number)++;
     }
   }
 };
 const handleDislikeClick = async () => {
   if (curUser == null || curUser.id < 0) {
+    Message.info("你需要先登录");
     return;
   }
-  if (isDisliked.value) {
-    isDisliked.value = !isDisliked.value;
-    const res = await ProblemControllerService.doDislikeProblemUsingPost({
-      problemId: data.problem?.id,
-    });
-    if (res.code == 0) {
-      Message.error("err" + res.message);
+  isDisliked.value = !isDisliked.value;
+  const res = await ProblemControllerService.doDislikeProblemUsingPost({
+    problemId: data.problem?.id,
+  });
+  if (res.code == 0) {
+    Message.error("err" + res.message);
+  } else {
+    if (isDisliked.value) {
+      (data.problem.disLikeNum as number)++;
     } else {
       (data.problem.disLikeNum as number)--;
-    }
-  } else {
-    isDisliked.value = !isDisliked.value;
-    const res = await ProblemControllerService.doDislikeProblemUsingPost({
-      problemId: data.problem?.id,
-    });
-    if (res.code == 0) {
-      Message.error("err" + res.message);
-    } else {
-      (data.problem.disLikeNum as number)++;
     }
   }
 };
