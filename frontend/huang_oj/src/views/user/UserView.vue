@@ -349,8 +349,11 @@
                   ).fromNow()
                 "
                 :author="item.userVO.userName || '用户'"
-                :content="item.content"
               >
+                <template #content>
+                  <div v-if="curCommentEdit !== index">{{ item.content }}</div>
+                  <a-textarea v-else v-model="item.content" />
+                </template>
                 <template #actions>
                   <a-tag
                     @click="handleGoToProblem(item.problemVO.id)"
@@ -358,20 +361,54 @@
                     >{{ item.problemVO?.id || -1 }}
                     {{ item.problemVO?.title || "" }}
                   </a-tag>
-                  <a-button
-                    size="small"
+                  <div
                     v-if="
                       curUser != undefined &&
                       curUser?.userRole !== undefined &&
                       curUser?.userRole !== null &&
                       curUser?.userRole === roleEnum.ADMIN
                     "
-                    style="margin-right: 10px; margin-left: auto; float: right"
-                    status="danger"
-                    type="primary"
-                    @click="handleDeleteComment(item.id)"
-                    >删除该评论
-                  </a-button>
+                  >
+                    <a-button
+                      size="small"
+                      v-if="curCommentEdit !== index"
+                      style="
+                        margin-right: 10px;
+                        margin-left: auto;
+                        float: right;
+                      "
+                      status="danger"
+                      type="primary"
+                      @click="handleDeleteComment(item.id)"
+                      >删除该评论
+                    </a-button>
+                    <a-button
+                      size="small"
+                      v-if="curCommentEdit !== index"
+                      style="
+                        margin-right: 10px;
+                        margin-left: auto;
+                        float: right;
+                      "
+                      status="normal"
+                      type="primary"
+                      @click="curCommentEdit = index"
+                      >编辑该评论
+                    </a-button>
+                    <a-button
+                      size="small"
+                      v-if="curCommentEdit === index"
+                      style="
+                        margin-right: 10px;
+                        margin-left: auto;
+                        float: right;
+                      "
+                      status="normal"
+                      type="primary"
+                      @click="handleEditSubmit(item)"
+                      >保存编辑
+                    </a-button>
+                  </div>
                 </template>
                 <template #avatar>
                   <a-avatar
@@ -496,6 +533,18 @@ const data = reactive({
   myCommentCount: 0,
 });
 
+const handleEditSubmit = async (item: any) => {
+  let res = await CommentControllerService.editCommentUsingPost({
+    id: item.id || -1,
+    content: item.content || "",
+    problemId: item.problemId || -1,
+  });
+  if (res.code !== 1) {
+    Message.error("err" + res.message);
+    return;
+  }
+  curCommentEdit.value = -1;
+};
 const handleDeleteComment = async (id: number) => {
   let res = await CommentControllerService.deleteCommentUsingPost({
     id: id,
@@ -532,6 +581,7 @@ const getMySubmissionList = async () => {
     subCurPage.value = Math.ceil(data.mySubmissionCount / subPageSize.value);
   }
 };
+const curCommentEdit = ref(-1);
 const getMyCommentList = async () => {
   let res = await CommentControllerService.listMyCommentVoByPageUsingPost({
     current: commentCurPage.value,
@@ -542,6 +592,7 @@ const getMyCommentList = async () => {
     Message.error("err" + res.message);
     return;
   }
+  curCommentEdit.value = -1;
   data.myCommentTable = res.data.records || [];
   data.myCommentCount = parseInt(res.data.total);
   if (

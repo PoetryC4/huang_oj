@@ -15,7 +15,6 @@ import com.huang.oj.model.dto.submission.ProblemSubmitQuest;
 import com.huang.oj.model.dto.submission.ProblemTestExampleRequest;
 import com.huang.oj.model.dto.submission.SimpleSubmissionQueryQuest;
 import com.huang.oj.model.dto.submission.SubmissionQueryQuest;
-import com.huang.oj.model.entity.Problem;
 import com.huang.oj.model.entity.Submission;
 import com.huang.oj.model.entity.User;
 import com.huang.oj.model.enums.SubmissionResultEnum;
@@ -24,6 +23,7 @@ import com.huang.oj.model.vo.SubmissionVO;
 import com.huang.oj.model.vo.UserVO;
 import com.huang.oj.service.SubmissionService;
 import com.huang.oj.service.UserService;
+import com.huang.oj.utils.IpRateLimiter;
 import com.huang.oj.utils.RedisUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -35,9 +35,6 @@ import java.util.List;
 
 /**
  * 帖子点赞接口
- *
- 
- 
  */
 @RestController
 @RequestMapping("/submission")
@@ -55,6 +52,15 @@ public class SubmissionController {
     @Resource
     private JudgeService judgeService;
 
+    private static IpRateLimiter ipRateLimiter;
+
+    // 每秒每个IP10个请求
+    private static final double submitRequestsPerSecond = 10;
+
+    static {
+        ipRateLimiter = new IpRateLimiter(submitRequestsPerSecond);
+    }
+
     /**
      * 点赞 / 取消点赞
      *
@@ -65,6 +71,12 @@ public class SubmissionController {
     @PostMapping("/submit/add")
     public BaseResponse<SubmissionVO> doSubmit(@RequestBody ProblemSubmitQuest problemSubmitQuest,
                                                HttpServletRequest request) {
+        String clientIp = request.getRemoteAddr(); // 获取客户端IP地址
+        boolean allowed = ipRateLimiter.allowRequest(clientIp);
+        if (!allowed) {
+            // 请求限制，返回相应的错误信息或状态码
+            throw new BusinessException(ErrorCode.TOO_MANY_REQUEST);
+        }
         if (problemSubmitQuest == null || problemSubmitQuest.getProblemId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -210,6 +222,5 @@ public class SubmissionController {
         simpleSubmissionVOPage.setTotal(submissionService.getSimpleSubmissionCount(current, size, title, judgeStatus, request));
         return ResultUtils.success(simpleSubmissionVOPage);
     }
-
 
 }

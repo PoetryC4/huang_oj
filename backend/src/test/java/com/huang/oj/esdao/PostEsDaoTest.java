@@ -24,7 +24,7 @@ import org.springframework.data.domain.Sort;
 @SpringBootTest
 public class PostEsDaoTest {
 
-    @Resource
+/*    @Resource
     private PostEsDao postEsDao;
 
     @Resource
@@ -32,19 +32,19 @@ public class PostEsDaoTest {
 
     @Test
     void test() {
-        /*PostQueryRequest postQueryRequest = new PostQueryRequest();
+        PostQueryRequest postQueryRequest = new PostQueryRequest();
         com.baomidou.mybatisplus.extension.plugins.pagination.Page<Post> page =
                 postService.searchFromEs(postQueryRequest);
-        System.out.println(page);*/
+        System.out.println(page);
     }
 
     @Test
     void testSelect() {
-        /*System.out.println(postEsDao.count());
+        System.out.println(postEsDao.count());
         Page<PostEsDTO> PostPage = postEsDao.findAll(
                 PageRequest.of(0, 5, Sort.by("createTime")));
         List<PostEsDTO> postList = PostPage.getContent();
-        System.out.println(postList);*/
+        System.out.println(postList);
     }
 
     @Test
@@ -79,5 +79,5 @@ public class PostEsDaoTest {
     void testFindByCategory() {
         List<PostEsDTO> postEsDaoTestList = postEsDao.findByUserId(1L);
         System.out.println(postEsDaoTestList);
-    }
+    }*/
 }

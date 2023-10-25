@@ -175,15 +175,38 @@
         </a-row>
         <a-row :gutter="1">
           <a-col>
-            <a-collapse>
-              <a-collapse-item header="调试" key="1">
+            <a-collapse :active-key="[collapseController]" style="cursor: text">
+              <a-collapse-item :key="1" style="cursor: text">
+                <template #expand-icon>
+                  <div
+                    style="cursor: pointer"
+                    @click="
+                      collapseController = collapseController === 1 ? -1 : 1
+                    "
+                  >
+                    <icon-right v-if="collapseController !== 1" />
+                    <icon-down v-else />
+                  </div>
+                </template>
+                <template #header>
+                  <div
+                    style="cursor: pointer"
+                    @click="
+                      collapseController = collapseController === 1 ? -1 : 1
+                    "
+                  >
+                    调试
+                  </div>
+                </template>
                 <template #extra>
                   <a-button
+                    :disabled="isJudge"
                     @click.stop="handleCodeTest"
                     style="margin-right: 40px"
                     >运行
                   </a-button>
                   <a-button
+                    :disabled="isJudge"
                     type="primary"
                     @click.stop="handleCodeSubmit"
                     style="margin-right: 30px"
@@ -204,80 +227,108 @@
                     />
                   </a-tab-pane>
                   <a-tab-pane key="2" title="测试结果">
-                    <div v-if="userSubmissionRes.judgeInfo != undefined">
-                      <span
-                        v-if="
-                          userSubmissionRes.judgeInfo?.resultStr === 'Accepted'
-                        "
-                        :style="{ color: 'green', fontSize: '20px' }"
-                      >
-                        {{ userSubmissionRes.judgeInfo?.resultStr || "" }}
-                      </span>
-                      <span v-else :style="{ color: 'red', fontSize: '20px' }">
-                        {{ userSubmissionRes.judgeInfo?.resultStr || "" }}
-                      </span>
-                      <span
-                        :style="{ fontSize: '16px' }"
-                        v-if="
-                          userSubmissionRes.judgeInfo?.timeUsed != undefined
-                        "
-                      >
-                        运行用时:
-                        {{
-                          userSubmissionRes.judgeInfo?.timeUsed || ""
-                        }}ms</span
-                      >
-                      <a-tabs default-active-key="0" type="round">
-                        <a-tab-pane
-                          v-for="(
-                            judgeCaseVO, index
-                          ) of userSubmissionRes.judgeCaseVOList"
-                          :key="index"
+                    <div v-if="isJudge">
+                      <a-skeleton :animation="true">
+                        <a-space
+                          direction="vertical"
+                          :style="{ width: '100%' }"
+                          size="large"
                         >
-                          <template #title>样例 {{ index + 1 }}</template>
-
-                          <h3>样例输入</h3>
-                          <a-alert type="normal">
-                            <div
-                              v-html="(judgeCaseVO.input as string).replace(/\n/g, '<br>')"
-                            />
-                          </a-alert>
-                          <h3 v-if="judgeCaseVO.stdout?.length > 0">
-                            样例标准输出
-                          </h3>
-                          <a-alert type="normal">
-                            <div
-                              v-html="(judgeCaseVO.stdout as string).replace(/\n/g, '<br>')"
-                            />
-                          </a-alert>
-                          <h3>样例返回</h3>
-                          <a-alert
-                            type="normal"
-                            v-if="judgeCaseVO.result === 'Accepted'"
-                          >
-                            <div
-                              :style="{ color: 'green' }"
-                              v-html="(judgeCaseVO.output as string).replace(/\n/g, '<br>')"
-                            />
-                          </a-alert>
-                          <a-alert type="normal" v-else>
-                            <div
-                              :style="{ color: 'red' }"
-                              v-html="(judgeCaseVO.output as string).replace(/\n/g, '<br>')"
-                            />
-                          </a-alert>
-                          <h3>样例期望值</h3>
-                          <a-alert type="normal">
-                            <div
-                              :style="{ color: 'green' }"
-                              v-html="(judgeCaseVO.expected as string).replace(/\n/g, '<br>')"
-                            />
-                          </a-alert>
-                        </a-tab-pane>
-                      </a-tabs>
+                          <a-skeleton-shape />
+                          <a-skeleton-line :rows="3" />
+                        </a-space>
+                      </a-skeleton>
                     </div>
-                    <div style="inset: 0; margin: auto" v-else>
-                      请先运行你的代码
+                    <div v-else>
+                      <div v-if="userSubmissionRes.judgeInfo != undefined">
+                        <span
+                          v-if="
+                            userSubmissionRes.judgeInfo?.resultStr ===
+                            'Accepted'
+                          "
+                          :style="{ color: 'green', fontSize: '20px' }"
+                        >
+                          {{ userSubmissionRes.judgeInfo?.resultStr || "" }}
+                        </span>
+                        <span
+                          v-else
+                          :style="{ color: 'red', fontSize: '20px' }"
+                        >
+                          {{ userSubmissionRes.judgeInfo?.resultStr || "" }}
+                        </span>
+                        <span
+                          :style="{ fontSize: '16px' }"
+                          v-if="
+                            userSubmissionRes.judgeInfo?.timeUsed != undefined
+                          "
+                        >
+                          运行用时:
+                          {{
+                            userSubmissionRes.judgeInfo?.timeUsed || ""
+                          }}ms</span
+                        >
+                        <a-tabs default-active-key="0" type="round">
+                          <a-tab-pane
+                            v-for="(
+                              judgeCaseVO, index
+                            ) of userSubmissionRes.judgeCaseVOList"
+                            :key="index"
+                          >
+                            <template #title>
+                              <a-tag
+                                size="large"
+                                style="margin-right: 20px"
+                                @click="testTagSelect = index"
+                                :color="
+                                  testTagSelect === index ? 'arcoblue' : 'gray'
+                                "
+                                >样例 {{ index + 1 }}
+                              </a-tag>
+                            </template>
+
+                            <h3>样例输入</h3>
+                            <a-alert type="normal">
+                              <div
+                                v-html="(judgeCaseVO.input as string).replace(/\n/g, '<br>')"
+                              />
+                            </a-alert>
+                            <h3 v-if="judgeCaseVO.stdout?.length > 0">
+                              样例标准输出
+                            </h3>
+                            <a-alert type="normal">
+                              <div
+                                v-html="(judgeCaseVO.stdout as string).replace(/\n/g, '<br>')"
+                              />
+                            </a-alert>
+                            <h3>样例返回</h3>
+                            <a-alert
+                              type="normal"
+                              v-if="judgeCaseVO.result === 'Accepted'"
+                            >
+                              <div
+                                :style="{ color: 'green' }"
+                                v-html="(judgeCaseVO.output as string).replace(/\n/g, '<br>')"
+                              />
+                            </a-alert>
+                            <a-alert type="normal" v-else>
+                              <div
+                                :style="{ color: 'red' }"
+                                v-html="(judgeCaseVO.output as string).replace(/\n/g, '<br>')"
+                              />
+                            </a-alert>
+                            <h3>样例期望值</h3>
+                            <a-alert type="normal">
+                              <div
+                                :style="{ color: 'green' }"
+                                v-html="(judgeCaseVO.expected as string).replace(/\n/g, '<br>')"
+                              />
+                            </a-alert>
+                          </a-tab-pane>
+                        </a-tabs>
+                      </div>
+                      <div style="inset: 0; margin: auto" v-else>
+                        请先运行你的代码
+                      </div>
                     </div>
                   </a-tab-pane>
                 </a-tabs>
@@ -312,6 +363,8 @@ import {
   IconThumbDownFill,
   IconBackward,
   IconList,
+  IconRight,
+  IconDown,
 } from "@arco-design/web-vue/es/icon";
 import { roleEnum } from "@/components/scripts/access/roleEnum";
 import { languageEnum } from "@/components/scripts/enum/languageEnum";
@@ -337,6 +390,8 @@ const codeLanguage = ref("java");
 let userCodes = {};
 const isLiked = ref(false);
 const isDisliked = ref(false);
+const isJudge = ref(false);
+const collapseController = ref(-1);
 
 const handleLikeClick = async () => {
   if (curUser == null || curUser.id < 0) {
@@ -383,6 +438,7 @@ const handleCodeTestTabChange = (v: string) => {
 };
 const testInput = ref("");
 const siderTabKey = ref("1");
+const testTagSelect = ref(0);
 
 const goToProblemList = () => {
   router.push({
@@ -479,6 +535,10 @@ async function handleCodeTest() {
     });
     return;
   }
+  if (isJudge.value) return;
+  isJudge.value = true;
+  collapseController.value = 1;
+  codeTestTabKey.value = "2";
   const res = await SubmissionControllerService.testSubmitUsingPost({
     judgeCases: {
       input: testInput.value,
@@ -492,11 +552,12 @@ async function handleCodeTest() {
   });
   if (res.code !== 1) {
     Message.error("err" + res.message);
+    isJudge.value = false;
     return;
   } else {
     Message.success("测试提交成功");
     userSubmissionRes.value = res.data;
-    codeTestTabKey.value = "2";
+    isJudge.value = false;
   }
 }
 
@@ -510,6 +571,10 @@ async function handleCodeSubmit() {
     });
     return;
   }
+  if (isJudge.value) return;
+  isJudge.value = true;
+  collapseController.value = 1;
+  codeTestTabKey.value = "2";
   const res = await SubmissionControllerService.doSubmitUsingPost({
     problemId: data.problem?.id || -1,
     userId: curUser.id,
@@ -518,18 +583,16 @@ async function handleCodeSubmit() {
   });
   if (res.code !== 1) {
     Message.error("err" + res.message);
+    isJudge.value = false;
     return;
   } else {
     Message.success("提交成功");
+    isJudge.value = false;
     userSubmissionRes.value = res.data.judgeResult;
-    codeTestTabKey.value = "2";
     getProblemDetails();
     routerKey.value++;
     if (userSubmissionRes.value.judgeInfo?.resultStr === "Accepted") {
-      router.push({
-        path: "/problem/details/" + props.id + "/submissions",
-      });
-      doSiderTabChange();
+      handleSiderTabChange("4");
     }
   }
 }
@@ -575,5 +638,11 @@ provide("data", data);
 
 .problem_details_view {
   overflow: hidden;
+}
+</style>
+
+<style>
+.arco-collapse-item-header {
+  cursor: default;
 }
 </style>

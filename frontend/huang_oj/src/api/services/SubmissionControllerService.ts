@@ -20,28 +20,6 @@ import { request as __request } from '../core/request';
 export class SubmissionControllerService {
 
     /**
-     * doSubmit
-     * @param problemSubmitQuest problemSubmitQuest
-     * @returns BaseResponse_SubmissionVO_ OK
-     * @returns any Created
-     * @throws ApiError
-     */
-    public static doSubmitUsingPost(
-problemSubmitQuest: ProblemSubmitQuest,
-): CancelablePromise<BaseResponse_SubmissionVO_ | any> {
-        return __request(OpenAPI, {
-            method: 'POST',
-            url: '/api/submission/add',
-            body: problemSubmitQuest,
-            errors: {
-                401: `Unauthorized`,
-                403: `Forbidden`,
-                404: `Not Found`,
-            },
-        });
-    }
-
-    /**
      * deleteSubmission
      * @param deleteRequest deleteRequest
      * @returns BaseResponse_boolean_ OK
@@ -131,6 +109,28 @@ simpleSubmissionQueryQuest: SimpleSubmissionQueryQuest,
     }
 
     /**
+     * doSubmit
+     * @param problemSubmitQuest problemSubmitQuest
+     * @returns BaseResponse_SubmissionVO_ OK
+     * @returns any Created
+     * @throws ApiError
+     */
+    public static doSubmitUsingPost(
+problemSubmitQuest: ProblemSubmitQuest,
+): CancelablePromise<BaseResponse_SubmissionVO_ | any> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/submission/submit/add',
+            body: problemSubmitQuest,
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+            },
+        });
+    }
+
+    /**
      * testSubmit
      * @param problemTestExampleRequest problemTestExampleRequest
      * @returns BaseResponse_JudgeResult_ OK
@@ -142,7 +142,7 @@ problemTestExampleRequest: ProblemTestExampleRequest,
 ): CancelablePromise<BaseResponse_JudgeResult_ | any> {
         return __request(OpenAPI, {
             method: 'POST',
-            url: '/api/submission/test',
+            url: '/api/submission/submit/test',
             body: problemTestExampleRequest,
             errors: {
                 401: `Unauthorized`,

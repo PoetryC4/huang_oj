@@ -34,8 +34,11 @@
         ).fromNow()
       "
       :author="item.userVO.userName || '用户'"
-      :content="item.content"
     >
+      <template #content>
+        <div v-if="curCommentEdit !== index">{{ item.content }}</div>
+        <a-textarea v-else v-model="item.content" />
+      </template>
       <template #actions>
         <span
           class="action"
@@ -51,20 +54,42 @@
           </span>
           {{ item.thumbNum }}
         </span>
-        <a-button
-          size="small"
+        <div
           v-if="
             curUser != undefined &&
             curUser?.userRole !== undefined &&
             curUser?.userRole !== null &&
             curUser?.userRole === roleEnum.ADMIN
           "
-          style="margin-right: 10px; margin-left: auto; float: right"
-          status="danger"
-          type="primary"
-          @click="handleDeleteComment(item.id)"
-          >删除该评论
-        </a-button>
+        >
+          <a-button
+            size="small"
+            v-if="curCommentEdit !== index"
+            style="margin-right: 10px; margin-left: auto; float: right"
+            status="danger"
+            type="primary"
+            @click="handleDeleteComment(item.id)"
+            >删除该评论
+          </a-button>
+          <a-button
+            size="small"
+            v-if="curCommentEdit !== index"
+            style="margin-right: 10px; margin-left: auto; float: right"
+            status="normal"
+            type="primary"
+            @click="curCommentEdit = index"
+            >编辑该评论
+          </a-button>
+          <a-button
+            size="small"
+            v-if="curCommentEdit === index"
+            style="margin-right: 10px; margin-left: auto; float: right"
+            status="normal"
+            type="primary"
+            @click="handleEditSubmit(item)"
+            >保存编辑
+          </a-button>
+        </div>
       </template>
       <template #avatar>
         <a-avatar
@@ -220,6 +245,7 @@ const curUser = store.state.user?.userInfo;
 
 const searchText = ref("");
 const commentInput = ref("");
+const curCommentEdit = ref(-1);
 
 const handleDeleteComment = async (id: number) => {
   let res = await CommentControllerService.deleteCommentUsingPost({
@@ -259,6 +285,19 @@ const commentData = reactive({
   commentCount: 0,
 });
 
+const handleEditSubmit = async (item: any) => {
+  let res = await CommentControllerService.editCommentUsingPost({
+    id: item.id || -1,
+    content: item.content || "",
+    problemId: item.problemId || -1,
+  });
+  if (res.code !== 1) {
+    Message.error("err" + res.message);
+    return;
+  }
+  curCommentEdit.value = -1;
+};
+
 const getCommentList = async () => {
   let res = await CommentControllerService.listCommentVoByPageUsingPost({
     current: curPage.value,
@@ -270,6 +309,7 @@ const getCommentList = async () => {
     Message.error("err" + res.message);
     return;
   }
+  curCommentEdit.value = -1;
   commentData.commentTable = res.data.records || [];
   commentData.commentCount = parseInt(res.data.total);
   if (Math.ceil(commentData.commentCount / pageSize.value) < curPage.value) {

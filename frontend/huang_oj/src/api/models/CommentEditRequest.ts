@@ -6,4 +6,5 @@
 export type CommentEditRequest = {
     content?: string;
     id?: number;
+    problemId?: number;
 };

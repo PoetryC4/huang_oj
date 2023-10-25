@@ -22,6 +22,7 @@ import com.huang.oj.model.enums.SubmissionResultEnum;
 import com.huang.oj.model.vo.JudgeCaseVO;
 import com.huang.oj.service.ProblemService;
 import com.huang.oj.service.SubmissionService;
+import com.huang.oj.service.UserService;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import org.apache.commons.lang3.StringUtils;
@@ -29,17 +30,22 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import javax.servlet.http.HttpServletRequest;
+import java.util.*;
+
+import static com.huang.oj.utils.EncryptionUtils.generateSignature;
 
 @Service
 public class JudgeServiceImpl implements JudgeService {
 
+    private String accessKey = "qwertyfjjcyehcnuiop";
+    private String secretKey = "zxcvbmnalskjdhfgf1029384785665";
+
     @Value("${sandbox.remote-url}")
     private String codeSandboxUrl;
 
+    @Value("${spring.application.name}")
+    private String appName;
     @Resource
     private SubmissionService submissionService;
 
@@ -66,10 +72,21 @@ public class JudgeServiceImpl implements JudgeService {
     public ProcessRunResult requestCodeSandbox(Object body) {
         try {
             return circuitBreaker.executeSupplier(() -> {
+                long timestamp = new Date().getTime();
+                String signature = generateSignature(appName + timestamp, timestamp, secretKey);
+                System.out.println("签证:"+signature);
                 String responseStr1 = HttpUtil.createPost(codeSandboxUrl)
+                        .header("Content-Type", "application/json")
+                        .header("AccessKey", accessKey)
+                        .header("Timestamp", String.valueOf(timestamp))
+                        .header("Code", appName)
+                        .header("Signature", signature)
                         .body(JSON.toJSONString(body))
                         .execute()
                         .body();
+                if (responseStr1.contains("无权限")) {
+                    throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+                }
                 if (StringUtils.isBlank(responseStr1)) {
                     throw new BusinessException(ErrorCode.API_REQUEST_ERROR);
                 }
