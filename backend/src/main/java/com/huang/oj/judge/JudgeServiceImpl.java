@@ -1,5 +1,6 @@
 package com.huang.oj.judge;
 
+import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.huang.oj.common.ErrorCode;
@@ -21,6 +22,8 @@ import com.huang.oj.model.enums.SubmissionResultEnum;
 import com.huang.oj.model.vo.JudgeCaseVO;
 import com.huang.oj.service.ProblemService;
 import com.huang.oj.service.SubmissionService;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -31,10 +34,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-import static com.huang.oj.utils.NetUtils.RequestWithBody;
-
 @Service
 public class JudgeServiceImpl implements JudgeService {
+
+    @Value("${sandbox.remote-url}")
+    private String codeSandboxUrl;
+
     @Resource
     private SubmissionService submissionService;
 
@@ -46,9 +51,35 @@ public class JudgeServiceImpl implements JudgeService {
 
     @Resource
     private JudgeStrategy judgeStrategy;
+    @Resource
+    private CircuitBreaker circuitBreaker;
 
     @Value("${sandbox.type}")
     private String type;
+
+    /**
+     * 请求代码沙箱
+     *
+     * @param body
+     * @return
+     */
+    public ProcessRunResult requestCodeSandbox(Object body) {
+        try {
+            return circuitBreaker.executeSupplier(() -> {
+                String responseStr1 = HttpUtil.createPost(codeSandboxUrl)
+                        .body(JSON.toJSONString(body))
+                        .execute()
+                        .body();
+                if (StringUtils.isBlank(responseStr1)) {
+                    throw new BusinessException(ErrorCode.API_REQUEST_ERROR);
+                }
+                return JSON.parseObject(responseStr1, ProcessRunResult.class);
+            });
+        } catch (CallNotPermittedException ex) {
+            // 处理熔断时的逻辑，例如返回一个默认值或者记录日志
+            throw new BusinessException(ErrorCode.API_REQUEST_FAILED, "熔断");
+        }
+    }
 
     @Override
     public JudgeResult doJudge(long submissionId) {
@@ -68,10 +99,10 @@ public class JudgeServiceImpl implements JudgeService {
         //if (submissionMapper.selectCount(queryWrapperSubmission) > 1) {
         //    throw new BusinessException(ErrorCode.OPERATION_ERROR, "需等待当前判题结束");
         //} // TODO 个数判断
-        Submission submission1 = new Submission();
-        submission1.setId(submissionId);
-        submission1.setJudgeStatus(SubmissionResultEnum.COMPILING.getValue());
-        submissionService.updateById(submission1);
+        Submission submissionUpdate = new Submission();
+        submissionUpdate.setId(submissionId);
+        submissionUpdate.setJudgeStatus(SubmissionResultEnum.COMPILING.getValue());
+        submissionService.updateById(submissionUpdate);
 
         FunctionConfig functionConfig = null;
         JudgeCases judgeCases = null;
@@ -84,14 +115,7 @@ public class JudgeServiceImpl implements JudgeService {
             judgeCases = JSON.parseObject(judgeCases1, JudgeCases.class);
         }
         String lang = submission.getLanguage().toLowerCase();
-        String initCode = "";
-        if (functionConfig != null) {
-            initCode = functionConfig.getInitCode().get(lang);
-        }
-        String correctCode = "";
-        if (functionConfig != null) {
-            correctCode = functionConfig.getCorrectCode().get(lang);
-        }
+
         CodeExecuteRequest codeExecuteRequest = new CodeExecuteRequest();
         codeExecuteRequest.setFunctionConfig(functionConfig);
         codeExecuteRequest.setCode(submission.getCode());
@@ -101,125 +125,123 @@ public class JudgeServiceImpl implements JudgeService {
             codeExecuteRequest.setInputCases(judgeCases.getInput());
         }
         JudgeConfig judgeConfig = JSON.parseObject(problem.getJudgeConfig(), JudgeConfig.class);
-        String responseStr = "";
-        try {
-            responseStr = RequestWithBody("http", "192.168.137.128", "8103", "codeSandbox/runProblem", codeExecuteRequest);
-            ProcessRunResult processRunResult = com.alibaba.fastjson2.JSON.parseObject(responseStr, ProcessRunResult.class);
-            if (processRunResult.getErrMessage() != null) {
-                JudgeResult judgeResult = new JudgeResult();
-                JudgeInfo judgeInfo = new JudgeInfo();
-                judgeInfo.setResultStr(processRunResult.getErrMessage());
-                judgeResult.setSubmissionId(submissionId);
-                judgeResult.setJudgeInfo(judgeInfo);
-                submission1.setJudgeResult(com.alibaba.fastjson2.JSON.toJSONString(judgeResult));
-                submission1.setJudgeStatus(SubmissionResultEnum.COMPILE_ERROR.getValue());
-                submissionService.updateById(submission1);
-                return judgeResult;
-            }
+        ProcessRunResult processRunResult1 = requestCodeSandbox(codeExecuteRequest);
+        if (processRunResult1.getErrMessage() != null) {
             JudgeResult judgeResult = new JudgeResult();
-            String[] expectedOutput = judgeCases.getExpected().split("\n");
-            String[] inputs = judgeCases.getInput().split("\n");
-            List<String> expectedOutputList = Arrays.asList(expectedOutput);
-            expectedOutputList.replaceAll(String::trim);
-
-            List<Long> runtimeList = processRunResult.getRuntime();
-            List<Long> memoryList = processRunResult.getMemoryUsed();
-            List<String> stdOutList = processRunResult.getStdOut();
-            List<String> outputList = processRunResult.getFuncReturn();
-            outputList.replaceAll(String::trim);
-            String errMessage = processRunResult.getErrMessage();
-
             JudgeInfo judgeInfo = new JudgeInfo();
-            Long memorySum = 0L;
-            Long runtimeSum = 0L;
-            judgeInfo.setTimeUsed(runtimeSum);
-            judgeInfo.setDetailCode(null);
-
-            int i;
-            for (i = 0; i < outputList.size(); i++) {
-
-                memorySum += memoryList.get(i);
-                runtimeSum += runtimeList.get(i);
-                String judgeRes = SubmissionResultEnum.getEnumByValue(judgeStrategy.judgeLimit(submission.getLanguage(), runtimeSum, memorySum, judgeConfig)).getText();
-                // 检测空间与时间使用
-                if (!Objects.equals(judgeRes, SubmissionResultEnum.ACCEPT.getText())) {
-                    if (Objects.equals(judgeRes, SubmissionResultEnum.TIME_LIMIT_EXCEEDED.getText())) {
-                        submission1.setJudgeStatus(SubmissionResultEnum.TIME_LIMIT_EXCEEDED.getValue());
-                    }
-                    if (Objects.equals(judgeRes, SubmissionResultEnum.MEMORY_LIMIT_EXCEEDED.getText())) {
-                        submission1.setJudgeStatus(SubmissionResultEnum.MEMORY_LIMIT_EXCEEDED.getValue());
-                    }
-                    submissionService.updateById(submission1);
-
-                    JudgeCaseVO judgeCaseVO = new JudgeCaseVO();
-                    judgeCaseVO.setStdout(stdOutList.get(i));
-                    judgeCaseVO.setOutput(outputList.get(i));
-                    StringBuilder inputTmp = new StringBuilder();
-                    for (int j = 0; j < functionConfig.getVarCount(); j++) {
-                        inputTmp.append(inputs[i * functionConfig.getVarCount() + j]);
-                        inputTmp.append("\n");
-                    }
-                    judgeCaseVO.setInput(inputTmp.toString());
-                    judgeCaseVO.setExpected(expectedOutputList.get(i));
-                    judgeCaseVO.setRuntime(runtimeList.get(i));
-                    judgeCaseVO.setMemory(memoryList.get(i));
-                    judgeCaseVO.setDetailCode(null);
-                    judgeCaseVO.setResult(judgeRes);
-                    judgeResult.setJudgeCaseVO(judgeCaseVO);
-                    judgeInfo.setResultStr(judgeRes);
-                    List<JudgeCaseVO> judgeCaseVOList = new ArrayList<>();
-                    judgeCaseVOList.add(judgeCaseVO);
-                    judgeResult.setJudgeCaseVOList(judgeCaseVOList);
-                    break;
-                }
-                if (!Objects.equals(expectedOutputList.get(i), outputList.get(i))) {//放入错误样例
-                    submission1.setJudgeStatus(SubmissionResultEnum.WRONG_ANSWER.getValue());
-                    submissionService.updateById(submission1);
-
-                    JudgeCaseVO judgeCaseVO = new JudgeCaseVO();
-                    judgeCaseVO.setStdout(stdOutList.get(i));
-                    judgeCaseVO.setOutput(outputList.get(i));
-                    StringBuilder inputTmp = new StringBuilder();
-                    for (int j = 0; j < functionConfig.getVarCount(); j++) {
-                        inputTmp.append(inputs[i * functionConfig.getVarCount() + j]);
-                        inputTmp.append("\n");
-                    }
-                    judgeCaseVO.setInput(inputTmp.toString());
-                    judgeCaseVO.setExpected(expectedOutputList.get(i));
-                    judgeCaseVO.setRuntime(runtimeList.get(i));
-                    judgeCaseVO.setMemory(memoryList.get(i));
-                    judgeCaseVO.setDetailCode(null);
-                    judgeCaseVO.setResult(SubmissionResultEnum.WRONG_ANSWER.getText());
-                    judgeResult.setJudgeCaseVO(judgeCaseVO);
-                    judgeInfo.setResultStr(SubmissionResultEnum.WRONG_ANSWER.getText());
-                    List<JudgeCaseVO> judgeCaseVOList = new ArrayList<>();
-                    judgeCaseVOList.add(judgeCaseVO);
-                    judgeResult.setJudgeCaseVOList(judgeCaseVOList);
-                    break;
-                }
-            }
-            if (judgeInfo.getResultStr() == null) {
-                judgeInfo.setResultStr(SubmissionResultEnum.ACCEPT.getText());
-                submission1.setJudgeStatus(SubmissionResultEnum.ACCEPT.getValue());
-                judgeInfo.setMemoryUsed(memorySum);
-                judgeInfo.setTimeUsed(runtimeSum);
-                judgeResult.setSubmissionId(submissionId);
-                judgeResult.setJudgeInfo(judgeInfo);
-                submission1.setJudgeResult(com.alibaba.fastjson2.JSON.toJSONString(judgeResult));
-                submissionService.updateById(submission1);
-            } else {
-                submission1.setJudgeStatus(SubmissionResultEnum.WRONG_ANSWER.getValue());
-                judgeInfo.setMemoryUsed(memorySum);
-                judgeInfo.setTimeUsed(runtimeSum);
-                judgeResult.setSubmissionId(submissionId);
-                judgeResult.setJudgeInfo(judgeInfo);
-                submission1.setJudgeResult(com.alibaba.fastjson2.JSON.toJSONString(judgeResult));
-                submissionService.updateById(submission1);
-            }
+            judgeInfo.setResultStr(processRunResult1.getErrMessage());
+            judgeResult.setSubmissionId(submissionId);
+            judgeResult.setJudgeInfo(judgeInfo);
+            submissionUpdate.setJudgeResult(com.alibaba.fastjson2.JSON.toJSONString(judgeResult));
+            submissionUpdate.setJudgeStatus(SubmissionResultEnum.COMPILE_ERROR.getValue());
+            submissionService.updateById(submissionUpdate);
             return judgeResult;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
+        JudgeResult judgeResult = new JudgeResult();
+        String[] expectedOutput = judgeCases.getExpected().split("\n");
+        String[] inputs = judgeCases.getInput().split("\n");
+        List<String> expectedOutputList = Arrays.asList(expectedOutput);
+        expectedOutputList.replaceAll(String::trim);
+
+        List<Long> runtimeList = processRunResult1.getRuntime();
+        List<Long> memoryList = processRunResult1.getMemoryUsed();
+        List<String> stdOutList = processRunResult1.getStdOut();
+        List<String> outputList = processRunResult1.getFuncReturn();
+        outputList.replaceAll(String::trim);
+
+        JudgeInfo judgeInfo = new JudgeInfo();
+        Long memorySum = 0L;
+        Long runtimeSum = 0L;
+        judgeInfo.setTimeUsed(runtimeSum);
+        judgeInfo.setDetailCode(null);
+
+        int i;
+        for (i = 0; i < outputList.size(); i++) {
+
+            memorySum += memoryList.get(i);
+            runtimeSum += runtimeList.get(i);
+            String judgeRes = SubmissionResultEnum.getEnumByValue(judgeStrategy.judgeLimit(submission.getLanguage(), runtimeSum, memorySum, judgeConfig)).getText();
+            // 检测空间与时间使用
+            if (!Objects.equals(judgeRes, SubmissionResultEnum.ACCEPT.getText())) {
+                if (Objects.equals(judgeRes, SubmissionResultEnum.TIME_LIMIT_EXCEEDED.getText())) {
+                    submissionUpdate.setJudgeStatus(SubmissionResultEnum.TIME_LIMIT_EXCEEDED.getValue());
+                }
+                if (Objects.equals(judgeRes, SubmissionResultEnum.MEMORY_LIMIT_EXCEEDED.getText())) {
+                    submissionUpdate.setJudgeStatus(SubmissionResultEnum.MEMORY_LIMIT_EXCEEDED.getValue());
+                }
+                submissionService.updateById(submissionUpdate);
+
+                StringBuilder inputTmp = new StringBuilder();
+                for (int j = 0; j < functionConfig.getVarCount(); j++) {
+                    inputTmp.append(inputs[i * functionConfig.getVarCount() + j]);
+                    inputTmp.append("\n");
+                }
+
+                JudgeCaseVO judgeCaseVO = JudgeCaseVO.builder()
+                        .input(inputTmp.toString())
+                        .stdout(stdOutList.get(i))
+                        .output(outputList.get(i))
+                        .expected(expectedOutputList.get(i))
+                        .runtime(runtimeList.get(i))
+                        .memory(memoryList.get(i))
+                        .detailCode(null)
+                        .result(judgeRes)
+                        .build();
+                judgeResult.setJudgeCaseVO(judgeCaseVO);
+                judgeInfo.setResultStr(judgeRes);
+                List<JudgeCaseVO> judgeCaseVOList = new ArrayList<>();
+                judgeCaseVOList.add(judgeCaseVO);
+                judgeResult.setJudgeCaseVOList(judgeCaseVOList);
+                break;
+            }
+            if (!Objects.equals(expectedOutputList.get(i), outputList.get(i))) {//放入错误样例
+                submissionUpdate.setJudgeStatus(SubmissionResultEnum.WRONG_ANSWER.getValue());
+                submissionService.updateById(submissionUpdate);
+
+                StringBuilder inputTmp = new StringBuilder();
+                for (int j = 0; j < functionConfig.getVarCount(); j++) {
+                    inputTmp.append(inputs[i * functionConfig.getVarCount() + j]);
+                    inputTmp.append("\n");
+                }
+
+                JudgeCaseVO judgeCaseVO = JudgeCaseVO
+                        .builder()
+                        .stdout(stdOutList.get(i))
+                        .output(outputList.get(i))
+                        .input(inputTmp.toString())
+                        .expected(expectedOutputList.get(i))
+                        .runtime(runtimeList.get(i))
+                        .memory(memoryList.get(i))
+                        .detailCode(null)
+                        .result(SubmissionResultEnum.WRONG_ANSWER.getText())
+                        .build();
+                judgeResult.setJudgeCaseVO(judgeCaseVO);
+                judgeInfo.setResultStr(SubmissionResultEnum.WRONG_ANSWER.getText());
+                List<JudgeCaseVO> judgeCaseVOList = new ArrayList<>();
+                judgeCaseVOList.add(judgeCaseVO);
+                judgeResult.setJudgeCaseVOList(judgeCaseVOList);
+                break;
+            }
+        }
+        if (judgeInfo.getResultStr() == null) {
+            judgeInfo.setResultStr(SubmissionResultEnum.ACCEPT.getText());
+            submissionUpdate.setJudgeStatus(SubmissionResultEnum.ACCEPT.getValue());
+            judgeInfo.setMemoryUsed(memorySum);
+            judgeInfo.setTimeUsed(runtimeSum);
+            judgeResult.setSubmissionId(submissionId);
+            judgeResult.setJudgeInfo(judgeInfo);
+            submissionUpdate.setJudgeResult(com.alibaba.fastjson2.JSON.toJSONString(judgeResult));
+            submissionService.updateById(submissionUpdate);
+        } else {
+            submissionUpdate.setJudgeStatus(SubmissionResultEnum.WRONG_ANSWER.getValue());
+            judgeInfo.setMemoryUsed(memorySum);
+            judgeInfo.setTimeUsed(runtimeSum);
+            judgeResult.setSubmissionId(submissionId);
+            judgeResult.setJudgeInfo(judgeInfo);
+            submissionUpdate.setJudgeResult(com.alibaba.fastjson2.JSON.toJSONString(judgeResult));
+            submissionService.updateById(submissionUpdate);
+        }
+        return judgeResult;
     }
 
     @Override
@@ -236,10 +258,6 @@ public class JudgeServiceImpl implements JudgeService {
             functionConfig = JSON.parseObject(functionConfig1, FunctionConfig.class);
         }
         String lang = problemSubmitQuest.getLanguage().toLowerCase();
-        String initCode = "";
-        if (functionConfig != null) {
-            initCode = functionConfig.getInitCode().get(lang);
-        }
         String correctCode = "";
         if (functionConfig != null) {
             correctCode = functionConfig.getCorrectCode().get(lang);
@@ -252,104 +270,95 @@ public class JudgeServiceImpl implements JudgeService {
         JudgeConfig judgeConfig = JSON.parseObject(problem.getJudgeConfig(), JudgeConfig.class);
 
         codeExecuteRequest.setCode(correctCode);
-        String responseStr1 = "";
         List<String> expectedOutputs;
-        try {
-            responseStr1 = RequestWithBody("http", "192.168.137.128", "8103", "codeSandbox/runProblem", codeExecuteRequest);
-            ProcessRunResult processRunResult = com.alibaba.fastjson2.JSON.parseObject(responseStr1, ProcessRunResult.class);
-            if (processRunResult.getErrMessage() != null) {
-                JudgeResult judgeResult = new JudgeResult();
-                JudgeInfo judgeInfo = new JudgeInfo();
-                judgeInfo.setResultStr(processRunResult.getErrMessage());
-                judgeResult.setJudgeInfo(judgeInfo);
-                return judgeResult;
-            }
-            expectedOutputs = processRunResult.getFuncReturn();
-            //去除前置后置换行符
-            expectedOutputs.replaceAll(String::trim);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        ProcessRunResult processRunResult1 = requestCodeSandbox(codeExecuteRequest);
+
+        if (processRunResult1.getErrMessage() != null) {
+            JudgeResult judgeResult = new JudgeResult();
+            JudgeInfo judgeInfo = new JudgeInfo();
+            judgeInfo.setResultStr(processRunResult1.getErrMessage());
+            judgeResult.setJudgeInfo(judgeInfo);
+            return judgeResult;
         }
+        expectedOutputs = processRunResult1.getFuncReturn();
+        //去除前置后置换行符
+        expectedOutputs.replaceAll(String::trim);
 
         codeExecuteRequest.setCode(problemSubmitQuest.getCode());
 
-        String responseStr2 = "";
-        try {
-            responseStr2 = RequestWithBody("http", "192.168.137.128", "8103", "codeSandbox/runProblem", codeExecuteRequest);
-            ProcessRunResult processRunResult = com.alibaba.fastjson2.JSON.parseObject(responseStr2, ProcessRunResult.class);
-            if (processRunResult.getErrMessage() != null) {
-                JudgeResult judgeResult = new JudgeResult();
-                JudgeInfo judgeInfo = new JudgeInfo();
-                judgeInfo.setResultStr(processRunResult.getErrMessage());
-                judgeResult.setSubmissionId(null);
-                judgeResult.setJudgeInfo(judgeInfo);
-                return judgeResult;
-            }
-            //System.out.println(processRunResult);
+        ProcessRunResult processRunResult2 = requestCodeSandbox(codeExecuteRequest);
+        if (processRunResult2.getErrMessage() != null) {
             JudgeResult judgeResult = new JudgeResult();
-            String[] inputs = problemTestExampleRequest.getJudgeCases().getInput().split("\n");
-
-            List<Long> runtimeList = processRunResult.getRuntime();
-            List<Long> memoryList = processRunResult.getMemoryUsed();
-            List<String> stdOutList = processRunResult.getStdOut();
-            List<String> outputList = processRunResult.getFuncReturn();
-            //去除前置后置换行符
-            outputList.replaceAll(String::trim);
-            String errMessage = processRunResult.getErrMessage();
-
             JudgeInfo judgeInfo = new JudgeInfo();
-            Long memorySum = 0L;
-            Long runtimeSum = 0L;
-            judgeInfo.setTimeUsed(runtimeSum);
-            judgeInfo.setDetailCode(null);
-
-            int i;
-            List<JudgeCaseVO> judgeCaseVOList = new ArrayList<>();
-            for (i = 0; i < expectedOutputs.size(); i++) {
-                JudgeCaseVO judgeCaseVO = new JudgeCaseVO();
-                judgeCaseVO.setStdout(stdOutList.get(i));
-                judgeCaseVO.setOutput(outputList.get(i));
-                StringBuilder inputTmp = new StringBuilder();
-                for (int j = 0; j < functionConfig.getVarCount(); j++) {
-                    inputTmp.append(inputs[i * functionConfig.getVarCount() + j]);
-                    inputTmp.append("\n");
-                }
-                judgeCaseVO.setInput(inputTmp.toString());
-                judgeCaseVO.setExpected(expectedOutputs.get(i));
-                judgeCaseVO.setRuntime(runtimeList.get(i));
-                judgeCaseVO.setMemory(memoryList.get(i));
-                judgeCaseVO.setDetailCode(null);
-                judgeCaseVO.setResult(SubmissionResultEnum.ACCEPT.getText());
-                judgeCaseVOList.add(judgeCaseVO);
-
-                memorySum += memoryList.get(i);
-                runtimeSum += runtimeList.get(i);
-                String judgeRes = SubmissionResultEnum.getEnumByValue(judgeStrategy.judgeLimit(problemSubmitQuest.getLanguage(), runtimeSum, memorySum, judgeConfig)).getText();
-                // 检测空间与时间使用
-                if (!Objects.equals(judgeRes, SubmissionResultEnum.ACCEPT.getText())) {
-                    judgeCaseVO.setResult(judgeRes);
-                    judgeResult.setJudgeCaseVO(judgeCaseVO);
-                    judgeInfo.setResultStr(judgeRes);
-                    break;
-                }
-                if (!Objects.equals(expectedOutputs.get(i), outputList.get(i))) {//放入错误样例
-                    judgeCaseVO.setResult(SubmissionResultEnum.WRONG_ANSWER.getText());
-                    judgeResult.setJudgeCaseVO(judgeCaseVO);
-                    judgeInfo.setResultStr(SubmissionResultEnum.WRONG_ANSWER.getText());
-                    break;
-                }
-            }
-            judgeInfo.setMemoryUsed(memorySum);
-            judgeInfo.setTimeUsed(runtimeSum);
-            judgeResult.setJudgeCaseVOList(judgeCaseVOList);
-            if (judgeInfo.getResultStr() == null) {
-                judgeInfo.setResultStr(SubmissionResultEnum.ACCEPT.getText());
-            }
+            judgeInfo.setResultStr(processRunResult2.getErrMessage());
             judgeResult.setJudgeInfo(judgeInfo);
-            judgeResult.setSubmissionId(null);
             return judgeResult;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
+        //System.out.println(processRunResult);
+        JudgeResult judgeResult = new JudgeResult();
+        String[] inputs = problemTestExampleRequest.getJudgeCases().getInput().split("\n");
+
+        List<Long> runtimeList = processRunResult2.getRuntime();
+        List<Long> memoryList = processRunResult2.getMemoryUsed();
+        List<String> stdOutList = processRunResult2.getStdOut();
+        List<String> outputList = processRunResult2.getFuncReturn();
+        //去除前置后置换行符
+        outputList.replaceAll(String::trim);
+        String errMessage = processRunResult2.getErrMessage();
+
+        JudgeInfo judgeInfo = new JudgeInfo();
+        Long memorySum = 0L;
+        Long runtimeSum = 0L;
+        judgeInfo.setTimeUsed(runtimeSum);
+        judgeInfo.setDetailCode(null);
+
+        int i;
+        List<JudgeCaseVO> judgeCaseVOList = new ArrayList<>();
+        for (i = 0; i < expectedOutputs.size(); i++) {
+            StringBuilder inputTmp = new StringBuilder();
+            for (int j = 0; j < functionConfig.getVarCount(); j++) {
+                inputTmp.append(inputs[i * functionConfig.getVarCount() + j]);
+                inputTmp.append("\n");
+            }
+
+            JudgeCaseVO judgeCaseVO = JudgeCaseVO
+                    .builder()
+                    .stdout(stdOutList.get(i))
+                    .output(outputList.get(i))
+                    .input(inputTmp.toString())
+                    .expected(expectedOutputs.get(i))
+                    .runtime(runtimeList.get(i))
+                    .memory(memoryList.get(i))
+                    .detailCode(null)
+                    .result(SubmissionResultEnum.ACCEPT.getText())
+                    .build();
+            judgeCaseVOList.add(judgeCaseVO);
+
+            memorySum += memoryList.get(i);
+            runtimeSum += runtimeList.get(i);
+            String judgeRes = SubmissionResultEnum.getEnumByValue(judgeStrategy.judgeLimit(problemSubmitQuest.getLanguage(), runtimeSum, memorySum, judgeConfig)).getText();
+            // 检测空间与时间使用
+            if (!Objects.equals(judgeRes, SubmissionResultEnum.ACCEPT.getText())) {
+                judgeCaseVO.setResult(judgeRes);
+                judgeResult.setJudgeCaseVO(judgeCaseVO);
+                judgeInfo.setResultStr(judgeRes);
+                break;
+            }
+            if (!Objects.equals(expectedOutputs.get(i), outputList.get(i))) {//放入错误样例
+                judgeCaseVO.setResult(SubmissionResultEnum.WRONG_ANSWER.getText());
+                judgeResult.setJudgeCaseVO(judgeCaseVO);
+                judgeInfo.setResultStr(SubmissionResultEnum.WRONG_ANSWER.getText());
+                break;
+            }
+        }
+        judgeInfo.setMemoryUsed(memorySum);
+        judgeInfo.setTimeUsed(runtimeSum);
+        judgeResult.setJudgeCaseVOList(judgeCaseVOList);
+        if (judgeInfo.getResultStr() == null) {
+            judgeInfo.setResultStr(SubmissionResultEnum.ACCEPT.getText());
+        }
+        judgeResult.setJudgeInfo(judgeInfo);
+        judgeResult.setSubmissionId(null);
+        return judgeResult;
     }
 }

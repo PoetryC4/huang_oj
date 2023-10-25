@@ -36,8 +36,8 @@ import java.util.List;
 /**
  * 帖子点赞接口
  *
- * @author <a href="https://github.com/liyupi">程序员鱼皮</a>
- * @from <a href="https://yupi.icu">编程导航知识星球</a>
+ 
+ 
  */
 @RestController
 @RequestMapping("/submission")
@@ -62,7 +62,7 @@ public class SubmissionController {
      * @param request
      * @return resultNum 本次点赞变化数
      */
-    @PostMapping("/add")
+    @PostMapping("/submit/add")
     public BaseResponse<SubmissionVO> doSubmit(@RequestBody ProblemSubmitQuest problemSubmitQuest,
                                                HttpServletRequest request) {
         if (problemSubmitQuest == null || problemSubmitQuest.getProblemId() <= 0) {
@@ -92,7 +92,7 @@ public class SubmissionController {
         return ResultUtils.success(submissionVO);
     }
 
-    @PostMapping("/test")
+    @PostMapping("/submit/test")
     public BaseResponse<JudgeResult> testSubmit(@RequestBody ProblemTestExampleRequest problemTestExampleRequest,
                                                 HttpServletRequest request) {
         ProblemSubmitQuest problemSubmitQuest = problemTestExampleRequest.getProblemSubmitQuest();
