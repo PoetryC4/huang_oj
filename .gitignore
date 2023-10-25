@@ -52,5 +52,5 @@ temp/
 ./backend\.mvn
 ./backend\.mvn
 ./backend\.mvn
-./backend/src/main\resources/application.yml
-./codeSandbox/src/main\resources/application.yml
+./backend/src/main/resources/application.yml
+./codeSandbox/src/main/resources/application.yml
