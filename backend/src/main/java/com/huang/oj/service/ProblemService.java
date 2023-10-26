@@ -2,12 +2,9 @@ package com.huang.oj.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.huang.oj.model.dto.post.PostQueryRequest;
 import com.huang.oj.model.dto.problem.ProblemQueryRequest;
-import com.huang.oj.model.entity.Post;
 import com.huang.oj.model.entity.Problem;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.huang.oj.model.vo.PostVO;
 import com.huang.oj.model.vo.ProblemVO;
 
 import javax.servlet.http.HttpServletRequest;

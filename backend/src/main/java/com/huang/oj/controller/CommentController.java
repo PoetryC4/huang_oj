@@ -199,7 +199,7 @@ public class CommentController {
      * @param request
      * @return
      */
-    /*@PostMapping("/search/page/vo")
+    @PostMapping("/search/page/vo")
     public BaseResponse<Page<CommentVO>> searchCommentVOByPage(@RequestBody CommentQueryRequest commentQueryRequest,
             HttpServletRequest request) {
         long size = commentQueryRequest.getPageSize();
@@ -207,7 +207,7 @@ public class CommentController {
         ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
         Page<Comment> commentPage = commentService.searchFromEs(commentQueryRequest);
         return ResultUtils.success(commentService.getCommentVOPage(commentPage, request));
-    }*/
+    }
 
     /**
      * 编辑（用户）

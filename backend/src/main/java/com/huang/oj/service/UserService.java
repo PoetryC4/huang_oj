@@ -13,8 +13,6 @@ import javax.servlet.http.HttpServletRequest;
 /**
  * 用户服务
  *
- 
- 
  */
 public interface UserService extends IService<User> {
 
@@ -123,4 +121,5 @@ public interface UserService extends IService<User> {
      */
     UserRecordVO getUserRecordVO(long id);
 
+    boolean userUpdatePassword(String userPassword, String checkPassword, String userEmail, String emailVerifyCode);
 }

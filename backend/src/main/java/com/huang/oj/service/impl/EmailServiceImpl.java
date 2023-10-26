@@ -21,7 +21,7 @@ public class EmailServiceImpl implements EmailService {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom("473240934@qq.com");
         message.setTo(toEmail);
-        message.setSubject("验证码-huang_oj");
+        message.setSubject("验证码-yi_oj");
         message.setText("您的验证码是：" + verificationCode + "，有效时间为300秒。");
 
         mailSender.send(message);

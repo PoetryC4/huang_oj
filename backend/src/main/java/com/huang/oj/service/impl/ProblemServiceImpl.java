@@ -138,7 +138,7 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
                 JudgeCases judgeCases = problemVO.getJudgeCases();
                 judgeCases.setExpected(null);
                 FunctionConfig functionConfig = problemVO.getFunctionConfig();
-                functionConfig.setDefaultCode(null);
+                functionConfig.setValidCode(null);
                 functionConfig.setInitCode(null);
                 functionConfig.setCorrectCode(null);
 
@@ -241,7 +241,7 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
                     JudgeCases judgeCases = problemVO.getJudgeCases();
                     judgeCases.setExpected(null);
                     FunctionConfig functionConfig = problemVO.getFunctionConfig();
-                    functionConfig.setDefaultCode(null);
+                    functionConfig.setValidCode(null);
                     functionConfig.setInitCode(null);
                     functionConfig.setCorrectCode(null);
 

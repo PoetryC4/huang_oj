@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * 用户角色枚举
+ * 题目难度枚举
  *
  */
 public enum ProblemDifficultyEnum {

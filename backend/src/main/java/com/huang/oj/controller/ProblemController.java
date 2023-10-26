@@ -11,9 +11,6 @@ import com.huang.oj.common.ResultUtils;
 import com.huang.oj.constant.UserConstant;
 import com.huang.oj.exception.BusinessException;
 import com.huang.oj.exception.ThrowUtils;
-import com.huang.oj.model.dto.post.PostAddRequest;
-import com.huang.oj.model.dto.post.PostEditRequest;
-import com.huang.oj.model.dto.post.PostUpdateRequest;
 import com.huang.oj.model.dto.problem.*;
 import com.huang.oj.model.entity.Problem;
 import com.huang.oj.model.entity.User;
@@ -22,17 +19,13 @@ import com.huang.oj.service.ProblemService;
 import com.huang.oj.service.UserService;
 import com.huang.oj.utils.RedisUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
 import java.util.List;
-
-import static com.huang.oj.utils.SqlUtils.isAnyNull;
 
 /**
  * 帖子接口

@@ -11,7 +11,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 提交简易版
+ * 提交简易版VO
  */
 @Data
 public class SimpleSubmissionVO implements Serializable {

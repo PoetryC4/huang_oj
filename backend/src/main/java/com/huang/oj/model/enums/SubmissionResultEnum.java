@@ -7,10 +7,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * 用户角色枚举
+ * 提交结果枚举
  *
- 
- 
  */
 public enum SubmissionResultEnum {
 

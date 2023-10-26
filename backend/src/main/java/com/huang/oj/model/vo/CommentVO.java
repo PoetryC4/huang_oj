@@ -20,7 +20,7 @@ import java.util.List;
 /**
  * 评论VO
  *
- * @TableName problem
+ *
  */
 @Data
 public class CommentVO implements Serializable {

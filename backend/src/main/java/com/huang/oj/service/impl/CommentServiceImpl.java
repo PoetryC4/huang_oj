@@ -11,6 +11,7 @@ import com.huang.oj.exception.ThrowUtils;
 import com.huang.oj.mapper.CommentMapper;
 import com.huang.oj.mapper.CommentThumbMapper;
 import com.huang.oj.mapper.ProblemMapper;
+import com.huang.oj.model.dto.comment.CommentEsDTO;
 import com.huang.oj.model.dto.comment.CommentQueryRequest;
 import com.huang.oj.model.entity.*;
 import com.huang.oj.model.vo.CommentVO;
@@ -21,9 +22,24 @@ import com.huang.oj.service.CommentThumbService;
 import com.huang.oj.service.ProblemService;
 import com.huang.oj.service.UserService;
 import com.huang.oj.utils.SqlUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.elasticsearch.common.unit.Fuzziness;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.FuzzyQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.WildcardQueryBuilder;
+import org.elasticsearch.search.sort.SortBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortOrder;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
+import org.springframework.data.elasticsearch.core.SearchHit;
+import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -31,6 +47,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements CommentService {
 
@@ -45,6 +62,9 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     private CommentThumbService commentThumbService;
     @Resource
     private ProblemService problemService;
+
+    @Resource
+    private ElasticsearchRestTemplate elasticsearchRestTemplate;
 
     @Resource
     private ProblemMapper problemMapper;
@@ -209,4 +229,90 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             return commentThumbService.remove(queryWrapper);
         }
     }
+
+    @Override
+    public Page<Comment> searchFromEs(CommentQueryRequest commentQueryRequest) {
+        Long id = commentQueryRequest.getId();
+        String searchText = commentQueryRequest.getSearchText();
+        Long userId = commentQueryRequest.getUserId();
+        // es 起始页为 0
+        long current = commentQueryRequest.getCurrent() - 1;
+        long pageSize = commentQueryRequest.getPageSize();
+        String sortField = commentQueryRequest.getSortField();
+        String sortOrder = commentQueryRequest.getSortOrder();
+        Long problemId = commentQueryRequest.getProblemId();
+        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+        // 过滤
+        boolQueryBuilder.filter(QueryBuilders.termQuery("isDelete", 0));
+        if (id != null) {
+            boolQueryBuilder.filter(QueryBuilders.termQuery("id", id));
+        }
+        if (userId != null) {
+            boolQueryBuilder.filter(QueryBuilders.termQuery("userId", userId));
+        }
+        if (problemId != null) {
+            boolQueryBuilder.filter(QueryBuilders.termQuery("problemId", problemId));
+        }
+        FuzzyQueryBuilder fuzzyQuery = null;
+        WildcardQueryBuilder wildcardQuery = null;
+        // 按关键词检索
+        if (StringUtils.isNotBlank(searchText)) {
+            // 纠错匹配
+            fuzzyQuery = QueryBuilders.fuzzyQuery("content", searchText)
+                    .fuzziness(Fuzziness.AUTO);
+            // 模糊匹配
+            wildcardQuery = QueryBuilders.wildcardQuery("content", "*" + searchText + "*");
+            /*boolQueryBuilder.should(QueryBuilders.matchQuery("content", searchText));
+            boolQueryBuilder.minimumShouldMatch(1);*/
+        }
+        // 排序
+        SortBuilder<?> sortBuilder = SortBuilders.scoreSort();
+        if (StringUtils.isNotBlank(sortField)) {
+            sortBuilder = SortBuilders.fieldSort(sortField);
+            sortBuilder.order(CommonConstant.SORT_ORDER_ASC.equals(sortOrder) ? SortOrder.ASC : SortOrder.DESC);
+        }
+        // 分页
+        PageRequest pageRequest = PageRequest.of((int) current, (int) pageSize);
+        // 构造查询
+        NativeSearchQueryBuilder searchQueryBuilder = new NativeSearchQueryBuilder()
+                .withQuery(boolQueryBuilder);
+
+        if (fuzzyQuery != null) {
+            searchQueryBuilder.withQuery(fuzzyQuery);
+        }
+        if (wildcardQuery != null) {
+            searchQueryBuilder.withQuery(wildcardQuery);
+        }
+
+        searchQueryBuilder.withPageable(pageRequest)
+                .withSorts(sortBuilder);
+
+        NativeSearchQuery searchQuery = searchQueryBuilder.build();
+        SearchHits<CommentEsDTO> searchHits = elasticsearchRestTemplate.search(searchQuery, CommentEsDTO.class);
+        Page<Comment> page = new Page<>();
+        page.setTotal(searchHits.getTotalHits());
+        List<Comment> resourceList = new ArrayList<>();
+        // 查出结果后，从 db 获取最新动态数据（比如点赞数）
+        if (searchHits.hasSearchHits()) {
+            List<SearchHit<CommentEsDTO>> searchHitList = searchHits.getSearchHits();
+            List<Long> postIdList = searchHitList.stream().map(searchHit -> searchHit.getContent().getId())
+                    .collect(Collectors.toList());
+            List<Comment> postList = baseMapper.selectBatchIds(postIdList);
+            if (postList != null) {
+                Map<Long, List<Comment>> idCommentMap = postList.stream().collect(Collectors.groupingBy(Comment::getId));
+                postIdList.forEach(postId -> {
+                    if (idCommentMap.containsKey(postId)) {
+                        resourceList.add(idCommentMap.get(postId).get(0));
+                    } else {
+                        // 从 es 清空 db 已物理删除的数据
+                        String delete = elasticsearchRestTemplate.delete(String.valueOf(postId), CommentEsDTO.class);
+                        log.info("delete post {}", delete);
+                    }
+                });
+            }
+        }
+        page.setRecords(resourceList);
+        return page;
+    }
+
 }

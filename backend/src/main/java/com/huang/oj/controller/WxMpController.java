@@ -1,6 +1,6 @@
 package com.huang.oj.controller;
 
-import com.huang.oj.wxmp.WxMpConstant;
+//import com.huang.oj.wxmp.WxMpConstant;
 
 import java.io.IOException;
 import java.util.Arrays;

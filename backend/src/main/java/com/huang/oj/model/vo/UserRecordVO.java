@@ -8,8 +8,6 @@ import java.util.Date;
 /**
  * 用户战绩（脱敏）
  *
-
- 
  */
 @Data
 public class UserRecordVO implements Serializable {

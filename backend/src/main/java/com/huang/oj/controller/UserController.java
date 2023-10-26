@@ -13,15 +13,10 @@ import com.huang.oj.constant.UserConstant;
 import com.huang.oj.exception.BusinessException;
 import com.huang.oj.exception.ThrowUtils;
 import com.huang.oj.mapper.UserMapper;
+import com.huang.oj.model.dto.user.*;
 import com.huang.oj.model.vo.UserRecordVO;
 import com.huang.oj.service.EmailService;
 import com.huang.oj.service.UserService;
-import com.huang.oj.model.dto.user.UserAddRequest;
-import com.huang.oj.model.dto.user.UserLoginRequest;
-import com.huang.oj.model.dto.user.UserQueryRequest;
-import com.huang.oj.model.dto.user.UserRegisterRequest;
-import com.huang.oj.model.dto.user.UserUpdateMyRequest;
-import com.huang.oj.model.dto.user.UserUpdateRequest;
 import com.huang.oj.model.entity.User;
 import com.huang.oj.model.vo.LoginUserVO;
 import com.huang.oj.model.vo.UserVO;
@@ -453,5 +448,19 @@ public class UserController {
         request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, user1);
         return ResultUtils.success(result);
     }
-
+    @PostMapping("/update/password")
+    public BaseResponse<Boolean> userUpdatePassword(@RequestBody UserUpdatePasswordRequest userUpdatePasswordRequest) {
+        if (userUpdatePasswordRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        String userPassword = userUpdatePasswordRequest.getUserPassword();
+        String checkPassword = userUpdatePasswordRequest.getCheckPassword();
+        String userEmail = userUpdatePasswordRequest.getUserEmail();
+        String emailVerifyCode = userUpdatePasswordRequest.getEmailVerifyCode();
+        if (StringUtils.isAnyBlank(userPassword, checkPassword, userEmail, emailVerifyCode)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        boolean result = userService.userUpdatePassword(userPassword, checkPassword, userEmail, emailVerifyCode);
+        return ResultUtils.success(result);
+    }
 }

@@ -44,8 +44,6 @@ import static com.huang.oj.utils.EncryptionUtils.getRandomString;
 /**
  * 用户服务实现
  *
-
-
  */
 @Service
 @Slf4j
@@ -382,5 +380,68 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         UserRecordVO userRecordVO = submissionMapper.getUserRecordTried(id);
         userRecordVO.setId(id);
         return userRecordVO;
+    }
+
+    @Override
+    public boolean userUpdatePassword(String userPassword, String checkPassword, String userEmail, String emailVerifyCode) {
+        // 1. 校验
+        if (StringUtils.isAnyBlank(userPassword, checkPassword, userEmail, emailVerifyCode)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数为空");
+        }
+        if (userPassword.length() < 8 || checkPassword.length() < 8) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户密码过短");
+        }
+        // 密码和校验密码相同
+        if (!userPassword.equals(checkPassword)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "两次输入的密码不一致");
+        }
+        QueryWrapper<User> queryWrapper3 = new QueryWrapper<>();
+        queryWrapper3.eq("userEmail", userEmail);
+        long count23 = this.baseMapper.selectCount(queryWrapper3);
+        if (count23 == 0) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "邮箱不存在");
+        }
+       /* String regex = "^[A-Za-z0-9+_.-]+@(.+)$";
+
+        // 编译正则表达式
+        Pattern pattern = Pattern.compile(regex);
+
+        // 创建Matcher对象
+        Matcher matcher = pattern.matcher(userEmail);
+
+        // 使用find()方法查找匹配项
+        if (!matcher.find()) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "邮箱格式错误");
+        }*/
+        EmailCodeUtils.CodeEmailPair codeEmailPair = EmailCodeUtils.getPair(userEmail);
+        if (codeEmailPair == null || System.currentTimeMillis() - codeEmailPair.getCreateTime() >= 300 * 1000) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "验证码过期或未发送验证码");
+        } else if (!Objects.equals(codeEmailPair.getVerificationCode(), emailVerifyCode)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "验证码不正确");
+        }
+        synchronized (userEmail.intern()) {
+            // 1. 获取用户Id
+            QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("userEmail", userEmail);
+            User user1 = this.baseMapper.selectOne(queryWrapper);
+            if(user1 == null) {
+                throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+            }
+            // 2. 加密
+            String salt = getRandomString(12);
+            String encryptPassword = DigestUtils.md5DigestAsHex((salt + userPassword).getBytes());
+            // 3. 插入数据
+            User user = new User();
+            user.setId(user1.getId());
+            user.setUserPassword(encryptPassword);
+            user.setUserSalt(salt);
+            user.setUserEmail(userEmail);
+            boolean update = this.updateById(user);
+            if (!update) {
+                throw new BusinessException(ErrorCode.SYSTEM_ERROR, "修改密码失败");
+            }
+            EmailCodeUtils.removePair(userEmail);
+            return update;
+        }
     }
 }

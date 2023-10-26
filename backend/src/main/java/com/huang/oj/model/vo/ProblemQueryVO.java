@@ -6,10 +6,8 @@ import lombok.Data;
 import java.io.Serializable;
 
 /**
- * 创建请求
+ * 题目请求VO
  *
- 
- 
  */
 @Data
 public class ProblemQueryVO implements Serializable {

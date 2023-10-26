@@ -67,5 +67,5 @@ public interface CommentService extends IService<Comment> {
     Page<CommentVO> getCommentVOPage(Page<Comment> commentPage, HttpServletRequest request);
 
     boolean doLikeComment(Long commentId, Long userId, HttpServletRequest request);
-
+    Page<Comment> searchFromEs(CommentQueryRequest commentQueryRequest);
 }
