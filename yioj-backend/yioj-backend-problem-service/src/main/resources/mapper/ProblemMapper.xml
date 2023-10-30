@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yioj.problemservice.mapper.ProblemMapper">
+
+    <resultMap id="BaseResultMap" type="com.yioj.model.model.entity.Problem">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="title" column="title" jdbcType="VARCHAR"/>
+        <result property="solution" column="solution" jdbcType="VARCHAR"/>
+        <result property="content" column="content" jdbcType="VARCHAR"/>
+        <result property="tags" column="tags" jdbcType="VARCHAR"/>
+        <result property="judgeConfig" column="judgeConfig" jdbcType="VARCHAR"/>
+        <result property="judgeCases" column="judgeCases" jdbcType="VARCHAR"/>
+        <result property="functionConfig" column="functionConfig" jdbcType="VARCHAR"/>
+        <result property="thumbNum" column="thumbNum" jdbcType="INTEGER"/>
+        <result property="disLikeNum" column="disLikeNum" jdbcType="INTEGER"/>
+        <result property="userId" column="userId" jdbcType="BIGINT"/>
+        <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
+        <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
+        <result property="isVip" column="isVip" jdbcType="TINYINT"/>
+        <result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id
+        ,title,solution,
+        content,tags,judgeConfig,
+        judgeCase,thumbNum,disLikeNum,
+        userId,createTime,updateTime,
+        isVip,isDelete
+    </sql>
+    <select id="getSubmitTimes" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM submission
+        WHERE problemId = #{problemId}
+    </select>
+    <select id="getSubmitAccepted" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM submission
+        WHERE problemId = #{problemId}
+          and judgeStatus = 0
+    </select>
+    <select id="getProblemQueryRes" resultType="com.yioj.model.model.entity.Problem">
+        SELECT distinct p.id as id,p.title as title,p.solution as solution,p.difficulty as difficulty,p.content as
+        content,p.tags as tags,p.judgeConfig as judgeConfig,p.judgeCases as judgeCases,p.functionConfig as functionConfig,p.thumbNum as thumbNum,p.disLikeNum
+        as disLikeNum,p.userId as userId,p.createTime as createTime,p.updateTime as updateTime,p.isVip as isVip,
+        p.isDelete as isDelete
+        from problem as p, (
+        SELECT
+        userId,
+        problemId,
+        CASE
+        WHEN userId IS NULL
+        <if test="param6!=-1">
+            OR userId !=#{param6}
+        </if> THEN 0
+        WHEN judgeStatus = 1 OR judgeStatus = 2 OR judgeStatus = 3 OR judgeStatus = 4 OR judgeStatus = 5
+        OR judgeStatus = 6 OR judgeStatus = 7 OR judgeStatus = 8 OR judgeStatus = 9  OR judgeStatus = 10
+        OR judgeStatus = 11 OR judgeStatus = 12 OR judgeStatus = 13 THEN -1
+        WHEN judgeStatus = 0 THEN 1
+        END AS judgeStatus
+        FROM
+        (SELECT
+        distinct s.userId,
+        problem.id as problemId,
+        s.judgeStatus
+        FROM problem
+        LEFT JOIN submission s on problem.isDelete = s.isDelete and problem.id = s.problemId) as t
+        ) as s
+        where p.isDelete = 0 and ((p.id = s.problemId
+        <if test="param4!=null">
+            and p.difficulty=#{param4}
+        </if>
+        <if test="param5!=null">
+            and s.judgeStatus=#{param5}
+        </if>
+        <if test="param3 != null and param3 !=''.toString()">
+            and p.title like CONCAT('%', #{param3}, '%')
+        </if>
+        )
+        <if test="param3 != null and param3 !=''.toString()">
+            or(
+            p.id = #{param3}
+            )
+        </if>
+        )
+        limit #{param1} offset #{param2}
+    </select>
+    <select id="getProblemQueryCount" resultType="java.lang.Integer">
+        SELECT count(distinct p.id)
+        from problem as p, (
+        SELECT
+        userId,
+        problemId,
+        CASE
+        WHEN userId IS NULL
+        <if test="param6!=-1">
+            OR userId !=#{param6}
+        </if> THEN 0
+        WHEN judgeStatus = 1 OR judgeStatus = 2 OR judgeStatus = 3 OR judgeStatus = 4 OR judgeStatus = 5
+        OR judgeStatus = 6 OR judgeStatus = 7 OR judgeStatus = 8 OR judgeStatus = 9  OR judgeStatus = 10
+        OR judgeStatus = 11 OR judgeStatus = 12 OR judgeStatus = 13 THEN -1
+        WHEN judgeStatus = 0 THEN 1
+        END AS judgeStatus
+        FROM
+        (SELECT
+        distinct s.userId,
+        problem.id as problemId,
+        s.judgeStatus
+        FROM problem
+        LEFT JOIN submission s on problem.isDelete = s.isDelete and problem.id = s.problemId) as t
+        ) as s
+        where p.isDelete = 0 and ((p.id = s.problemId
+        <if test="param4!=null">
+            and p.difficulty=#{param4}
+        </if>
+        <if test="param5!=null">
+            and s.judgeStatus=#{param5}
+        </if>
+        <if test="param3 != null and param3 !=''.toString()">
+            and p.title like CONCAT('%', #{param3}, '%')
+        </if>
+        )
+        <if test="param3 != null and param3 !=''.toString()">
+            or(
+            p.id = #{param3}
+            )
+        </if>
+            )
+    </select>
+</mapper>

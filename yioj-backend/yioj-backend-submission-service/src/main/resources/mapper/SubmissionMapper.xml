@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yioj.submissionservice.mapper.SubmissionMapper">
+
+    <resultMap id="BaseResultMap" type="com.yioj.model.model.entity.Submission">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="problemId" column="problemId" jdbcType="BIGINT"/>
+        <result property="userId" column="userId" jdbcType="BIGINT"/>
+        <result property="language" column="language" jdbcType="VARCHAR"/>
+        <result property="code" column="code" jdbcType="VARCHAR"/>
+        <result property="judgeStatus" column="judgeStatus" jdbcType="TINYINT"/>
+        <result property="judgeResult" column="judgeResult" jdbcType="VARCHAR"/>
+        <result property="submitTime" column="submitTime" jdbcType="TIMESTAMP"/>
+        <result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
+    </resultMap>
+
+    <select id="getUserRecordTried" resultType="com.yioj.model.model.vo.UserRecordVO">
+        SELECT (SELECT COUNT(s.id)
+                FROM submission s,
+                     problem p
+                WHERE s.userId = #{param1}
+                  AND EXISTS(SELECT 1 FROM problem p WHERE p.id = s.problemId AND p.difficulty = 0)) AS easyTried,
+               (SELECT COUNT(s.id)
+                FROM submission s,
+                     problem p
+                WHERE s.userId = #{param1}
+                  AND EXISTS(SELECT 1 FROM problem p WHERE p.id = s.problemId AND p.difficulty = 1)) AS mediumTried,
+               (SELECT COUNT(s.id)
+                FROM submission s,
+                     problem p
+                WHERE s.userId = #{param1}
+                  AND EXISTS(SELECT 1 FROM problem p WHERE p.id = s.problemId AND p.difficulty = 2)) AS hardTried,
+               (SELECT COUNT(s.id)
+                FROM submission s,
+                     problem p
+                WHERE EXISTS(SELECT 1 FROM problem p WHERE p.id = s.problemId AND p.difficulty = 0)) AS easyTotal,
+               (SELECT COUNT(s.id)
+                FROM submission s,
+                     problem p
+                WHERE EXISTS(SELECT 1 FROM problem p WHERE p.id = s.problemId AND p.difficulty = 1)) AS mediumTotal,
+               (SELECT COUNT(s.id)
+                FROM submission s,
+                     problem p
+                WHERE EXISTS(SELECT 1 FROM problem p WHERE p.id = s.problemId AND p.difficulty = 2)) AS hardTotal,
+               (SELECT COUNT(s.id)
+                FROM submission s,
+                     problem p
+                WHERE s.userId = #{param1}
+                  AND EXISTS(SELECT 1 FROM problem p WHERE p.id = s.problemId AND p.difficulty = 0)
+                  AND s.judgeStatus = 0)                                                             AS easySolved,
+               (SELECT COUNT(s.id)
+                FROM submission s,
+                     problem p
+                WHERE s.userId = #{param1}
+                  AND EXISTS(SELECT 1 FROM problem p WHERE p.id = s.problemId AND p.difficulty = 1)
+                  AND s.judgeStatus = 0)                                                             AS mediumSolved,
+               (SELECT COUNT(s.id)
+                FROM submission s,
+                     problem p
+                WHERE s.userId = #{param1}
+                  AND EXISTS(SELECT 1 FROM problem p WHERE p.id = s.problemId AND p.difficulty = 2)
+                  AND s.judgeStatus = 0)                                                             AS hardSolved;
+        ;
+    </select>
+    <select id="getSimpleSubmissionRes" resultType="com.yioj.model.model.vo.SimpleSubmission">
+        SELECT p.id as problemId,p.title as title,s.judgeResult as judgeResult,s.id as id, s.userId as userId,
+        s.submitTime as submitTime
+        from problem as p, submission as s
+        where p.isDelete = 0 and (p.id = s.problemId
+        <if test="param4!=null">
+            and s.judgeStatus=#{param4}
+        </if>
+        <if test="param3 != null and param3 !=''.toString()">
+            and p.title like CONCAT('%', #{param3}, '%')
+        </if>
+        <if test="param5 != null">
+            and s.userId = #{param5}
+        </if>
+        )
+        limit #{param1} offset #{param2}
+    </select>
+    <select id="getSimpleSubmissionCount" resultType="java.lang.Integer">
+        SELECT count(distinct s.id)
+        from problem as p, submission as s
+        where p.isDelete = 0 and (p.id = s.problemId
+        <if test="param4!=null">
+            and s.judgeStatus=#{param4}
+        </if>
+        <if test="param3 != null and param3 !=''.toString()">
+            and p.title like CONCAT('%', #{param3}, '%')
+        </if>
+        <if test="param5 != null">
+            and s.userId = #{param5}
+        </if>
+        )
+        limit #{param1} offset #{param2}
+    </select>
+</mapper>
