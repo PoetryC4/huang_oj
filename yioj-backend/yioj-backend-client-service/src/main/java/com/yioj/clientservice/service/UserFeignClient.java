@@ -30,7 +30,7 @@ public interface UserFeignClient {
     User getById(@RequestParam("userId") long userId);
 
     @GetMapping("/get/list")
-    List<User> listByIds(@RequestParam("isList") Collection<Long> isList);
+    List<User> listByIds(@RequestParam("idList") Collection<Long> idList);
 
     default User getLoginUser(HttpServletRequest request) {
         // 先判断是否已登录

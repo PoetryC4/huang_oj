@@ -13,7 +13,6 @@ spring:
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
-  # session 配置
   session:
     # todo 取消注释开启分布式 session（须先配置 Redis）
     store-type: redis
@@ -53,6 +52,7 @@ server:
     session:
       cookie:
         max-age: 2592000
+        path: /api
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: false
@@ -65,12 +65,13 @@ mybatis-plus:
 resilience4j:
   circuitbreaker:
     instances:
-      problemCircuitBreaker:
+      commentCircuitBreaker:
         registerHealthIndicator: true
         slidingWindowType: COUNT_BASED
         slidingWindowSize: 10
         minimumNumberOfCalls: 5
         permitted-number-of-calls-in-half-open-state: 3
         waitDurationInOpenState: 5000
+        failure-rate-threshold: 50
 knife4j:
   enable: true

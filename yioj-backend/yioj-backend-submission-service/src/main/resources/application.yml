@@ -53,6 +53,7 @@ server:
     session:
       cookie:
         max-age: 2592000
+        path: /api
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: false
@@ -63,15 +64,22 @@ mybatis-plus:
       logic-delete-value: 1 # 逻辑已删除值（默认为 1）
       logic-not-delete-value: 0 # 逻辑未删除值（默认为 0）
 resilience4j:
+  ratelimiter:
+    instances:
+      submissionRateLimiter:
+        limitForPeriod: 10
+        limitRefreshPeriod: 1s
+        timeoutDuration: 5000ms
   circuitbreaker:
     instances:
-      problemCircuitBreaker:
+      submissionCircuitBreaker:
         registerHealthIndicator: true
         slidingWindowType: COUNT_BASED
         slidingWindowSize: 10
         minimumNumberOfCalls: 5
         permitted-number-of-calls-in-half-open-state: 3
         waitDurationInOpenState: 5000
+        failure-rate-threshold: 50
 sandbox:
   type: example
   remote-url: http://192.168.137.128:8103/codeSandbox/runProblem

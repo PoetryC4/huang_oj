@@ -60,6 +60,11 @@ spring:
     multipart:
       # 大小限制
       max-file-size: 10MB
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
 server:
   address: 0.0.0.0
   port: 8005
@@ -69,6 +74,7 @@ server:
     session:
       cookie:
         max-age: 2592000
+        path: /api
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: false
@@ -81,12 +87,13 @@ mybatis-plus:
 resilience4j:
   circuitbreaker:
     instances:
-      problemCircuitBreaker:
+      commentCircuitBreaker:
         registerHealthIndicator: true
         slidingWindowType: COUNT_BASED
         slidingWindowSize: 10
         minimumNumberOfCalls: 5
         permitted-number-of-calls-in-half-open-state: 3
         waitDurationInOpenState: 5000
+        failure-rate-threshold: 50
 knife4j:
   enable: true

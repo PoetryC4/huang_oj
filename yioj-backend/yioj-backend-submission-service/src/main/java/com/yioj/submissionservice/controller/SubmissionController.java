@@ -24,6 +24,7 @@ import com.yioj.model.model.vo.SubmissionVO;
 import com.yioj.model.model.vo.UserVO;
 import com.yioj.submissionservice.judge.JudgeService;
 import com.yioj.submissionservice.service.SubmissionService;
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
@@ -92,7 +93,14 @@ public class SubmissionController {
         submission.setJudgeStatus(SubmissionResultEnum.COMPILING.getValue());
         boolean save = submissionService.save(submission);
         ThrowUtils.throwIf(!save, ErrorCode.OPERATION_ERROR);
-        JudgeResult judgeResult = judgeService.doJudge(submission.getId());
+
+        JudgeResult judgeResult;
+        // 限流异常捕捉
+        try {
+            judgeResult = judgeService.doJudge(submission.getId());
+        } catch (RequestNotPermitted e) {
+            throw new BusinessException(ErrorCode.TOO_MANY_REQUEST);
+        }
 
         SubmissionVO submissionVO = SubmissionVO.objToVo(submission);
         UserVO loginUserVO = new UserVO();
@@ -114,7 +122,13 @@ public class SubmissionController {
 
         submissionService.ValidSubmission(problemSubmitQuest, loginUser);
 
-        JudgeResult judgeResult = judgeService.testJudge(problemTestExampleRequest);
+        JudgeResult judgeResult;
+        // 限流异常捕捉
+        try {
+            judgeResult = judgeService.testJudge(problemTestExampleRequest);
+        } catch (RequestNotPermitted e) {
+            throw new BusinessException(ErrorCode.TOO_MANY_REQUEST);
+        }
 
         return ResultUtils.success(judgeResult);
     }

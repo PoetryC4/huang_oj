@@ -355,9 +355,8 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, provide, ref } from "vue";
+import { onMounted, provide, reactive, ref } from "vue";
 import {
-  BaseResponse_ProblemVO_,
   JudgeResult,
   ProblemControllerService,
   ProblemVO,
@@ -366,28 +365,22 @@ import {
 import { Message } from "@arco-design/web-vue";
 import store from "@/store";
 import {
-  IconLock,
-  IconQuestion,
   IconCheck,
-  IconExperiment,
-  IconThumbUp,
-  IconThumbDown,
-  IconThumbUpFill,
-  IconThumbDownFill,
-  IconBackward,
-  IconList,
-  IconRight,
   IconDown,
+  IconList,
+  IconQuestion,
+  IconRight,
+  IconThumbDown,
+  IconThumbDownFill,
+  IconThumbUp,
+  IconThumbUpFill,
 } from "@arco-design/web-vue/es/icon";
-import { roleEnum } from "@/components/scripts/access/roleEnum";
 import { languageEnum } from "@/components/scripts/enum/languageEnum";
 import { useRoute, useRouter } from "vue-router";
-import moment from "moment";
 import { defineProps, withDefaults } from "vue/dist/vue";
 import MdViewer from "@/components/MdViewer.vue";
 import CodeEditor from "@/components/CodeEditor.vue";
 import { formatNum } from "@/components/scripts/utils";
-import { languages } from "monaco-editor";
 
 const router = useRouter();
 const route = useRoute();
@@ -497,7 +490,7 @@ const onChangeCode = (v: string) => {
   userCode.value = v;
 };
 const doInitCode = () => {
-  testInput.value = data.problem.judgeCases.input;
+  testInput.value = data.problem.judgeCases.input || "";
   userCode.value = userCodes[codeLanguage.value] || "";
   return userCode.value;
 };

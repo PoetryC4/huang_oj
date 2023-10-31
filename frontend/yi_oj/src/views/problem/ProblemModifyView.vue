@@ -410,8 +410,8 @@ const handleProblemDelete = (index: number) => {
   state.formDataProblem.judgeCase.splice(index, 1);
 };*/
 async function handleProblemSubmit() {
-  let id = store.state.user?.userInfo?.id;
-  if (id === -1) {
+  let userId = store.state.user?.userInfo?.id;
+  if (userId === -1) {
     Message.error("未登录");
     return;
   }
@@ -427,7 +427,7 @@ async function handleProblemSubmit() {
   if (id.value === "") {
     res = await ProblemControllerService.addProblemUsingPost({
       ...state.formDataProblem,
-      userId: id,
+      userId: userId,
       isVip: state.formDataProblem.vipOnly ? 1 : 0,
     });
     if (res.code !== null && res.code === 1) {
@@ -436,10 +436,10 @@ async function handleProblemSubmit() {
       Message.error(res.message || "出错");
     }
   } else {
-    res = await ProblemControllerService.updateProblemUsingPost({
+    res = await ProblemControllerService.editProblemUsingPost({
       ...state.formDataProblem,
-      userId: id,
-      id: id.value,
+      userId: userId,
+      id: parseInt(id.value),
       isVip: state.formDataProblem.vipOnly ? 1 : 0,
     });
     if (res.code !== null && res.code === 1) {

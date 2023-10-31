@@ -191,6 +191,9 @@ public class CommentController {
         // 限制爬虫
         ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
         Page<Comment> commentPage = commentService.searchFromEs(commentQueryRequest);
+        if(commentPage == null) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR);
+        }
         return ResultUtils.success(commentService.getCommentVOPage(commentPage, request));
     }
 

@@ -208,7 +208,9 @@ public class ProblemController {
         List<Problem> problemRes = problemService.getProblemQueryRes(current, size, title, difficulty, status, request);
         problemPage.setRecords(problemRes);
         problemPage.setTotal(problemService.getProblemQueryCount(current, size, title, difficulty, status, request));
-        return ResultUtils.success(problemService.getProblemVOPage(problemPage, request));
+        Page<ProblemVO> problemVOPage = problemService.getProblemVOPage(problemPage, request);
+        ThrowUtils.throwIf(problemVOPage==null, new BusinessException(ErrorCode.SYSTEM_ERROR));
+        return ResultUtils.success(problemVOPage);
     }
 
     /**

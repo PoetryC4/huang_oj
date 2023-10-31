@@ -27,6 +27,7 @@ import com.yioj.problemservice.mapper.ProblemThumbMapper;
 import com.yioj.problemservice.service.ProblemDislikeService;
 import com.yioj.problemservice.service.ProblemService;
 import com.yioj.problemservice.service.ProblemThumbService;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -205,6 +206,7 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
     }
 
     @Override
+    @CircuitBreaker(name = "problemCircuitBreaker", fallbackMethod = "myFallbackMethod")
     public Page<ProblemVO> getProblemVOPage(Page<Problem> problemPage, HttpServletRequest request) {
         List<Problem> problemList = problemPage.getRecords();
         Page<ProblemVO> problemVOPage = new Page<>(problemPage.getCurrent(), problemPage.getSize(), problemPage.getTotal());
@@ -329,6 +331,7 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
         queryWrapper.eq("problemId", problemId);
         queryWrapper.eq("userId", userId);
         Long count = problemThumbMapper.selectCount(queryWrapper);
+        System.out.println("个数:"+count);
         Problem problem = this.getById(problemId);
         if(Objects.equals(0L, count)) {
             problem.setThumbNum(problem.getThumbNum()+1);
@@ -361,6 +364,13 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
             this.updateById(problem);
             return problemDislikeService.remove(queryWrapper);
         }
+    }
+    // 熔断触发函数
+    public Page<ProblemVO> myFallbackMethod(Page<Problem> problemPage, HttpServletRequest request, Throwable t) {
+        // 降级逻辑，例如返回一个默认值
+        t.printStackTrace();
+        log.error("熔断, 错误信息:"+t.getMessage());
+        return null;
     }
 }
 

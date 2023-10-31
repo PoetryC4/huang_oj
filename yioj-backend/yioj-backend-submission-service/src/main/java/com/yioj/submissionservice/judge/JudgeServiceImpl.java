@@ -1,5 +1,6 @@
 package com.yioj.submissionservice.judge;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -24,7 +25,9 @@ import com.yioj.submissionservice.judge.sandbox.strategy.JudgeStrategy;
 import com.yioj.submissionservice.mapper.SubmissionMapper;
 import com.yioj.submissionservice.service.SubmissionService;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+//import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -33,6 +36,7 @@ import javax.annotation.Resource;
 import java.util.*;
 
 @Service
+@Slf4j
 public class JudgeServiceImpl implements JudgeService {
 
     private String accessKey = "KS8d794nxMf4o53gDSepIlxhJYwa3hpx";
@@ -54,8 +58,8 @@ public class JudgeServiceImpl implements JudgeService {
 
     @Resource
     private JudgeStrategy judgeStrategy;
-    @Resource
-    private CircuitBreaker circuitBreaker;
+    /*@Resource
+    private CircuitBreaker circuitBreaker;*/
 
     @Value("${sandbox.type}")
     private String type;
@@ -66,7 +70,7 @@ public class JudgeServiceImpl implements JudgeService {
      * @param body
      * @return
      */
-    public ProcessRunResult requestCodeSandbox(Object body) {
+    /*public ProcessRunResult requestCodeSandbox(Object body) {
         try {
             return circuitBreaker.executeSupplier(() -> {
                 long timestamp = new Date().getTime();
@@ -93,9 +97,31 @@ public class JudgeServiceImpl implements JudgeService {
             // 处理熔断时的逻辑，例如返回一个默认值或者记录日志
             throw new BusinessException(ErrorCode.API_REQUEST_FAILED, "熔断");
         }
+    }*/
+    public ProcessRunResult requestCodeSandbox(Object body) {
+        long timestamp = new Date().getTime();
+        String signature = EncryptionUtils.generateSignature(appName + timestamp, timestamp, secretKey);
+        System.out.println("签证:"+signature);
+        String responseStr1 = HttpUtil.createPost(codeSandboxUrl)
+                .header("Content-Type", "application/json")
+                .header("AccessKey", accessKey)
+                .header("Timestamp", String.valueOf(timestamp))
+                .header("Code", appName)
+                .header("Signature", signature)
+                .body(JSON.toJSONString(body))
+                .execute()
+                .body();
+        if (responseStr1.contains("无权限")) {
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+        }
+        if (StringUtils.isBlank(responseStr1)) {
+            throw new BusinessException(ErrorCode.API_REQUEST_ERROR);
+        }
+        return JSON.parseObject(responseStr1, ProcessRunResult.class);
     }
-
     @Override
+    @CircuitBreaker(name = "submissionCircuitBreaker", fallbackMethod = "doFallbackMethod")
+    @RateLimiter(name = "submissionRateLimiter")
     public JudgeResult doJudge(long submissionId) {
         Submission submission = submissionService.getById(submissionId);
         if (submission == null) {
@@ -259,6 +285,8 @@ public class JudgeServiceImpl implements JudgeService {
     }
 
     @Override
+    @CircuitBreaker(name = "submissionCircuitBreaker", fallbackMethod = "testFallbackMethod")
+    @RateLimiter(name = "submissionRateLimiter")
     public JudgeResult testJudge(ProblemTestExampleRequest problemTestExampleRequest) {
         ProblemSubmitQuest problemSubmitQuest = problemTestExampleRequest.getProblemSubmitQuest();
         Problem problem = problemService.getById(problemSubmitQuest.getProblemId());
@@ -374,5 +402,18 @@ public class JudgeServiceImpl implements JudgeService {
         judgeResult.setJudgeInfo(judgeInfo);
         judgeResult.setSubmissionId(null);
         return judgeResult;
+    }
+    // 熔断触发函数
+    public JudgeResult testFallbackMethod(ProblemTestExampleRequest problemTestExampleRequest, Throwable t) {
+        // 降级逻辑，例如返回一个默认值
+        t.printStackTrace();
+        log.error("熔断, 请求信息:"+problemTestExampleRequest.toString()+"   错误信息:"+t.getMessage());
+        return null;
+    }
+    public JudgeResult doFallbackMethod(long submissionId, Throwable t) {
+        // 降级逻辑，例如返回一个默认值
+        t.printStackTrace();
+        log.error("熔断, 请求id:"+submissionId+"   错误信息:"+t.getMessage());
+        return null;
     }
 }

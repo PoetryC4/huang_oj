@@ -62,59 +62,59 @@
           placeholder="请输入用户简介"
         />
       </a-form-item>
-      <a-upload
-        style="display: flex; justify-content: center; align-items: center"
-        draggable
-        :limit="1"
-        action="#"
-        :headers="headers"
-        :auto-upload="false"
-        :fileList="avatar ? [avatar] : []"
-        :show-file-list="false"
-        @change="onChange"
-        @progress="onProgress"
-        :on-exceed-limit="handleExceed"
-        :on-before-upload="beforeUpload"
-        accept=".jpg,.jpeg,.png,.JPG,.JPEG"
-      >
-        <template #upload-button>
-          <div
-            :class="`arco-upload-list-item${
-              avatar && avatar.status === 'error'
-                ? ' arco-upload-list-item-error'
-                : ''
-            }`"
-          >
-            <div
-              class="arco-upload-list-picture custom-upload-avatar"
-              v-if="avatar && avatar.url"
+      <!--      <a-upload
+              style="display: flex; justify-content: center; align-items: center"
+              draggable
+              :limit="1"
+              action="#"
+              :headers="headers"
+              :auto-upload="false"
+              :fileList="avatar ? [avatar] : []"
+              :show-file-list="false"
+              @change="onChange"
+              @progress="onProgress"
+              :on-exceed-limit="handleExceed"
+              :on-before-upload="beforeUpload"
+              accept=".jpg,.jpeg,.png,.JPG,.JPEG"
             >
-              <img :src="avatar.url" />
-              <div class="arco-upload-list-picture-mask">
-                <IconEdit />
-              </div>
-              <a-progress
-                v-if="avatar.status === 'uploading' && avatar.percent < 100"
-                :percent="avatar.percent"
-                type="circle"
-                size="mini"
-                :style="{
-                  position: 'absolute',
-                  left: '50%',
-                  top: '50%',
-                  transform: 'translateX(-50%) translateY(-50%)',
-                }"
-              />
-            </div>
-            <div class="arco-upload-picture-card" v-else>
-              <div class="arco-upload-picture-card-text">
-                <IconPlus />
-                <div style="margin-top: 10px; font-weight: 600">Upload</div>
-              </div>
-            </div>
-          </div>
-        </template>
-      </a-upload>
+              <template #upload-button>
+                <div
+                  :class="`arco-upload-list-item${
+                    avatar && avatar.status === 'error'
+                      ? ' arco-upload-list-item-error'
+                      : ''
+                  }`"
+                >
+                  <div
+                    class="arco-upload-list-picture custom-upload-avatar"
+                    v-if="avatar && avatar.url"
+                  >
+                    <img :src="avatar.url" />
+                    <div class="arco-upload-list-picture-mask">
+                      <IconEdit />
+                    </div>
+                    <a-progress
+                      v-if="avatar.status === 'uploading' && avatar.percent < 100"
+                      :percent="avatar.percent"
+                      type="circle"
+                      size="mini"
+                      :style="{
+                        position: 'absolute',
+                        left: '50%',
+                        top: '50%',
+                        transform: 'translateX(-50%) translateY(-50%)',
+                      }"
+                    />
+                  </div>
+                  <div class="arco-upload-picture-card" v-else>
+                    <div class="arco-upload-picture-card-text">
+                      <IconPlus />
+                      <div style="margin-top: 10px; font-weight: 600">Upload</div>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </a-upload>-->
       <a-form-item
         style="display: flex; justify-content: center; align-items: center"
       >
@@ -137,28 +137,27 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, onMounted, reactive, ref, withDefaults } from "vue";
+import { onMounted, reactive, ref } from "vue";
 import store from "@/store";
 import { useRoute, useRouter } from "vue-router";
-import { Message, Modal } from "@arco-design/web-vue";
-import { IconEdit, IconPlus } from "@arco-design/web-vue/es/icon";
+import { Message } from "@arco-design/web-vue";
 import { UserControllerService } from "@/api";
 import moment from "moment/moment";
 
 const router = useRouter();
 const route = useRoute();
 
-const headers = {
+/*const headers = {
   "Content-Type": "multipart/form-data",
-};
+};*/
 
 const curUser = ref({});
-const avatar = ref();
+/*const avatar = ref();*/
 
 const data = reactive({
   mutableData: {
     userName: "",
-    userAvatar: "",
+    /*userAvatar: "",*/
     userProfile: "",
   },
   immutableData: {
@@ -168,7 +167,7 @@ const data = reactive({
     userAccount: "",
   },
 });
-const onChange = (_: any, currentFile: any) => {
+/*const onChange = (_: any, currentFile: any) => {
   avatar.value = {
     ...currentFile,
     // url: URL.createObjectURL(currentFile.file),
@@ -192,19 +191,18 @@ const beforeUpload = (file: any) => {
     return false; // 阻止文件上传
   }
   return true; // 允许文件上传
-};
+};*/
 const handleUserInfoUpdate = async () => {
   let res1 = await UserControllerService.updateMyUserUsingPost({
     userName: data.mutableData.userName,
-    userAvatar: data.mutableData.userAvatar,
+    /*userAvatar: data.mutableData.userAvatar,*/
     userProfile: data.mutableData.userProfile,
   });
   if (res1.code === 0) {
     Message.error("err" + res1.message);
     return;
   }
-  console.log(avatar.value);
-  if (avatar.value != null) {
+  /*if (avatar.value != null) {
     const _file = avatar.value.file;
     let blob = new Blob([_file], { type: "image/png" });
 
@@ -216,7 +214,7 @@ const handleUserInfoUpdate = async () => {
       Message.error("err" + res2.message);
       return;
     }
-  }
+  }*/
   Message.success("修改成功");
   await store.dispatch("user/getLoginUser");
   getUserThis();
@@ -225,7 +223,7 @@ const getUserThis = () => {
   curUser.value = store.state.user?.userInfo || {};
   if (curUser.value !== {}) {
     data.mutableData.userName = curUser.value?.userName;
-    data.mutableData.userAvatar = curUser.value?.userAvatar;
+    /*data.mutableData.userAvatar = curUser.value?.userAvatar;*/
     data.mutableData.userProfile = curUser.value?.userProfile;
     data.immutableData.id = curUser.value?.id;
     data.immutableData.createTime = moment(

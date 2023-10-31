@@ -24,6 +24,7 @@ import com.yioj.model.model.entity.User;
 import com.yioj.model.model.vo.CommentVO;
 import com.yioj.model.model.vo.ProblemVO;
 import com.yioj.model.model.vo.UserVO;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
@@ -63,7 +64,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     @Resource
     private CommentThumbService commentThumbService;
     @Resource
-    private ProblemFeignClient problemService;
+    private ProblemFeignClient problemFeignClient;
 
     @Resource
     private ElasticsearchRestTemplate elasticsearchRestTemplate;
@@ -74,7 +75,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         Long problemId = comment.getProblemId();
-        Problem problem = problemService.getById(problemId);
+        Problem problem = problemFeignClient.getById(problemId);
         if (problem == null) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
         }
@@ -137,7 +138,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         Long problemId = comment.getProblemId();
         Problem problem = null;
         if (problemId != null && problemId > 0) {
-            problem = problemService.getById(problemId);
+            problem = problemFeignClient.getById(problemId);
         }
         ProblemVO problemVO = ProblemVO.objToVo(problem);
         commentVO.setProblemVO(problemVO);
@@ -197,7 +198,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             Long problemId = comment.getProblemId();
             Problem problem = null;
             if (problemId != null && problemId > 0) {
-                problem = problemService.getById(problemId);
+                problem = problemFeignClient.getById(problemId);
             }
             ProblemVO problemVO = ProblemVO.objToVo(problem);
             commentVO.setProblemVO(problemVO);
@@ -230,6 +231,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     }
 
     @Override
+    @CircuitBreaker(name = "commentCircuitBreaker", fallbackMethod = "myFallbackMethod")
     public Page<Comment> searchFromEs(CommentQueryRequest commentQueryRequest) {
         Long id = commentQueryRequest.getId();
         String searchText = commentQueryRequest.getSearchText();
@@ -313,5 +315,11 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         page.setRecords(resourceList);
         return page;
     }
-
+    // 熔断触发函数
+    public Page<Comment> myFallbackMethod(CommentQueryRequest commentQueryRequest, Throwable t) {
+        // 降级逻辑，例如返回一个默认值
+        t.printStackTrace();
+        log.error("熔断, 请求信息:"+commentQueryRequest.toString()+"   错误信息:"+t.getMessage());
+        return null;
+    }
 }

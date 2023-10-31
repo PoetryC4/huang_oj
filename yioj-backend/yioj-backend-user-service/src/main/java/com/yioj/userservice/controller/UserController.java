@@ -17,6 +17,7 @@ import com.yioj.model.model.vo.LoginUserVO;
 import com.yioj.model.model.vo.UserRecordVO;
 import com.yioj.model.model.vo.UserVO;
 import com.yioj.userservice.annotation.AuthCheck;
+import com.yioj.userservice.rabbitmq.MyMessageProducer;
 import com.yioj.userservice.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -47,7 +48,7 @@ public class UserController {
     private UserService userService;
 
     @Resource
-    private CommentFeignClient commentFeignClient;
+    private MyMessageProducer myMessageProducer;
 
     private static String userDir = System.getProperty("user.dir");
 
@@ -340,7 +341,9 @@ public class UserController {
         if (StringUtils.isAnyBlank(userEmail)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "邮箱错误");
         }
-        commentFeignClient.sendVerificationCode(userEmail);
+
+        //commentFeignClient.sendVerificationCode(userEmail);
+        myMessageProducer.sendMessage("yioj_exchange", "yioj_routingKey", userEmail);
         return ResultUtils.success("验证码已发送，请检查您的邮箱。");
     }
 
