@@ -235,7 +235,7 @@ import { useRoute, useRouter } from "vue-router";
 import { SubmissionControllerService } from "@/api";
 import { Message } from "@arco-design/web-vue";
 import store from "@/store";
-import { languageEnum } from "@/components/scripts/enum/languageEnum";
+import { languageEnum } from "@/components/scripts/enum/LanguageEnum";
 import * as path from "path";
 import CodeEditor from "@/components/CodeEditor.vue";
 import CodeViewer from "@/components/CodeViewer.vue";

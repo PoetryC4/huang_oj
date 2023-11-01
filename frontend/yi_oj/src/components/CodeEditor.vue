@@ -25,18 +25,19 @@
 <script setup lang="ts">
 import * as monaco from "monaco-editor";
 import {
+  computed,
+  defineEmits,
   defineProps,
   onMounted,
   ref,
   toRaw,
   withDefaults,
-  defineEmits,
-  computed,
 } from "vue";
 
 const codeEditorRef = ref();
 const codeEditor = ref();
 const langs = [
+  /*
   {
     name: "bat",
     fancyName: "bat",
@@ -48,18 +49,18 @@ const langs = [
   {
     name: "go",
     fancyName: "GoLang",
-  },
+  },*/
   {
     name: "java",
     fancyName: "Java",
-  },
-  {
-    name: "javascript",
-    fancyName: "JavaScript",
-  },
+  } /*
   {
     name: "kotlin",
     fancyName: "Kotlin",
+  },
+  {
+    name: "c",
+    fancyName: "C",
   },
   {
     name: "mysql",
@@ -72,7 +73,7 @@ const langs = [
   {
     name: "python",
     fancyName: "Python",
-  },
+  }
   {
     name: "rust",
     fancyName: "rust",
@@ -88,6 +89,10 @@ const langs = [
   {
     name: "typescript",
     fancyName: "TypeScript",
+  },*/,
+  {
+    name: "javascript",
+    fancyName: "JavaScript",
   },
 ];
 

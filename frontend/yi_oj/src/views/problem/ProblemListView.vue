@@ -143,7 +143,7 @@
         </a-table-column>
         <a-table-column title="解答" :width="90">
           <template #cell="{ record }">
-            <a-button @click="console.log(record)">
+            <a-button @click="goToSolution(record.id)">
               <template #icon>
                 <icon-experiment />
               </template>
@@ -216,14 +216,14 @@ import { ProblemControllerService } from "@/api";
 import { Message } from "@arco-design/web-vue";
 import store from "@/store";
 import {
-  IconLock,
-  IconQuestion,
   IconCheck,
   IconExperiment,
-  IconSunFill,
-  IconSend,
-  IconSearch,
+  IconLock,
   IconMinus,
+  IconQuestion,
+  IconSearch,
+  IconSend,
+  IconSunFill,
 } from "@arco-design/web-vue/es/icon";
 import { roleEnum } from "@/components/scripts/access/roleEnum";
 import { useRouter } from "vue-router";
@@ -266,6 +266,12 @@ const getProblemList = async () => {
   if (Math.ceil(data.problemCounts / pageSize.value) < curPage.value) {
     curPage.value = Math.ceil(data.problemCounts / pageSize.value);
   }
+};
+
+const goToSolution = (id: string) => {
+  router.push({
+    path: `/problem/details/${id}/solution`,
+  });
 };
 
 const handleSizeChange = (val: number) => {

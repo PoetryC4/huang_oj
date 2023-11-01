@@ -32,7 +32,7 @@
               <img
                 alt="avatar"
                 :src="
-                  'http://127.0.0.1:8102/api/avatars/' +
+                  'http://127.0.0.1:8102/api/user/avatars/' +
                   curUser.id +
                   '/' +
                   curUser.userAvatar
@@ -501,7 +501,7 @@
                     <img
                       alt="avatar"
                       :src="
-                        'http://127.0.0.1:8102/api/avatars/' +
+                        'http://127.0.0.1:8102/api/user/avatars/' +
                         item.userVO.id +
                         '/' +
                         item.userVO.userAvatar

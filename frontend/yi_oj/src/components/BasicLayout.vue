@@ -30,7 +30,7 @@
               <img
                 alt="avatar"
                 :src="
-                  'http://127.0.0.1:8102/api/avatars/' +
+                  'http://127.0.0.1:8006/api/user/avatars/' +
                   store.state.user?.userInfo.id +
                   '/' +
                   store.state.user?.userInfo.userAvatar

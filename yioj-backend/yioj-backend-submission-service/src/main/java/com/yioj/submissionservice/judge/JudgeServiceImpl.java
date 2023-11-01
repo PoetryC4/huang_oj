@@ -101,13 +101,13 @@ public class JudgeServiceImpl implements JudgeService {
     public ProcessRunResult requestCodeSandbox(Object body) {
         long timestamp = new Date().getTime();
         String signature = EncryptionUtils.generateSignature(appName + timestamp, timestamp, secretKey);
-        System.out.println("签证:"+signature);
         String responseStr1 = HttpUtil.createPost(codeSandboxUrl)
                 .header("Content-Type", "application/json")
                 .header("AccessKey", accessKey)
                 .header("Timestamp", String.valueOf(timestamp))
                 .header("Code", appName)
                 .header("Signature", signature)
+                .timeout(1000 * 30)
                 .body(JSON.toJSONString(body))
                 .execute()
                 .body();
@@ -119,6 +119,7 @@ public class JudgeServiceImpl implements JudgeService {
         }
         return JSON.parseObject(responseStr1, ProcessRunResult.class);
     }
+
     @Override
     @CircuitBreaker(name = "submissionCircuitBreaker", fallbackMethod = "doFallbackMethod")
     @RateLimiter(name = "submissionRateLimiter")
@@ -182,12 +183,14 @@ public class JudgeServiceImpl implements JudgeService {
         String[] inputs = judgeCases.getInput().split("\n");
         List<String> expectedOutputList = Arrays.asList(expectedOutput);
         expectedOutputList.replaceAll(String::trim);
+        expectedOutputList.replaceAll(s -> s.replaceAll(" ", ""));
 
         List<Long> runtimeList = processRunResult1.getRuntime();
         List<Long> memoryList = processRunResult1.getMemoryUsed();
         List<String> stdOutList = processRunResult1.getStdOut();
         List<String> outputList = processRunResult1.getFuncReturn();
         outputList.replaceAll(String::trim);
+        outputList.replaceAll(s -> s.replaceAll(" ", ""));
 
         JudgeInfo judgeInfo = new JudgeInfo();
         Long memorySum = 0L;
@@ -325,6 +328,7 @@ public class JudgeServiceImpl implements JudgeService {
         expectedOutputs = processRunResult1.getFuncReturn();
         //去除前置后置换行符
         expectedOutputs.replaceAll(String::trim);
+        expectedOutputs.replaceAll(s -> s.replaceAll(" ", ""));
 
         codeExecuteRequest.setCode(problemSubmitQuest.getCode());
 
@@ -346,6 +350,7 @@ public class JudgeServiceImpl implements JudgeService {
         List<String> outputList = processRunResult2.getFuncReturn();
         //去除前置后置换行符
         outputList.replaceAll(String::trim);
+        outputList.replaceAll(s -> s.replaceAll(" ", ""));
         String errMessage = processRunResult2.getErrMessage();
 
         JudgeInfo judgeInfo = new JudgeInfo();
@@ -403,17 +408,19 @@ public class JudgeServiceImpl implements JudgeService {
         judgeResult.setSubmissionId(null);
         return judgeResult;
     }
+
     // 熔断触发函数
     public JudgeResult testFallbackMethod(ProblemTestExampleRequest problemTestExampleRequest, Throwable t) {
         // 降级逻辑，例如返回一个默认值
         t.printStackTrace();
-        log.error("熔断, 请求信息:"+problemTestExampleRequest.toString()+"   错误信息:"+t.getMessage());
+        log.error("熔断, 请求信息:" + problemTestExampleRequest.toString() + "   错误信息:" + t.getMessage());
         return null;
     }
+
     public JudgeResult doFallbackMethod(long submissionId, Throwable t) {
         // 降级逻辑，例如返回一个默认值
         t.printStackTrace();
-        log.error("熔断, 请求id:"+submissionId+"   错误信息:"+t.getMessage());
+        log.error("熔断, 请求id:" + submissionId + "   错误信息:" + t.getMessage());
         return null;
     }
 }

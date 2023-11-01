@@ -313,7 +313,6 @@
                               >
                                 {{ judgeCaseVO.output as string }}
                               </div>
-                              >
                             </a-alert>
                             <a-alert type="normal" v-else>
                               <div
@@ -375,7 +374,7 @@ import {
   IconThumbUp,
   IconThumbUpFill,
 } from "@arco-design/web-vue/es/icon";
-import { languageEnum } from "@/components/scripts/enum/languageEnum";
+import { languageEnum } from "@/components/scripts/enum/LanguageEnum";
 import { useRoute, useRouter } from "vue-router";
 import { defineProps, withDefaults } from "vue/dist/vue";
 import MdViewer from "@/components/MdViewer.vue";

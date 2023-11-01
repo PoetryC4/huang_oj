@@ -11,7 +11,7 @@
           :color="'arcoblue'"
           bordered
           :style="{
-            width: '68px',
+            width: '65px',
             height: '35px',
             borderRadius: '10px',
             cursor: 'text',
@@ -21,7 +21,7 @@
             marginRight: '50px',
           }"
         >
-          Yi_OJ
+          翼 OJ
         </a-tag>
       </a-menu-item>
       <a-menu-item
