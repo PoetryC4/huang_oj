@@ -201,6 +201,13 @@
                 <template #extra>
                   <a-button
                     :disabled="isJudge"
+                    @click.stop="handleSwitchSourceMode"
+                    style="margin-right: 40px"
+                    type="text"
+                    >{{ isSourceMode ? "tab模式" : "源码模式" }}
+                  </a-button>
+                  <a-button
+                    :disabled="isJudge"
                     @click.stop="handleCodeTest"
                     style="margin-right: 40px"
                     >运行
@@ -219,12 +226,59 @@
                   @change="handleCodeTestTabChange"
                 >
                   <a-tab-pane key="1" title="测试用例">
-                    <a-mention
-                      v-model="testInput"
-                      type="textarea"
-                      placeholder="请输入测试用例"
-                      style="min-height: 100px"
-                    />
+                    <div v-if="!isSourceMode">
+                      <a-tag
+                        v-for="(example, index) of exampleTags"
+                        :key="index"
+                        :closable="exampleTags.length !== 1"
+                        :visible="true"
+                        @close="handleExampleRemove(index)"
+                        @click="handleExampleTagClick(index)"
+                        style="cursor: pointer"
+                      >
+                        样例{{ index + 1 }}
+                      </a-tag>
+                      <a-tag
+                        :style="{
+                          width: '90px',
+                          backgroundColor: 'var(--color-fill-2)',
+                          border: '1px dashed var(--color-fill-3)',
+                          cursor: 'pointer',
+                        }"
+                        @click="handleExampleAdd"
+                      >
+                        <template #icon>
+                          <icon-plus />
+                        </template>
+                        增加样例
+                      </a-tag>
+                      <div
+                        v-for="(name, index) of exampleTagSelected"
+                        :key="index"
+                      >
+                        <a-typography-paragraph>
+                          {{ data.problem.functionConfig.varNames[index] }} =
+                        </a-typography-paragraph>
+                        <a-input
+                          v-model="exampleTagSelected[index]"
+                          :placeholder="
+                            '请输入' +
+                            data.problem.functionConfig.varNames[index] +
+                            '的值'
+                          "
+                          :rules="[{ required: true, message: '值不得为空' }]"
+                          :validate-trigger="['change', 'input']"
+                        />
+                      </div>
+                    </div>
+                    <div v-else>
+                      <a-mention
+                        v-model="testInput"
+                        type="textarea"
+                        placeholder="请输入测试用例"
+                        style="min-height: 100px"
+                      />
+                    </div>
                   </a-tab-pane>
                   <a-tab-pane key="2" title="测试结果">
                     <div v-if="isJudge">
@@ -278,9 +332,11 @@
                               <a-tag
                                 size="large"
                                 style="margin-right: 20px"
-                                @click="testTagSelect = index"
+                                @click="testResultTagSelect = index"
                                 :color="
-                                  testTagSelect === index ? 'arcoblue' : 'gray'
+                                  testResultTagSelect === index
+                                    ? 'arcoblue'
+                                    : 'gray'
                                 "
                                 >样例 {{ index + 1 }}
                               </a-tag>
@@ -354,7 +410,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, provide, reactive, ref } from "vue";
+import { nextTick, onMounted, provide, reactive, ref } from "vue";
 import {
   JudgeResult,
   ProblemControllerService,
@@ -367,6 +423,7 @@ import {
   IconCheck,
   IconDown,
   IconList,
+  IconPlus,
   IconQuestion,
   IconRight,
   IconThumbDown,
@@ -397,6 +454,76 @@ const isLiked = ref(false);
 const isDisliked = ref(false);
 const isJudge = ref(false);
 const collapseController = ref(-1);
+const exampleTagChosen = ref(0);
+const testInput = ref("");
+const exampleTags = ref([]);
+const isSourceMode = ref(false);
+const exampleTagSelected = ref([]);
+
+const handleSwitchSourceMode = () => {
+  isSourceMode.value = !isSourceMode.value;
+  examplesSync(isSourceMode.value);
+};
+
+const examplesSync = (updateSource: boolean) => {
+  if (updateSource) {
+    let newTestInput = "start";
+    for (let i = 0; i < exampleTags.value.length; i++) {
+      for (let j = 0; j < exampleTags.value[i].length; j++) {
+        newTestInput =
+          newTestInput === "start"
+            ? exampleTags.value[i][j] + "\n"
+            : newTestInput + exampleTags.value[i][j] + "\n";
+      }
+    }
+    testInput.value = newTestInput;
+  } else {
+    let strs = testInput.value.split("\n");
+    let i = 0;
+    exampleTags.value = [];
+    while (i < strs.length - 1) {
+      let newExample = [];
+      for (
+        let j = 0;
+        j < (data.problem.functionConfig.varCount || 0);
+        j++, i++
+      ) {
+        newExample.push(strs[i]);
+      }
+      exampleTags.value.push(newExample);
+    }
+    nextTick();
+  }
+};
+
+const handleExampleTagClick = (idx: number) => {
+  exampleTags.value[exampleTagChosen.value] = exampleTagSelected.value;
+  exampleTagSelected.value = exampleTags.value[idx];
+  exampleTagChosen.value = idx;
+  nextTick();
+  console.log(exampleTags.value);
+};
+
+const handleExampleRemove = (idx: number) => {
+  exampleTags.value.splice(idx, 1);
+  exampleTagChosen.value = Math.min(
+    exampleTagChosen.value,
+    exampleTags.value.length - 1
+  );
+  exampleTagSelected.value = exampleTags.value[exampleTagChosen.value];
+  nextTick();
+};
+
+const handleExampleAdd = () => {
+  if (exampleTags.value.length >= 8) return;
+  let newExample: string[] = [];
+  for (let j = 0; j < (data.problem.functionConfig.varCount || 0); j++) {
+    newExample.push(exampleTags.value[exampleTags.value.length - 1][j]);
+  }
+  exampleTags.value.push(newExample);
+  nextTick();
+  handleExampleTagClick(exampleTags.value.length - 1);
+};
 
 const handleLikeClick = async () => {
   if (curUser == null || curUser.id < 0) {
@@ -441,9 +568,8 @@ const codeTestTabKey = ref("1");
 const handleCodeTestTabChange = (v: string) => {
   codeTestTabKey.value = v;
 };
-const testInput = ref("");
 const siderTabKey = ref("1");
-const testTagSelect = ref(0);
+const testResultTagSelect = ref(0);
 
 const goToProblemList = () => {
   router.push({
@@ -542,6 +668,7 @@ async function handleCodeTest() {
   }
   if (isJudge.value) return;
   isJudge.value = true;
+  examplesSync(true);
   collapseController.value = 1;
   codeTestTabKey.value = "2";
   const res = await SubmissionControllerService.testSubmitUsingPost({
@@ -620,6 +747,8 @@ onMounted(async () => {
   await getProblemDetails();
   doInitCode();
   doLanguageChange("java");
+  examplesSync(false);
+  exampleTagSelected.value = exampleTags.value[0];
 });
 provide("data", data);
 </script>
@@ -648,6 +777,10 @@ provide("data", data);
 
 <style>
 .arco-collapse-item-header {
+  cursor: default;
+}
+
+.arco-collapse-item-header-left {
   cursor: default;
 }
 </style>

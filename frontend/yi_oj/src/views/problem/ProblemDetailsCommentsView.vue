@@ -374,3 +374,13 @@ const data = inject("data");
   background: transparent;
 }
 </style>
+
+<style>
+.arco-collapse-item-header {
+  cursor: default;
+}
+
+.arco-collapse-item-header-left {
+  cursor: default;
+}
+</style>

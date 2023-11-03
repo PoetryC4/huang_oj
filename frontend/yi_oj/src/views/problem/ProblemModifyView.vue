@@ -52,50 +52,6 @@
           </a-form-item>
         </a-col>
       </a-row>
-      <!--
-      <a-form-item
-        v-for="(judge_case, index) of state.formDataProblem.judgeCase"
-        :field="`state.formDataProblem.judgeCase[${index}]`"
-        :label="`测试用例-${index}`"
-        :key="index"
-      >
-        <a-input
-          v-model="judge_case.input"
-          placeholder="样例输入"
-          style="
-            width: 450px;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            top: 0;
-            margin: auto auto auto 10px;
-          "
-        />
-        <a-input
-          v-model="judge_case.expected"
-          placeholder="样例正确输出"
-          style="
-            width: 450px;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            top: 0;
-            margin: auto 10px auto auto;
-          "
-        />
-        <a-button
-          @click="handleProblemDelete(index)"
-          :style="{ marginLeft: '10px' }"
-          >删除
-        </a-button>
-      </a-form-item>
-      <a-form-item>
-        <a-button
-          style="right: 0; left: 0; top: 0; bottom: 0; margin: auto"
-          @click="handleProblemAdd"
-          >添加样例
-        </a-button>
-      </a-form-item>-->
       <a-form-item field="judgeConfig.hint" label="提示">
         <a-input
           v-model="state.formDataProblem.judgeConfig.hint"
@@ -153,6 +109,44 @@
         />
       </a-form-item>
       <a-form-item
+        v-for="(varName, index) of state.formDataProblem.functionConfig
+          .varNames"
+        :field="`state.formDataProblem.functionConfig.varNames[${index}]`"
+        :label="`参数名称-${index}`"
+        :key="index"
+      >
+        <a-input
+          v-model="state.formDataProblem.functionConfig.varNames[index]"
+          placeholder="参数"
+          style="
+            width: 450px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            top: 0;
+            margin: auto auto auto 10px;
+          "
+          :rules="[{ required: true, message: '值不得为空' }]"
+          :validate-trigger="['change', 'input']"
+        />
+        <a-button
+          @click="
+            handleVarNameDelete(
+              typeof index === 'string' ? parseInt(index) : index
+            )
+          "
+          :style="{ marginLeft: '10px' }"
+          >删除
+        </a-button>
+      </a-form-item>
+      <a-form-item>
+        <a-button
+          style="right: 0; left: 0; top: 0; bottom: 0; margin: auto"
+          @click="handleVarNameAdd"
+          >添加样例
+        </a-button>
+      </a-form-item>
+      <a-form-item
         field="functionConfig.validCode"
         label="样例输入输入验证代码段"
       >
@@ -175,14 +169,14 @@
           :handle-language-change="doLanguageChangeInit"
           :handle-editor-init="doInitCodeInit"
           style="height: 600px; min-width: 800px"
-        />
-      </a-form-item>
+        /> </a-form-item
+      ><!--
       <a-form-item field="functionConfig.varCount" label="输入参数个数">
         <a-input-number
           v-model="state.formDataProblem.functionConfig.varCount"
           placeholder="请输入输入参数个数"
         />
-      </a-form-item>
+      </a-form-item>-->
       <a-form-item field="functionConfig.defaultCode" label="样例默认代码段">
         <CodeEditor
           :next-code="nextCodeDefault"
@@ -400,15 +394,13 @@ const onChangeSolution = (v: string) => {
   state.formDataProblem.solution = v;
 };
 
-/*const handleProblemAdd = () => {
-  state.formDataProblem.judgeCase.push({
-    expected: "",
-    input: "",
-  });
+const handleVarNameAdd = () => {
+  state.formDataProblem.functionConfig.varNames.push("");
 };
-const handleProblemDelete = (index: number) => {
-  state.formDataProblem.judgeCase.splice(index, 1);
-};*/
+const handleVarNameDelete = (index: number) => {
+  state.formDataProblem.functionConfig.varNames.splice(index, 1);
+};
+
 async function handleProblemSubmit() {
   let userId = store.state.user?.userInfo?.id;
   if (userId === -1) {
@@ -424,6 +416,8 @@ async function handleProblemSubmit() {
   state.formDataProblem.functionConfig.validCode[codeLanguageValid.value] =
     curValidCode.value;
   let res;
+  state.formDataProblem.functionConfig.varCount =
+    state.formDataProblem.functionConfig.varNames.length;
   if (id.value === "") {
     res = await ProblemControllerService.addProblemUsingPost({
       ...state.formDataProblem,
@@ -470,6 +464,8 @@ async function handleProblemFillIn(id: string) {
       res.data.functionConfig.correctCode || {};
     state.formDataProblem.functionConfig.validCode =
       res.data.functionConfig.validCode || {};
+    state.formDataProblem.functionConfig.varNames =
+      res.data.functionConfig.varNames || [];
     state.formDataProblem.functionConfig.varCount = parseInt(
       res.data.functionConfig.varCount
     );
