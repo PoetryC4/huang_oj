@@ -24,6 +24,14 @@ nav a {
 nav a.router-link-exact-active {
   color: #42b983;
 }
+
+.arco-collapse-item-header {
+  cursor: default;
+}
+
+.arco-collapse-item-header-left {
+  cursor: default;
+}
 </style>
 <script setup lang="ts">
 import BasicLayout from "@/components/BasicLayout.vue";

@@ -311,15 +311,28 @@
                           {{ userSubmissionRes.judgeInfo?.resultStr || "" }}
                         </span>
                         <span
-                          :style="{ fontSize: '16px' }"
+                          :style="{ fontSize: '16px', marginLeft: '20px' }"
                           v-if="
                             userSubmissionRes.judgeInfo?.timeUsed != undefined
                           "
                         >
                           运行用时:
                           {{
-                            userSubmissionRes.judgeInfo?.timeUsed || ""
+                            userSubmissionRes.judgeInfo?.timeUsed || "NaN"
                           }}ms</span
+                        >
+                        <span
+                          :style="{ fontSize: '16px', marginLeft: '20px' }"
+                          v-if="
+                            userSubmissionRes.judgeInfo?.memoryUsed != undefined
+                          "
+                        >
+                          占用内存:
+                          {{
+                            (
+                              userSubmissionRes.judgeInfo?.memoryUsed / 1048576
+                            ).toFixed(1) || "NaN"
+                          }}MB</span
                         >
                         <a-tabs default-active-key="0" type="round">
                           <a-tab-pane

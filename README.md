@@ -10,12 +10,7 @@
 
 该系统前端使用Vue3+TypeScript+ArcoDesign+Axios构建。
 
-相关Redis，MySQL，ElasticSearch的配置如果需要可以自行修改，如果使用的是Linux虚拟机，需要运行以下命令:
-
-```
-sudo ufw disable
-sudo systemctl stop firewalld
-```
+相关Redis，MySQL，ElasticSearch的配置如果需要可以自行修改。
 
 ## 效果图
 ![效果图1](./imgs/1.png)
@@ -35,4 +30,6 @@ sudo systemctl stop firewalld
 ![效果图8](./imgs/8.png)
 
 ![效果图9](./imgs/9.png)
+
+![效果图10](./imgs/10.png)
 
