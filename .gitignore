@@ -61,3 +61,10 @@ temp/
 ./yioj-backend/yioj-backend-common-service/src/main/resources/application.yml
 ./yioj-backend/yioj-backend-model-service/src/main/resources/application.yml
 ./yioj-backend/yioj-backend-gateway-service/src/main/resources/application.yml
+./yioj-backend/yioj-backend-comment-service/src/main/resources/application-prod.yml
+./yioj-backend/yioj-backend-problem-service/src/main/resources/application-prod.yml
+./yioj-backend/yioj-backend-user-service/src/main/resources/application-prod.yml
+./yioj-backend/yioj-backend-submission-service/src/main/resources/application-prod.yml
+./yioj-backend/yioj-backend-common-service/src/main/resources/application-prod.yml
+./yioj-backend/yioj-backend-model-service/src/main/resources/application-prod.yml
+./yioj-backend/yioj-backend-gateway-service/src/main/resources/application-prod.yml

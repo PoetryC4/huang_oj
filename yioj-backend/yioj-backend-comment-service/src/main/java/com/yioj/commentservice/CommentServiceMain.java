@@ -18,7 +18,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableFeignClients(basePackages = {"com.yioj.clientservice.service"})
 public class CommentServiceMain {
     public static void main(String[] args) {
-        InitRabbitMq.doInit();
+        // InitRabbitMq.doInit();
         SpringApplication.run(CommentServiceMain.class, args);
     }
 }

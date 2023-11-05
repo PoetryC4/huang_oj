@@ -12,6 +12,9 @@
 
 相关Redis，MySQL，ElasticSearch的配置如果需要可以自行修改。
 
+TODO:
+1. 添加COS
+
 ## 效果图
 ![效果图1](./imgs/1.png)
 

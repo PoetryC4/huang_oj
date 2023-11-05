@@ -1,4 +1,4 @@
-package com.yioj.common.config;
+package com.yioj.commentservice.config;
 
 import com.yioj.common.common.JSONObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +39,7 @@ public class WebMvcConfig extends WebMvcConfigurationSupport {
         //将上面的消息转换器对象追加到mvc框架的转换器集合中
         converters.add(0,messageConverter);
     }
-    @Bean
+    /*@Bean
     public CorsFilter corsFilter() {
         final UrlBasedCorsConfigurationSource urlBasedCorsConfigurationSource = new UrlBasedCorsConfigurationSource();
         final CorsConfiguration corsConfiguration = new CorsConfiguration();
@@ -53,6 +53,6 @@ public class WebMvcConfig extends WebMvcConfigurationSupport {
         corsConfiguration.addAllowedMethod("*");
         urlBasedCorsConfigurationSource.registerCorsConfiguration("/**", corsConfiguration);
         return new CorsFilter(urlBasedCorsConfigurationSource);
-    }
+    }*/
 
 }

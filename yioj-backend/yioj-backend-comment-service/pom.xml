@@ -12,10 +12,10 @@
     <artifactId>yioj-backend-comment-service</artifactId>
     <dependencies>
         <!-- elasticsearch-->
-        <dependency>
+        <!--<dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-elasticsearch</artifactId>
-        </dependency>
+        </dependency>-->
         <dependency>
             <groupId>com.yioj</groupId>
             <artifactId>yioj-backend-common</artifactId>
@@ -68,6 +68,14 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>repackage</id>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

@@ -1,20 +1,25 @@
-package com.yioj.commentservice;
+package com.yioj.commentservice.rabbitmq;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
 @Slf4j
-public class InitRabbitMq {
-    @Value("${spring.rabbitmq.host}")
-    private static String rabbitMqHost;
+@Component
+public class InitRabbitMqBean {
 
-    public static void doInit() {
+    @Value("${spring.rabbitmq.host}")
+    private String rabbitMqHost;
+
+    @PostConstruct
+    public void mqInit() {
         ConnectionFactory connectionFactory = new ConnectionFactory();
         connectionFactory.setHost(rabbitMqHost);
         try {
@@ -25,7 +30,7 @@ public class InitRabbitMq {
             String queueName = "yioj_queue";
             channel.queueDeclare(queueName, true, false, false, null);
             channel.queueBind(queueName, exchange_name, "yioj_routingKey");
-            log.error("RabbitMQ启动成功");
+            log.info("RabbitMQ启动成功");
         } catch (IOException | TimeoutException e) {
             log.error("RabbitMQ启动失败");
             throw new RuntimeException(e);

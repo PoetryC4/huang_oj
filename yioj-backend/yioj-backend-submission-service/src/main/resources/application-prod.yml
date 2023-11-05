@@ -3,33 +3,14 @@ spring:
   cloud:
     nacos:
       discovery:
-        server-addr: localhost:8848
-  mail:
-    host: smtp.qq.com
-    username: 473240934@qq.com
-    password: rptztjtiqcsjbgjj
-    default-encoding: UTF-8
-    port: 587
-    properties:
-      mail:
-        debug: true
-        smtp:
-          socketFactory:
-            class: javax.net.ssl.SSLSocketFactory
+        server-addr: nacos:8848
   application:
-    name: yioj-backend-comment-service
-  # 默认 dev 环境
-  profiles:
-    active: dev
+    name: yioj-backend-submission-service
   # 支持 swagger3
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
   # session 配置
-  # elasticsearch:
-  #   uris: http://192.168.137.128:9200
-  #   username: user-es
-  #   password: null
   session:
     # todo 取消注释开启分布式 session（须先配置 Redis）
     store-type: redis
@@ -39,14 +20,14 @@ spring:
   # todo 需替换配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/yi_oj
+    url: jdbc:mysql://mysql:3306/yi_oj
     username: root
     password: 123456
   # Redis 配置
   # todo 需替换配置，然后取消注释
   redis:
     database: 1
-    host: 192.168.137.128
+    host: redis
     port: 6379
     timeout: 5000
     password:
@@ -60,16 +41,11 @@ spring:
     multipart:
       # 大小限制
       max-file-size: 10MB
-  rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
 server:
   address: 0.0.0.0
-  port: 8005
+  port: 8003
   servlet:
-    context-path: /api/comment
+    context-path: /api/submission
     # cookie 30 天过期
     session:
       cookie:
@@ -85,9 +61,15 @@ mybatis-plus:
       logic-delete-value: 1 # 逻辑已删除值（默认为 1）
       logic-not-delete-value: 0 # 逻辑未删除值（默认为 0）
 resilience4j:
+  ratelimiter:
+    instances:
+      submissionRateLimiter:
+        limitForPeriod: 10
+        limitRefreshPeriod: 1s
+        timeoutDuration: 5000ms
   circuitbreaker:
     instances:
-      commentCircuitBreaker:
+      submissionCircuitBreaker:
         registerHealthIndicator: true
         slidingWindowType: COUNT_BASED
         slidingWindowSize: 10
@@ -95,5 +77,8 @@ resilience4j:
         permitted-number-of-calls-in-half-open-state: 3
         waitDurationInOpenState: 5000
         failure-rate-threshold: 50
+sandbox:
+  type: example
+  remote-url: http://127.0.0.1:8103/codeSandbox/runProblem
 knife4j:
   enable: true

@@ -227,9 +227,21 @@ public class ProblemController {
         }
         Problem problem = new Problem();
         BeanUtils.copyProperties(problemUpdateRequest, problem);
-        List<String> tags = problemUpdateRequest.getTags();
-        if (tags != null) {
-            problem.setTags(GSON.toJson(tags));
+        JudgeConfig judgeConfig1 = problemUpdateRequest.getJudgeConfig();
+        if (judgeConfig1 != null) {
+            problem.setJudgeConfig(JSON.toJSONString(judgeConfig1));
+        }
+        List<String> problemTag1 = problemUpdateRequest.getTags();
+        if (problemTag1 != null) {
+            problem.setTags(JSON.toJSONString(problemTag1));
+        }
+        FunctionConfig functionConfig1 = problemUpdateRequest.getFunctionConfig();
+        if (functionConfig1 != null) {
+            problem.setFunctionConfig(com.alibaba.fastjson2.JSON.toJSONString(functionConfig1));
+        }
+        JudgeCases judgeCases1 = problemUpdateRequest.getJudgeCases();
+        if (judgeCases1 != null) {
+            problem.setJudgeCases(com.alibaba.fastjson2.JSON.toJSONString(judgeCases1));
         }
         // 参数校验
         problemService.validProblem(problem, false);
