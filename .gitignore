@@ -46,6 +46,7 @@ temp/
 ./frontend/huang_oj/package-lock.json
 ./frontend/huang_oj/yarn.lock
 ./backend/.idea
+./yioj-backend/.idea
 ./backend/.mvn
 ./backend/doc
 ./backend/target
