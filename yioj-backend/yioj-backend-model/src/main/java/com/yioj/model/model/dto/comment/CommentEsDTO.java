@@ -17,7 +17,7 @@ import java.util.Date;
  *
  **/
 // todo 取消注释开启 ES（须先配置 ES）
-@Document(indexName = "comment")
+//@Document(indexName = "comment")
 @Data
 public class CommentEsDTO implements Serializable {
 

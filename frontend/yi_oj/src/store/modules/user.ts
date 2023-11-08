@@ -1,11 +1,11 @@
 import { StoreOptions } from "vuex";
 import { roleEnum } from "@/components/scripts/access/roleEnum";
 import { UserControllerService } from "@/api";
-import store from "@/store";
 
 export default {
   namespaced: true,
   state: () => ({
+    jwt: "",
     userInfo: {
       userAccount: null,
       userName: "未登录",
@@ -19,6 +19,11 @@ export default {
       userEmail: null,
     },
   }),
+  getters: {
+    getJwt(state) {
+      return state.jwt || null;
+    },
+  },
   actions: {
     async getLoginUser({ commit, state }, payload) {
       // id === -1 代表未登录
@@ -36,6 +41,9 @@ export default {
     async logoutUser({ commit, state }) {
       commit("userLogout");
     },
+    async jwtSetter({ commit, state }, payload) {
+      commit("setJwt", payload);
+    },
   },
   mutations: {
     userLogout(state) {
@@ -49,9 +57,13 @@ export default {
       state.userInfo.userProfile = null;
       state.userInfo.userEmail = null;
       state.userInfo.userAccount = null;
+      state.userInfo.jwt = "";
     },
     userLogin(state, payload) {
       state.userInfo = payload;
+    },
+    setJwt: (state, payload) => {
+      state.jwt = payload.jwt;
     },
   },
 } as StoreOptions<any>;

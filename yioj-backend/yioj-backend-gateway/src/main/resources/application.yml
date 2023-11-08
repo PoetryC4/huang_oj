@@ -1,0 +1,60 @@
+# 公共配置文件
+spring:
+  main:
+    web-application-type: reactive
+  cloud:
+    gateway:
+      globalcors: # 全局的跨域处理
+        add-to-simple-url-handler-mapping: true # 解决options请求被拦截问题
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: # 允许哪些网站的跨域请求
+              - "http://43.139.245.208"
+            allowedMethods: # 允许的跨域ajax的请求方式
+              - "GET"
+              - "POST"
+              - "DELETE"
+              - "PUT"
+              - "OPTIONS"
+            allowedHeaders: "*" # 允许在请求中携带的头信息
+            allowCredentials: true # 是否允许携带cookie
+            maxAge: 360000 # 这次跨域检测的有效期
+      routes:
+        - id: yioj-backend-user-service
+          uri: lb://yioj-backend-user-service
+          predicates:
+            - Path=/api/user/**
+        - id: yioj-backend-problem-service
+          uri: lb://yioj-backend-problem-service
+          predicates:
+            - Path=/api/problem/**
+        - id: yioj-backend-submission-service
+          uri: lb://yioj-backend-submission-service
+          predicates:
+            - Path=/api/submission/**
+        - id: yioj-backend-comment-service
+          uri: lb://yioj-backend-comment-service
+          predicates:
+            - Path=/api/comment/**
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+  application:
+    name: yioj-backend-gateway
+  # 默认 dev 环境
+server:
+  address: 0.0.0.0
+  port: 8006
+  servlet:
+    # context-path: /api
+    # cookie 30 天过期
+    session:
+      cookie:
+        max-age: 2592000
+knife4j:
+  gateway:
+    enabled: true
+    strategy: discover
+    discover:
+      enabled: true
+      version: swagger2

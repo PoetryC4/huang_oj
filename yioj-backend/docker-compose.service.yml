@@ -1,71 +1,65 @@
 version: '3'
 services:
-  mysql:
-    image: mysql:8
-    container_name: yioj-mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: 123456
+  yioj-backend-user-service:
+    container_name: yioj-backend-user-service
+    build:
+      context: ./yioj-backend-user-service
+      dockerfile: Dockerfile
     ports:
-      - "3306:3306"
-    volumes:
-      - ./.mysql-data:/var/lib/mysql
-      - ./mysql-init:/docker-entrypoint-initdb.d
-    restart: always
+      - "8002:8002"
     networks:
       - yinetwork
-  redis:
-    image: redis:6
-    container_name: yioj-redis
+    depends_on:
+      - yioj-backend-gateway
+
+  yioj-backend-submission-service:
+    container_name: yioj-backend-submission-service
+    build:
+      context: ./yioj-backend-submission-service
+      dockerfile: Dockerfile
     ports:
-      - "6379-6379"
+      - "8003:8003"
     networks:
       - yinetwork
-    volumes:
-      - ./.redis-data:/data
-  rabbitmq:
-    image: rabbitmq:3.12.6-management
-    container_name: yioj-rabbitmq
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
+    depends_on:
+      - yioj-backend-gateway
+      - yioj-backend-user-service
+      - yioj-backend-problem-service
+
+  yioj-backend-problem-service:
+    container_name: yioj-backend-problem-service
+    build:
+      context: ./yioj-backend-problem-service
+      dockerfile: Dockerfile
     ports:
-      - "5672-5672"
-      - "15672-15672"
-    volumes:
-      - ./.rabbitmq-data:/var/lib/rabbitmq
+      - "8004:8004"
     networks:
       - yinetwork
-  nacos:
-    image: nacos/nacos-server:v2.2.0-slim
-    container_name: yioj-nacos
+    depends_on:
+      - yioj-backend-gateway
+      - yioj-backend-user-service
+
+  yioj-backend-comment-service:
+    container_name: yioj-backend-comment-service
+    build:
+      context: ./yioj-backend-comment-service
+      dockerfile: Dockerfile
     ports:
-      - "8848-8848"
-    volumes:
-      -  ./.nacos-data:/home/nacos/data
+      - "8005:8005"
     networks:
       - yinetwork
-    environment:
-      - MODE=standalone
-      - PREFER_HOST_MODE=hostname
-      - TZ=Asia/Shanghai
-  # elasticsearch:
-  #   image: elasticsearch:7.14.1
-  #   environment:
-  #     - node.name=es01
-  #     - cluster.name=es-cluster-ai66
-  #     - cluster.initial_master_nodes=es01
-  #     - bootstrap.memory_lock=true
-  #     - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-  #   ulimits:
-  #     memlock:
-  #       soft: -1
-  #       hard: -1
-  #   volumes:
-  #     - /.elasticsearch-data/docker-compose/elastic/es01/data:/usr/share/elasticsearch/data
-  #     - /.elasticsearch-data/docker-compose/elastic/es01/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
-  #   ports:
-  #     - "9200:9200"
-  #   networks:
-  #     - yinetwork
+    depends_on:
+      - yioj-backend-user-service
+      - yioj-backend-gateway
+
+  yioj-backend-gateway:
+    container_name: yioj-backend-gateway
+    build:
+      context: ./yioj-backend-gateway
+      dockerfile: Dockerfile
+    ports:
+      - "8006:8006"
+    networks:
+      - yinetwork
 networks:
   yinetwork:

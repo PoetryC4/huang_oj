@@ -30,7 +30,8 @@
               <img
                 alt="avatar"
                 :src="
-                  'http://127.0.0.1:8006/api/user/avatars/' +
+                  COS_ADDR +
+                  '/user/avatars/' +
                   store.state.user?.userInfo.id +
                   '/' +
                   store.state.user?.userInfo.userAvatar
@@ -95,7 +96,7 @@
 import GlobalHeader from "@/components/GlobalHeader.vue";
 import store from "@/store";
 import { useRoute, useRouter } from "vue-router";
-import { onMounted } from "vue";
+import { COS_ADDR } from "@/components/scripts/CommonValues";
 
 const router = useRouter();
 const route = useRoute();

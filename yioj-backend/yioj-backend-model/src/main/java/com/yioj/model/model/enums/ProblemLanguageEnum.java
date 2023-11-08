@@ -12,13 +12,13 @@ import java.util.stream.Collectors;
  */
 public enum ProblemLanguageEnum {
 
-    C("C", "C"),
-    CPLUSPLUS("C++", "C++"),
-    JAVA("Java", "Java"),
+    /*C("C", "C"),
+    CPLUSPLUS("C++", "C++"),*/
+    JAVA("Java", "Java"),/*
     PYTHON("Python", "Python"),
     PYTHON3("Python3", "Python3"),
-    CSHARP("C#", "C#"),
-    JAVASCRIPT("JavaScript", "JavaScript"),
+    CSHARP("C#", "C#"),*/
+    JAVASCRIPT("JavaScript", "JavaScript"),/*
     TYPESCRIPT("TypeScript", "TypeScript"),
     PHP("PHP", "PHP"),
     BAT("bat", "bat"),
@@ -27,7 +27,7 @@ public enum ProblemLanguageEnum {
     SHELL("shell", "shell"),
     KOTLIN("Kotlin", "Kotlin"),
     RUST("rust", "rust"),
-    GOLANG("GoLang","GoLang");
+    GOLANG("GoLang","GoLang")*/;
 
     private final String text;
 

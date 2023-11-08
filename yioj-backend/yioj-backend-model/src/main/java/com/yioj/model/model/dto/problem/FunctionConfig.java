@@ -2,6 +2,7 @@ package com.yioj.model.model.dto.problem;
 
 import lombok.Data;
 
+import java.util.List;
 import java.util.Map;
 
 @Data
@@ -26,8 +27,13 @@ public class FunctionConfig {
 
     private Map<String, String> correctCode;
     /**
-     * 输入参数个数
+     * 输入参数个数(弃用)
      */
 
     private Integer varCount;
+
+    /**
+     * 变量名称
+     */
+    private List<String> varNames;
 }

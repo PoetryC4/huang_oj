@@ -32,7 +32,8 @@
               <img
                 alt="avatar"
                 :src="
-                  'http://127.0.0.1:8102/api/user/avatars/' +
+                  COS_ADDR +
+                  '/user/avatars/' +
                   curUser.id +
                   '/' +
                   curUser.userAvatar
@@ -501,7 +502,8 @@
                     <img
                       alt="avatar"
                       :src="
-                        'http://127.0.0.1:8102/api/user/avatars/' +
+                        COS_ADDR +
+                        '/user/avatars/' +
                         item.userVO.id +
                         '/' +
                         item.userVO.userAvatar
@@ -566,16 +568,17 @@ import {
 import { Message } from "@arco-design/web-vue";
 import { useRouter } from "vue-router";
 import {
+  IconEdit,
   IconMessage,
+  IconPlus,
   IconSearch,
   IconSelectAll,
   IconSend,
   IconSunFill,
-  IconEdit,
-  IconPlus,
 } from "@arco-design/web-vue/es/icon";
 import { SubmissionResultEnums } from "@/components/scripts/enum/SubmissionResultEnums";
 import { roleEnum } from "@/components/scripts/access/roleEnum";
+import { COS_ADDR } from "@/components/scripts/CommonValues";
 
 const userRecord = ref({});
 const router = useRouter();
@@ -649,16 +652,17 @@ const getMySubmissionList = async () => {
 };
 const curCommentEdit = ref(-1);
 const getMyCommentList = async () => {
-  /*let res = await CommentControllerService.listMyCommentVoByPageUsingPost({
-    current: commentCurPage.value,
-    pageSize: commentPageSize.value,
-    searchText: commentSearchText.value,
-  });*/
-  let res = await CommentControllerService.searchCommentVoByPageUsingPost({
+  let res = await CommentControllerService.listMyCommentVoByPageUsingPost({
     current: commentCurPage.value,
     pageSize: commentPageSize.value,
     searchText: commentSearchText.value,
   });
+  // 开启ES后可使用
+  /*let res = await CommentControllerService.searchCommentVoByPageUsingPost({
+    current: commentCurPage.value,
+    pageSize: commentPageSize.value,
+    searchText: commentSearchText.value,
+  });*/
   if (res.code !== 1) {
     Message.error("err" + res.message);
     return;

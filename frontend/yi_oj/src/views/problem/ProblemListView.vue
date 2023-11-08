@@ -29,9 +29,9 @@
           placeholder="难度选择"
           @change="getProblemList"
         >
-          <a-option :value="0" style="color: rgb(137, 255, 83)">简单</a-option>
-          <a-option :value="1" style="color: rgb(229, 192, 44)">中等</a-option>
-          <a-option :value="2" style="color: rgb(255, 103, 83)">困难</a-option>
+          <a-option :value="0" style="color: green">简单</a-option>
+          <a-option :value="1" style="color: orange">中等</a-option>
+          <a-option :value="2" style="color: firebrick">困难</a-option>
         </a-select>
       </a-col>
       <a-col :span="3" :offset="1">

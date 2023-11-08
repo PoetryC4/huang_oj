@@ -36,9 +36,6 @@ nav a.router-link-exact-active {
 <script setup lang="ts">
 import BasicLayout from "@/components/BasicLayout.vue";
 import { onMounted } from "vue";
-import { useRoute } from "vue-router";
-
-const route = useRoute();
 
 onMounted(() => {
   init();

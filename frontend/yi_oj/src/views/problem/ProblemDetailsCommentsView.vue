@@ -113,7 +113,8 @@
           <img
             alt="avatar"
             :src="
-              'http://127.0.0.1:8102/api/user/avatars/' +
+              COS_ADDR +
+              '/user/avatars/' +
               item.userVO.id +
               '/' +
               item.userVO.userAvatar
@@ -178,7 +179,8 @@
           <img
             alt="avatar"
             :src="
-              'http://127.0.0.1:8102/api/user/avatars/' +
+              COS_ADDR +
+              '/user/avatars/' +
               curUser.id +
               '/' +
               curUser.userAvatar
@@ -219,17 +221,18 @@ import {
 } from "vue";
 import moment from "moment";
 import {
+  IconHeart,
+  IconHeartFill,
   IconSearch,
   IconSend,
   IconSunFill,
-  IconHeart,
-  IconHeartFill,
 } from "@arco-design/web-vue/es/icon";
 import { useRoute, useRouter } from "vue-router";
 import store from "@/store";
-import { CommentControllerService, ProblemControllerService } from "@/api";
+import { CommentControllerService } from "@/api";
 import { Message } from "@arco-design/web-vue";
 import { roleEnum } from "@/components/scripts/access/roleEnum";
+import { COS_ADDR } from "@/components/scripts/CommonValues";
 
 interface Props {
   id: string;
@@ -299,18 +302,19 @@ const handleEditSubmit = async (item: any) => {
 };
 
 const getCommentList = async () => {
-  /*let res = await CommentControllerService.listCommentVoByPageUsingPost({
-    current: curPage.value,
-    pageSize: pageSize.value,
-    problemId: parseInt(props.id),
-    searchText: searchText.value,
-  });*/
-  let res = await CommentControllerService.searchCommentVoByPageUsingPost({
+  let res = await CommentControllerService.listCommentVoByPageUsingPost({
     current: curPage.value,
     pageSize: pageSize.value,
     problemId: parseInt(props.id),
     searchText: searchText.value,
   });
+  // 开启ES后可使用
+  /*let res = await CommentControllerService.searchCommentVoByPageUsingPost({
+    current: curPage.value,
+    pageSize: pageSize.value,
+    problemId: parseInt(props.id),
+    searchText: searchText.value,
+  });*/
   if (res.code !== 1) {
     Message.error("err" + res.message);
     return;

@@ -4,6 +4,10 @@
 -- ------------------------------------------------------
 -- Server version	10.4.25-MariaDB
 
+create database if not exists yi_oj;
+
+use yi_oj;
+
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;

@@ -69,3 +69,5 @@ temp/
 ./yioj-backend/yioj-backend-common-service/src/main/resources/application-prod.yml
 ./yioj-backend/yioj-backend-model-service/src/main/resources/application-prod.yml
 ./yioj-backend/yioj-backend-gateway-service/src/main/resources/application-prod.yml
+./yioj-backend/nginx.rar
+./yioj-backend/nginx

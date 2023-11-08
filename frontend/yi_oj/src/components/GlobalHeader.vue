@@ -64,7 +64,6 @@ import { useRoute, useRouter } from "vue-router";
 import { computed, onMounted, ref } from "vue";
 import { useStore } from "vuex";
 import { roleChecker } from "@/components/scripts/access/roleCheck";
-import { roleEnum } from "@/components/scripts/access/roleEnum";
 
 const store = useStore();
 const router = useRouter();

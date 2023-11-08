@@ -164,18 +164,18 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>${spring-boot.version}</version>
-                <configuration>
+                <!--<configuration>
                     <mainClass>com.yioj.service.yiojbackend.YiojBackendApplication</mainClass>
                     <skip>true</skip>
-                </configuration>
-                <executions>
+                </configuration>-->
+                <!--<executions>
                     <execution>
                         <id>repackage</id>
                         <goals>
                             <goal>repackage</goal>
                         </goals>
                     </execution>
-                </executions>
+                </executions>-->
             </plugin>
         </plugins>
     </build>

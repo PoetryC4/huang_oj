@@ -1,0 +1,33 @@
+import axios from "axios/index";
+import store from "@/store";
+
+axios.interceptors.request.use(
+  function (config) {
+    let jwt = store.state.user.getters.getJwt;
+    // let jwt = window.mm.$store.getters.getJwt;
+    if (jwt) {
+      config.headers["jwt"] = jwt;
+    }
+    return config;
+  },
+  function (error) {
+    return Promise.reject(error);
+  }
+);
+// 响应拦截器
+axios.interceptors.response.use(
+  function (response) {
+    //将响应头中的jwt字符串放入state.js中
+    let jwt = response.headers["jwt"];
+    if (jwt) {
+      /*window.mm.$store.commit('setJwt', {
+        jwt: jwt
+    });*/
+      store.state.user.commit("setJwt", { jwt: jwt });
+    }
+    return response;
+  },
+  function (error) {
+    return Promise.reject(error);
+  }
+);

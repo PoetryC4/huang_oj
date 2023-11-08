@@ -10,6 +10,7 @@ import com.yioj.common.common.ResultUtils;
 import com.yioj.common.constant.UserConstant;
 import com.yioj.common.exception.BusinessException;
 import com.yioj.common.exception.ThrowUtils;
+import com.yioj.common.utils.JwtUtils;
 import com.yioj.common.utils.RedisUtils;
 import com.yioj.model.model.dto.user.*;
 import com.yioj.model.model.entity.User;
@@ -27,8 +28,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * {
@@ -88,7 +92,7 @@ public class UserController {
      * @return
      */
     @PostMapping("/login")
-    public BaseResponse<LoginUserVO> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
+    public BaseResponse<LoginUserVO> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request, HttpServletResponse response) {
         if (userLoginRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -101,12 +105,36 @@ public class UserController {
                 throw new BusinessException(ErrorCode.PARAMS_ERROR);
             }
             LoginUserVO loginUserVO = userService.userLogin("", userPassword, userEmail, request);
+            if (loginUserVO != null) {
+                Map<String, Object> json = new HashMap<>();
+                json.put("id", loginUserVO.getId());
+                json.put("userName", loginUserVO.getUserName());
+                json.put("userAccount", loginUserVO.getUserAccount());
+                json.put("userEmail", loginUserVO.getUserEmail());
+                //生成JWT，并设置到response响应头中
+                String jwt = JwtUtils.createJwt(json, JwtUtils.JWT_WEB_TTL);
+                // 暴露Jwt
+                response.setHeader("Access-Control-Expose-Headers", JwtUtils.JWT_HEADER_KEY);
+                response.setHeader(JwtUtils.JWT_HEADER_KEY, jwt);
+            }
             return ResultUtils.success(loginUserVO);
         } else {
             if (StringUtils.isAnyBlank(userAccount, userPassword)) {
                 throw new BusinessException(ErrorCode.PARAMS_ERROR);
             }
             LoginUserVO loginUserVO = userService.userLogin(userAccount, userPassword, "", request);
+            if (loginUserVO != null) {
+                Map<String, Object> json = new HashMap<>();
+                json.put("id", loginUserVO.getId());
+                json.put("userName", loginUserVO.getUserName());
+                json.put("userAccount", loginUserVO.getUserAccount());
+                json.put("userEmail", loginUserVO.getUserEmail());
+                //生成JWT，并设置到response响应头中
+                String jwt = JwtUtils.createJwt(json, JwtUtils.JWT_WEB_TTL);
+                // 暴露Jwt
+                response.setHeader("Access-Control-Expose-Headers", JwtUtils.JWT_HEADER_KEY);
+                response.setHeader(JwtUtils.JWT_HEADER_KEY, jwt);
+            }
             return ResultUtils.success(loginUserVO);
         }
     }
@@ -366,8 +394,8 @@ public class UserController {
         }
         String originalFileName = file.getOriginalFilename();
         String suffix = ".png";
-        for (int i = originalFileName.length()-1; i >=0; i--) {
-            if(originalFileName.charAt(i) == '.') {
+        for (int i = originalFileName.length() - 1; i >= 0; i--) {
+            if (originalFileName.charAt(i) == '.') {
                 suffix = originalFileName.substring(i);
                 break;
             }
@@ -394,7 +422,7 @@ public class UserController {
                 }
             }
         }
-        String fileName = String.valueOf(id)+suffix;
+        String fileName = String.valueOf(id) + suffix;
         // 使用Hutool的FileUtil来保存文件
         FileUtil.writeBytes(file.getBytes(), savePath + File.separator + fileName);
         User user = new User();
@@ -411,6 +439,7 @@ public class UserController {
         request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, user1);
         return ResultUtils.success(result);
     }
+
     @PostMapping("/update/password")
     public BaseResponse<Boolean> userUpdatePassword(@RequestBody UserUpdatePasswordRequest userUpdatePasswordRequest) {
         if (userUpdatePasswordRequest == null) {

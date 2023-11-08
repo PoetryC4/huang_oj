@@ -12,15 +12,15 @@ import java.util.stream.Collectors;
  */
 public enum ProblemLanguageMemoryEnum {
 
-    C("C", 0),
-    CPLUSPLUS("C++", 0),
-    JAVA("Java", 50),
+    /*C("C", 0),
+    CPLUSPLUS("C++", 0),*/
+    JAVA("Java", 50),/*
     PYTHON("Python", 0),
     PYTHON3("Python3", 0),
-    CSHARP("C#", 0),
-    JAVASCRIPT("JavaScript", 0),
+    CSHARP("C#", 0),*/
+    JAVASCRIPT("JavaScript", 0),/*
     TYPESCRIPT("TypeScript", 0),
-    PHP("PHP", 0);
+    PHP("PHP", 0)*/;
 
     private final String text;
 

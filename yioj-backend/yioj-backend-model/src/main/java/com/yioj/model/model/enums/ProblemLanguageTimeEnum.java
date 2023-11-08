@@ -12,15 +12,15 @@ import java.util.stream.Collectors;
  */
 public enum ProblemLanguageTimeEnum {
 
-    C("C", 0),
-    CPLUSPLUS("C++", 0),
-    JAVA("Java", 500 * 1024),
+    /*C("C", 0),
+    CPLUSPLUS("C++", 0),*/
+    JAVA("Java", 500 * 1024),/*
     PYTHON("Python", 0),
     PYTHON3("Python3", 0),
-    CSHARP("C#", 0),
-    JAVASCRIPT("JavaScript", 200 * 1024),
+    CSHARP("C#", 0),*/
+    JAVASCRIPT("JavaScript", 200 * 1024),/*
     TYPESCRIPT("TypeScript", 200 * 1024),
-    PHP("PHP", 0);
+    PHP("PHP", 0)*/;
 
     private final String text;
 
